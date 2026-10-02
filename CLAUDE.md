@@ -8,6 +8,12 @@ HACS custom integration `ev_charge_control`. It converts the YAML-based EV load 
 
 The repository is public on GitHub (`straybiker/HA-EV-Charge-Control`).
 
+## Design constraints
+
+- One config entry is one virtual device: the EV charger controller.
+- The integration owns no car and no charger. It uses sensors and devices that already exist in Home Assistant.
+- It talks to the real charger only through the charger's own integration (entities and actions). It never opens its own connection to the charger.
+
 ## Status
 
 Repository setup only. Write no behaviour until a design plan exists.

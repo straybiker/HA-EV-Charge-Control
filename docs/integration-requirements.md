@@ -22,7 +22,19 @@ Allowed `integration_type`: `device`, `entity`, `hardware`, `helper`, `hub`, `se
 
 Allowed `iot_class`: `assumed_state`, `cloud_polling`, `cloud_push`, `local_polling`, `local_push`, `calculated`.
 
-Current choice: `service` and `calculated`. Review both when the design is ready.
+Current choice: `helper` and `calculated`.
+
+`integration_type`:
+- One config entry creates one virtual device: the EV charger controller. It owns no car and no charger. It works on entities that already exist in Home Assistant.
+- `helper` is for an integration that provides an entity to help with automations, like `derivative`, `group` or `generic_thermostat`. That matches.
+- `device` is for a single real device, like ESPHome. The real charger already has its own integration, so `device` does not fit.
+- `hub` is for a gateway to multiple devices or services. `virtual` only points to another integration. Neither fits.
+
+`iot_class`:
+- `local_push` and `local_polling` mean direct communication with the device. The controller has none. It sends commands through the charger's own integration.
+- `calculated` means the integration does no communication of its own and provides a calculated result. That matches.
+- Core's `generic_thermostat` uses `local_polling`. The value has no runtime effect. hassfest only checks that it is valid.
+- Change to `local_push` or `local_polling` only if the controller must talk to the charger directly.
 
 ## HACS
 
