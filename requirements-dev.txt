@@ -1,0 +1,13 @@
+# Development and CI dependencies.
+#
+# The integration's own runtime requirements live in
+# custom_components/ev_charge_control/manifest.json. This file is only for
+# running tests and linting.
+#
+# homeassistant has no upper bound on purpose. CI should go red when an
+# upstream release breaks the integration. The lower bound matches hacs.json.
+# Home Assistant 2026.3 and later need Python 3.14.
+homeassistant>=2026.3
+pytest>=8
+pytest-asyncio>=0.24
+ruff>=0.6
