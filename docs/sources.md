@@ -6,7 +6,7 @@ Paths are relative to this repository. The folders are read-only reference for t
 
 GitHub: [straybiker/HA-load-balancer](https://github.com/straybiker/HA-load-balancer). Local: `../EV_Loadbalancer/`.
 
-The YAML package stays the source of truth for behaviour until this integration reaches parity.
+The YAML package explains the intent. Where the integration behaves differently, `behaviour.md` records the decision.
 
 | Path | Content |
 |---|---|
@@ -14,6 +14,8 @@ The YAML package stays the source of truth for behaviour until this integration 
 | `../EV_Loadbalancer/packages/` | `ev_loadbalancer.yaml` (logic), `ev_loadbalancer_user_config.yaml` (user mapping) |
 | `../EV_Loadbalancer/tests/` | Tests for output and trigger logic |
 | `../EV_Loadbalancer/dashboards/` | Logic dashboard |
+
+The GitHub `dev` branch of that repository (22/10/2025, `custom_components/ev_load_balancer/`) is an earlier Python prototype. It predates EMS, the price gate and Comfort mode, imports `hass` inside the engine, and has no tests. It is not reused. Two ideas from it are worth a look for the Home Assistant wiring: the config-flow entity-mapping dataclasses in its `models.py`, and a car-aware "extended power limit" that the YAML never had.
 
 ## Live Home Assistant configuration
 

@@ -1,0 +1,322 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Laadpaal",
+        "description": "Wat de laadpaal meldt. Kies de entiteiten van de eigen integratie van je laadpaal.",
+        "data": {
+          "name": "Naam",
+          "charger_power_entity": "Vermogen laadpaal",
+          "applied_current_entity": "Toegepaste stroomlimiet",
+          "active_phases_entity": "Actieve fasen",
+          "connection_entity": "Verbindingsstatus",
+          "max_current_a": "Maximale stroom",
+          "min_current_a": "Minimale stroom",
+          "fallback_current_a": "Terugvalstroom",
+          "voltage_v": "Spanning",
+          "current_step_a": "Stroomstap",
+          "widen_small_decreases": "Kleine verlagingen vergroten",
+          "failsafe_keeps_phase": "Fase behouden bij sensorfout"
+        },
+        "data_description": {
+          "charger_power_entity": "Vermogen dat de laadpaal nu verbruikt.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
+          "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
+          "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
+          "max_current_a": "De hardwarewaarde van de laadpaal of kabel. Gebruik geen sensor die met de belasting verandert.",
+          "min_current_a": "Meestal 6 A.",
+          "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
+          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
+          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
+          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
+        }
+      },
+      "controls": {
+        "title": "Bediening laadpaal",
+        "description": "Waar de regelaar zijn instelwaarden schrijft. In schaduwmodus wordt nog niets geschreven.",
+        "data": {
+          "current_limit_entity": "Stroomlimiet",
+          "phase_select_entity": "Fase-instelling"
+        }
+      },
+      "phases": {
+        "title": "Fase-opties",
+        "description": "Welke optie van de fase-instelling 1 fase betekent en welke 3 fasen.",
+        "data": {
+          "phase_option_1": "Optie voor 1 fase",
+          "phase_option_3": "Optie voor 3 fasen"
+        }
+      },
+      "household": {
+        "title": "Huishouden",
+        "description": "Het vermogen van het huis zonder de laadpaal.",
+        "data": {
+          "house_power_entity": "Huisvermogen zonder laadpaal"
+        },
+        "data_description": {
+          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best."
+        }
+      },
+      "car": {
+        "title": "Auto",
+        "description": "Optioneel. Zonder batterijniveau doen de SOC-doelen niets.",
+        "data": {
+          "car_soc_entity": "Batterijniveau",
+          "battery_capacity_kwh": "Batterijcapaciteit",
+          "car_max_current_a": "Maximale stroom auto",
+          "car_min_current_a": "Minimale stroom auto"
+        }
+      },
+      "price": {
+        "title": "Prijs en EMS",
+        "description": "Optioneel. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "data": {
+          "price_entity": "Elektriciteitsprijs",
+          "price_attribute": "Prijsattribuut",
+          "ems_entity": "EMS-signaal"
+        },
+        "data_description": {
+          "price_entity": "Afnameprijs in je munt per kWh.",
+          "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
+          "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
+        }
+      }
+    },
+    "error": {
+      "min_above_max": "De minimale stroom is hoger dan de maximale stroom.",
+      "fallback_out_of_range": "De terugvalstroom moet tussen de minimale en maximale stroom liggen.",
+      "connection_not_mode3": "Deze sensor toont geen Mode 3-status (A, B1–D2, E, F). Kies een Mode 3-sensor of een binaire sensor.",
+      "phase_select_unavailable": "De fase-instelling heeft geen opties. Controleer of de laadpaal online is.",
+      "current_entity_in_use": "Een andere laadregelaar gebruikt deze stroomlimiet al.",
+      "same_phase_option": "Kies twee verschillende opties.",
+      "capacity_required": "Vul de batterijcapaciteit in wanneer je een batterijniveausensor kiest.",
+      "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
+      "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
+      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Laadpaal",
+        "description": "Wat de laadpaal meldt. Kies de entiteiten van de eigen integratie van je laadpaal.",
+        "data_description": {
+          "charger_power_entity": "Vermogen dat de laadpaal nu verbruikt.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
+          "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
+          "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
+          "max_current_a": "De hardwarewaarde van de laadpaal of kabel. Gebruik geen sensor die met de belasting verandert.",
+          "min_current_a": "Meestal 6 A.",
+          "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
+          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
+          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
+          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
+        },
+        "data": {
+          "charger_power_entity": "Vermogen laadpaal",
+          "applied_current_entity": "Toegepaste stroomlimiet",
+          "active_phases_entity": "Actieve fasen",
+          "connection_entity": "Verbindingsstatus",
+          "max_current_a": "Maximale stroom",
+          "min_current_a": "Minimale stroom",
+          "fallback_current_a": "Terugvalstroom",
+          "voltage_v": "Spanning",
+          "current_step_a": "Stroomstap",
+          "widen_small_decreases": "Kleine verlagingen vergroten",
+          "failsafe_keeps_phase": "Fase behouden bij sensorfout"
+        }
+      },
+      "controls": {
+        "title": "Bediening laadpaal",
+        "description": "Waar de regelaar zijn instelwaarden schrijft. In schaduwmodus wordt nog niets geschreven.",
+        "data": {
+          "current_limit_entity": "Stroomlimiet",
+          "phase_select_entity": "Fase-instelling"
+        }
+      },
+      "phases": {
+        "title": "Fase-opties",
+        "description": "Welke optie van de fase-instelling 1 fase betekent en welke 3 fasen.",
+        "data": {
+          "phase_option_1": "Optie voor 1 fase",
+          "phase_option_3": "Optie voor 3 fasen"
+        }
+      },
+      "household": {
+        "title": "Huishouden",
+        "description": "Het vermogen van het huis zonder de laadpaal.",
+        "data": {
+          "house_power_entity": "Huisvermogen zonder laadpaal"
+        },
+        "data_description": {
+          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best."
+        }
+      },
+      "car": {
+        "title": "Auto",
+        "description": "Optioneel. Zonder batterijniveau doen de SOC-doelen niets.",
+        "data": {
+          "car_soc_entity": "Batterijniveau",
+          "battery_capacity_kwh": "Batterijcapaciteit",
+          "car_max_current_a": "Maximale stroom auto",
+          "car_min_current_a": "Minimale stroom auto"
+        }
+      },
+      "price": {
+        "title": "Prijs en EMS",
+        "description": "Optioneel. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "data": {
+          "price_entity": "Elektriciteitsprijs",
+          "price_attribute": "Prijsattribuut",
+          "ems_entity": "EMS-signaal"
+        },
+        "data_description": {
+          "price_entity": "Afnameprijs in je munt per kWh.",
+          "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
+          "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
+        }
+      }
+    },
+    "error": {
+      "min_above_max": "De minimale stroom is hoger dan de maximale stroom.",
+      "fallback_out_of_range": "De terugvalstroom moet tussen de minimale en maximale stroom liggen.",
+      "connection_not_mode3": "Deze sensor toont geen Mode 3-status (A, B1–D2, E, F). Kies een Mode 3-sensor of een binaire sensor.",
+      "phase_select_unavailable": "De fase-instelling heeft geen opties. Controleer of de laadpaal online is.",
+      "current_entity_in_use": "Een andere laadregelaar gebruikt deze stroomlimiet al.",
+      "same_phase_option": "Kies twee verschillende opties.",
+      "capacity_required": "Vul de batterijcapaciteit in wanneer je een batterijniveausensor kiest.",
+      "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
+      "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
+      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam."
+    }
+  },
+  "selector": {
+    "current_step": {
+      "options": {
+        "0_1": "0,1 A",
+        "1": "1 A"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "charge_mode": {
+        "name": "Laadmodus",
+        "state": {
+          "off": "Uit",
+          "min_1p": "Minimum 1 fase",
+          "min_3p": "Minimum 3 fasen",
+          "limited": "Begrensd",
+          "fast": "Snel",
+          "solar": "Zon",
+          "comfort": "Comfort"
+        }
+      }
+    },
+    "number": {
+      "power_limit": {
+        "name": "Vermogenslimiet"
+      },
+      "max_charging_cost": {
+        "name": "Maximale laadkost"
+      },
+      "target_soc": {
+        "name": "Doel-SOC"
+      },
+      "comfort_soc": {
+        "name": "Comfort-SOC"
+      },
+      "emergency_soc": {
+        "name": "Nood-SOC"
+      },
+      "solar_bridge": {
+        "name": "Zonnebrug"
+      },
+      "power_update_threshold": {
+        "name": "Drempel vermogensaanpassing"
+      },
+      "phase_switch_delay": {
+        "name": "Vertraging faseschakeling"
+      },
+      "recalc_interval": {
+        "name": "Herberekeningsinterval"
+      }
+    },
+    "switch": {
+      "car_aware": {
+        "name": "Autobewust"
+      },
+      "solar_when_ems_blocks": {
+        "name": "Laden op zon als EMS blokkeert"
+      },
+      "single_phase_only": {
+        "name": "Enkel 1 fase"
+      },
+      "ems_control": {
+        "name": "EMS-sturing"
+      },
+      "ems_as_onoff": {
+        "name": "EMS als aan/uit"
+      }
+    },
+    "binary_sensor": {
+      "grid_allowed": {
+        "name": "Net toegestaan"
+      },
+      "emergency": {
+        "name": "Noodladen"
+      },
+      "target_reached": {
+        "name": "Doel bereikt"
+      }
+    },
+    "sensor": {
+      "target_current": {
+        "name": "Doelstroom"
+      },
+      "target_phases": {
+        "name": "Doelfasen"
+      },
+      "target_power": {
+        "name": "Doelvermogen"
+      },
+      "charger_efficiency": {
+        "name": "Rendement laadpaal"
+      },
+      "solar_surplus": {
+        "name": "Zonne-overschot"
+      },
+      "grid_share": {
+        "name": "Netaandeel"
+      },
+      "phase_hold_until": {
+        "name": "Fase vastgehouden tot"
+      },
+      "decision": {
+        "name": "Beslissing",
+        "state": {
+          "charging": "Laden",
+          "emergency": "Noodladen",
+          "off": "Uit",
+          "target_reached": "Doel bereikt",
+          "grid_blocked": "Net geblokkeerd",
+          "insufficient_power": "Te weinig vermogen",
+          "refused": "Geweigerd",
+          "failsafe": "Veiligheidsstand",
+          "not_connected": "Niet verbonden",
+          "charger_unavailable": "Laadpaal niet beschikbaar",
+          "no_power_limit": "Geen vermogenslimiet",
+          "grace_period": "Wachten na faseschakeling"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "mode_conflicts_single_phase": {
+      "message": "Minimum 3 fasen kan niet zolang Enkel 1 fase aan staat."
+    },
+    "single_phase_conflicts_mode": {
+      "message": "Enkel 1 fase kan niet zolang de laadmodus Minimum 3 fasen is."
+    }
+  }
+}

@@ -50,6 +50,7 @@ jobs:
 
       - name: Lint
         run: |
-          pip install ruff
+          # Same version as requirements-dev.txt, so format checks match local runs.
+          pip install ruff==0.16.10
           ruff check .
           ruff format --check .

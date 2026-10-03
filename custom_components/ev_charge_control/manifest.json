@@ -2,12 +2,12 @@
   "domain": "ev_charge_control",
   "name": "EV Charge Control",
   "codeowners": ["@straybiker"],
-  "config_flow": false,
+  "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/straybiker/HA-EV-Charge-Control",
   "integration_type": "helper",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/straybiker/HA-EV-Charge-Control/issues",
   "requirements": [],
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

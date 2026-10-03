@@ -1,0 +1,11 @@
+# Native Windows development: engine and translation tests only.
+#
+# The Home Assistant test harness does not run on Windows. tests/conftest.py
+# skips tests/ha when it is missing. Run those in Docker: scripts/test-ha.ps1.
+# Keep homeassistant at the version pytest-homeassistant-custom-component
+# pins in requirements-dev.txt.
+homeassistant==2026.9.4
+pytest>=8
+pytest-asyncio>=0.24
+hypothesis>=6.100
+ruff==0.16.10
