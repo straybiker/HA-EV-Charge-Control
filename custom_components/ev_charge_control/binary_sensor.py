@@ -14,20 +14,23 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EvChargeConfigEntry
-from .coordinator import EvChargeCoordinator
-from .engine import Output
+from .coordinator import EvChargeCoordinator, Snapshot
 from .entity import init_entity
 
 
 @dataclass(frozen=True, kw_only=True)
 class OutputBinaryDescription(BinarySensorEntityDescription):
-    value_fn: Callable[[Output], bool | None]
+    value_fn: Callable[[Snapshot], bool | None]
 
 
 BINARY_SENSORS: tuple[OutputBinaryDescription, ...] = (
-    OutputBinaryDescription(key="grid_allowed", value_fn=lambda o: o.grid_allowed),
-    OutputBinaryDescription(key="emergency", value_fn=lambda o: o.emergency),
-    OutputBinaryDescription(key="target_reached", value_fn=lambda o: o.target_reached),
+    OutputBinaryDescription(
+        key="grid_allowed", value_fn=lambda s: s.output.grid_allowed
+    ),
+    OutputBinaryDescription(key="emergency", value_fn=lambda s: s.output.emergency),
+    OutputBinaryDescription(
+        key="target_reached", value_fn=lambda s: s.output.target_reached
+    ),
 )
 
 

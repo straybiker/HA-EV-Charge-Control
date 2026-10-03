@@ -44,6 +44,19 @@ Each run applies the first rule that matches.
   - Solar: solar first. Solar ≥ 1-phase minimum: charge on solar alone. Solar below the minimum, but the gap fits within the bridge and the grid allowance: charge at exactly the minimum and import only the gap. Otherwise: no charging.
 - **Target power** = `min(request, headroom, hardware maximum)`.
 
+## Power limit
+
+- **Base power limit:** the device's own number entity.
+- **Effective power limit:** while "Follow monthly peak" is on and a monthly peak sensor is set and has a value: `max(base, peak factor × monthly peak)`. The peak factor is a setup field (default 90 %). Otherwise the base limit. The capacity tariff bills the month's highest quarter-hour, so once that peak is set, charging up to a share of it costs nothing extra.
+- The integration does not compute the peak. It reads an existing sensor (W or kW).
+- The controller uses the effective limit everywhere the rules above say "power limit".
+
+## Charger maximum
+
+- Read every run from the max current entity picked in setup.
+- Unavailable: the last known value. No value since start: the fallback current is the maximum. Never above 32 A.
+- Entries made before this option keep their fixed maximum.
+
 ## Phases
 
 - Minimum modes use their own phase count. Single phase only forces 1 phase in the other modes.
@@ -73,6 +86,14 @@ The ratio of measured charger power to commanded power (`current × voltage × p
 - "Widen small decreases" (on for Alfen): a decrease below 0.15 A is written as 0.2 A, unless that drops below the minimum. Some chargers ignore 0.1 A decreases.
 - Going from 1 to 3 phases: current 0 A first, then the phase, then the current.
 - In shadow mode nothing is written. The decision sensors show what would be written.
+
+## Energy
+
+The integration counts energy only; an EMS turns it into cost and reimbursement.
+
+- **Charged energy:** from the charger's own energy meter when one is set in setup (a meter that resets or jumps back adds nothing for that step), otherwise charger power × time between runs (gaps over 5 min are not counted).
+- **From solar / from grid:** each step is split with the conditions of the previous run: solar = `min(charger power, export)`, where export comes from house power without the charger; the rest is grid.
+- Totals in kWh, `total_increasing`, usable in the Energy dashboard. They survive restarts (saved at most every 60 s and on unload).
 
 ## Decision sensor values
 
@@ -118,3 +139,13 @@ The controller started as a port of the EV Load Balancer YAML package ([straybik
 | B6 | Efficiency learning | Running average, steady samples only, reset on unplug. |
 | B7 | Charger quirks | Current step (0.1 A or 1 A) and "widen small decreases" are charger options. |
 | B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and connection changes. Power sensor updates do not trigger a run. |
+| B9 | Parameter sources | Each parameter of the YAML user config lives where the user chose: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the runtime settings are device entities. |
+| B10 | Power limit | Effective limit = max(base, peak factor × monthly peak) with "Follow monthly peak" on. The monthly peak is an existing sensor; the integration does not compute it. |
+| B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
+| B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
+| B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |
+
+### Decided for charger control (not built yet)
+
+- A write the charger does not confirm is retried on the next run. After 3 failures in a row, a repair issue is raised and the decision becomes "charger not responding".
+- What the charger gets when "Control charger" is switched off is a setup option.

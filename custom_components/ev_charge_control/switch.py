@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -16,12 +16,13 @@ from . import EvChargeConfigEntry
 from .const import DOMAIN
 from .engine import ChargeMode
 from .entity import init_entity
-from .settings import SettingsStore
+from .settings import FOLLOW_MONTHLY_PEAK, SettingsStore
 
 
 @dataclass(frozen=True, kw_only=True)
 class SettingSwitchDescription(SwitchEntityDescription):
     field: str
+    default: bool = False
 
 
 SWITCHES: tuple[SettingSwitchDescription, ...] = tuple(
@@ -35,14 +36,22 @@ SWITCHES: tuple[SettingSwitchDescription, ...] = tuple(
     )
 )
 
+FOLLOW_PEAK = SettingSwitchDescription(
+    key=FOLLOW_MONTHLY_PEAK, field=FOLLOW_MONTHLY_PEAK, default=True
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EvChargeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    store = entry.runtime_data.store
-    async_add_entities(SettingSwitch(entry, store, d) for d in SWITCHES)
+    runtime = entry.runtime_data
+    switches = list(SWITCHES)
+    # Following the monthly peak needs a peak sensor from the setup.
+    if runtime.coordinator.reader.has_monthly_peak:
+        switches.append(FOLLOW_PEAK)
+    async_add_entities(SettingSwitch(entry, runtime.store, d) for d in switches)
 
 
 class SettingSwitch(SwitchEntity, RestoreEntity):
@@ -58,12 +67,13 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
     ) -> None:
         init_entity(self, entry, description)
         self._store = store
-        self._attr_is_on = False
+        self._attr_is_on = description.default
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
-        self._attr_is_on = last is not None and last.state == STATE_ON
+        if last is not None and last.state in (STATE_ON, STATE_OFF):
+            self._attr_is_on = last.state == STATE_ON
         self._store.set(self.entity_description.field, self._attr_is_on, notify=False)
 
     async def async_turn_on(self, **kwargs: Any) -> None:

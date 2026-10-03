@@ -1,4 +1,4 @@
-"""The 6-step setup flow and the options flow."""
+"""The 7-step setup flow and the options flow."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from .conftest import (
     OPTIONS,
     PHASE_SELECT,
     PHASES_STEP,
+    TUNING_STEP,
 )
 
 
@@ -36,6 +37,7 @@ async def _to_step(hass: HomeAssistant, step: str):
         ("phases", PHASES_STEP),
         ("household", HOUSEHOLD_STEP),
         ("car", {}),
+        ("price", {}),
     ):
         if result["step_id"] == step:
             return result
@@ -46,7 +48,7 @@ async def _to_step(hass: HomeAssistant, step: str):
 
 
 async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
-    result = await _to_step(hass, "price")
+    result = await _to_step(hass, "tuning")
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test charger"
@@ -55,6 +57,9 @@ async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
     assert options["current_limit_entity"] == CONTROLS_STEP["current_limit_entity"]
     assert options["phase_option_3"] == "3 Phases"
     assert "price_entity" not in options
+    assert options["max_current_entity"] == CHARGER_STEP["max_current_entity"]
+    # Tuning defaults, as in the EV Load Balancer package.
+    assert {k: options[k] for k in TUNING_STEP} == TUNING_STEP
 
 
 async def test_phase_options_come_from_the_select(hass: HomeAssistant, sources) -> None:
@@ -72,6 +77,7 @@ async def _error(hass: HomeAssistant, step: str, data: dict) -> str:
 
 
 async def test_min_above_max(hass: HomeAssistant, sources) -> None:
+    # The max current entity reports 16 A.
     data = CHARGER_STEP | {"min_current_a": 20}
     assert await _error(hass, "user", data) == "min_above_max"
 
@@ -128,12 +134,30 @@ async def test_options_flow_edits_and_clears(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["step_id"] == "init"
     charger = {k: v for k, v in CHARGER_STEP.items() if k != "name"} | {
-        "max_current_a": 32
+        "fallback_current_a": 8
     }
-    for data in (charger, CONTROLS_STEP, PHASES_STEP, HOUSEHOLD_STEP, {}, {}):
+    tuning = TUNING_STEP | {"recalc_interval_s": 30}
+    for data in (charger, CONTROLS_STEP, PHASES_STEP, HOUSEHOLD_STEP, {}, {}, tuning):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], data
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["max_current_a"] == 32
+    assert entry.options["fallback_current_a"] == 8
+    assert entry.options["recalc_interval_s"] == 30
     assert "price_entity" not in entry.options  # cleared optional field
+
+
+async def test_old_entry_without_new_keys_still_loads(
+    hass: HomeAssistant, sources
+) -> None:
+    """An entry made before the tuning step and the max current entity."""
+    old = {
+        k: v
+        for k, v in OPTIONS.items()
+        if k not in TUNING_STEP and k not in ("max_current_entity", "fallback_phase")
+    } | {"max_current_a": 16}
+    entry = MockConfigEntry(domain=DOMAIN, title="Test charger", options=old)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charger_decision") is not None

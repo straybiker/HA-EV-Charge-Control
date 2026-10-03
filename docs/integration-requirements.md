@@ -9,7 +9,7 @@ Checklist for Home Assistant and HACS. Sources: developers.home-assistant.io and
 | Directory `custom_components/<domain>/`, domain equals directory name | Done |
 | `__init__.py` with `async_setup` or `async_setup_entry` | Done (`async_setup_entry`, `async_unload_entry`) |
 | `manifest.json` with `domain`, `name`, `codeowners`, `dependencies`, `documentation`, `integration_type`, `iot_class`, `requirements`, `version` | Done |
-| `version` is SemVer or CalVer | Done (`0.1.0`) |
+| `version` is SemVer or CalVer | Done (`0.2.0`) |
 | `CONFIG_SCHEMA` declared (hassfest warns without it) | Done (`config_entry_only_config_schema`) |
 | `brand/icon.png` in the integration directory (Home Assistant 2026.3 and later) | Placeholder |
 | `config_flow: true` and `config_flow.py` | Done (`SchemaConfigFlowHandler`, options flow reloads the entry) |

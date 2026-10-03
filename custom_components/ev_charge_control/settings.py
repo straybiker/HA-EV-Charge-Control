@@ -6,10 +6,11 @@ from collections.abc import Callable
 from dataclasses import fields, replace
 from typing import Any
 
-from .const import DEFAULT_RECALC_INTERVAL_S
 from .engine import Settings
 
-RECALC_INTERVAL = "recalc_interval_s"
+# A setting the integration uses around the controller, not inside it.
+FOLLOW_MONTHLY_PEAK = "follow_monthly_peak"
+_EXTRA_DEFAULTS: dict[str, Any] = {FOLLOW_MONTHLY_PEAK: True}
 _ENGINE_FIELDS = {f.name for f in fields(Settings)}
 
 type SettingsListener = Callable[[str], None]
@@ -24,20 +25,20 @@ class SettingsStore:
 
     def __init__(self) -> None:
         self._settings = Settings()
-        self.recalc_interval_s: float = DEFAULT_RECALC_INTERVAL_S
+        self._extra: dict[str, Any] = dict(_EXTRA_DEFAULTS)
         self._listeners: list[SettingsListener] = []
 
     def snapshot(self) -> Settings:
         return self._settings
 
     def get(self, key: str) -> Any:
-        if key == RECALC_INTERVAL:
-            return self.recalc_interval_s
+        if key in self._extra:
+            return self._extra[key]
         return getattr(self._settings, key)
 
     def set(self, key: str, value: Any, *, notify: bool = True) -> None:
-        if key == RECALC_INTERVAL:
-            self.recalc_interval_s = float(value)
+        if key in self._extra:
+            self._extra[key] = value
         elif key in _ENGINE_FIELDS:
             self._settings = replace(self._settings, **{key: value})
         else:
@@ -45,6 +46,9 @@ class SettingsStore:
         if notify:
             for listener in list(self._listeners):
                 listener(key)
+
+    def extras(self) -> dict[str, Any]:
+        return dict(self._extra)
 
     def add_listener(self, listener: SettingsListener) -> Callable[[], None]:
         self._listeners.append(listener)

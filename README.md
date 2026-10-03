@@ -33,14 +33,15 @@ Requires Home Assistant 2026.3 or later.
 
 ## Setup
 
-The setup asks in six steps for:
+The setup asks in seven steps for:
 
-1. **Charger**: its power, applied current limit, active phases and connection state (a Mode 3 sensor or a binary sensor), its current range, voltage and current step.
+1. **Charger**: its power, applied current limit, active phases, connection state (a Mode 3 sensor or a binary sensor) and maximum current (entity); min and fallback current, fallback phases, voltage, current step; optionally its energy meter.
 2. **Charger controls**: its current-limit number and phase select.
 3. **Phase options**: which option of the phase select means 1 phase and which 3 phases.
-4. **Household**: house power **without** the charger (negative while exporting).
+4. **Household**: house power **without** the charger (negative while exporting); optionally solar power and the monthly peak (capacity tariff).
 5. **Car** (optional): battery level and capacity, car current range.
 6. **Price and EMS** (optional): price sensor or attribute, EMS signal in watts.
+7. **Tuning**: power update threshold, phase switch delay, recalculation interval, peak factor.
 
 **Configure** on the integration page reopens the same steps.
 
@@ -48,12 +49,12 @@ The setup asks in six steps for:
 
 | Kind | Entities |
 |---|---|
-| Settings | Charge mode; power limit; max charging cost; target, comfort and emergency SOC; solar bridge; car aware; charge on solar when EMS blocks; single phase only; EMS control; EMS as on/off |
-| Configuration | Power update threshold; phase switch delay; recalculation interval |
-| Decision | Target current; target phases; target power; decision; grid allowed; emergency charging; target reached |
+| Settings | Charge mode; base power limit; max charging cost; target, comfort and emergency SOC; solar bridge; car aware; charge on solar when EMS blocks; single phase only; EMS control; EMS as on/off; follow monthly peak (with a peak sensor) |
+| Decision | Target current; target phases; target power; effective power limit; decision; grid allowed; emergency charging; target reached |
+| Energy | Charged energy; charged from grid; charged from solar (kWh, for the Energy dashboard or an EMS) |
 | Diagnostic | Charger efficiency; solar surplus; grid share; phase hold until |
 
-Settings keep their value across restarts. The controller runs every 10 s (configurable) and at once when the mode, a setting, the connection or the phase changes. Power sensor updates do not trigger a run.
+Settings and energy totals keep their value across restarts. The controller runs every 10 s (a setup field) and at once when the mode, a setting, the connection or the phase changes. Power sensor updates do not trigger a run.
 
 ## Relationship to EV Load Balancer
 

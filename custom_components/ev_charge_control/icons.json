@@ -15,32 +15,66 @@
       }
     },
     "number": {
-      "power_limit": { "default": "mdi:transmission-tower" },
-      "max_charging_cost": { "default": "mdi:currency-eur" },
-      "target_soc": { "default": "mdi:battery-high" },
-      "comfort_soc": { "default": "mdi:battery-medium" },
-      "emergency_soc": { "default": "mdi:battery-alert-variant-outline" },
-      "solar_bridge": { "default": "mdi:bridge" },
-      "power_update_threshold": { "default": "mdi:tune-vertical" },
-      "phase_switch_delay": { "default": "mdi:timer-sand" },
-      "recalc_interval": { "default": "mdi:update" }
+      "power_limit": {
+        "default": "mdi:transmission-tower"
+      },
+      "max_charging_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "target_soc": {
+        "default": "mdi:battery-high"
+      },
+      "comfort_soc": {
+        "default": "mdi:battery-medium"
+      },
+      "emergency_soc": {
+        "default": "mdi:battery-alert-variant-outline"
+      },
+      "solar_bridge": {
+        "default": "mdi:bridge"
+      }
     },
     "switch": {
-      "car_aware": { "default": "mdi:car-electric" },
-      "solar_when_ems_blocks": { "default": "mdi:solar-power-variant" },
-      "single_phase_only": { "default": "mdi:numeric-1-circle-outline" },
-      "ems_control": { "default": "mdi:chart-timeline-variant" },
-      "ems_as_onoff": { "default": "mdi:toggle-switch-outline" }
+      "car_aware": {
+        "default": "mdi:car-electric"
+      },
+      "solar_when_ems_blocks": {
+        "default": "mdi:solar-power-variant"
+      },
+      "single_phase_only": {
+        "default": "mdi:numeric-1-circle-outline"
+      },
+      "ems_control": {
+        "default": "mdi:chart-timeline-variant"
+      },
+      "ems_as_onoff": {
+        "default": "mdi:toggle-switch-outline"
+      },
+      "follow_monthly_peak": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      }
     },
     "binary_sensor": {
-      "grid_allowed": { "default": "mdi:transmission-tower-import" },
-      "emergency": { "default": "mdi:alert" },
-      "target_reached": { "default": "mdi:flag-checkered" }
+      "grid_allowed": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "emergency": {
+        "default": "mdi:alert"
+      },
+      "target_reached": {
+        "default": "mdi:flag-checkered"
+      }
     },
     "sensor": {
-      "target_current": { "default": "mdi:current-ac" },
-      "target_phases": { "default": "mdi:sine-wave" },
-      "target_power": { "default": "mdi:flash" },
+      "target_current": {
+        "default": "mdi:current-ac"
+      },
+      "target_phases": {
+        "default": "mdi:sine-wave"
+      },
+      "target_power": {
+        "default": "mdi:flash"
+      },
       "decision": {
         "default": "mdi:information-outline",
         "state": {
@@ -58,10 +92,30 @@
           "grace_period": "mdi:timer-sand"
         }
       },
-      "charger_efficiency": { "default": "mdi:percent" },
-      "solar_surplus": { "default": "mdi:solar-power" },
-      "grid_share": { "default": "mdi:transmission-tower-import" },
-      "phase_hold_until": { "default": "mdi:timer-lock-outline" }
+      "charger_efficiency": {
+        "default": "mdi:percent"
+      },
+      "solar_surplus": {
+        "default": "mdi:solar-power"
+      },
+      "grid_share": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "phase_hold_until": {
+        "default": "mdi:timer-lock-outline"
+      },
+      "effective_power_limit": {
+        "default": "mdi:gauge"
+      },
+      "charged_energy": {
+        "default": "mdi:battery-charging-high"
+      },
+      "charged_from_grid": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "charged_from_solar": {
+        "default": "mdi:solar-power-variant-outline"
+      }
     }
   }
 }

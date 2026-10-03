@@ -12,16 +12,14 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    EntityCategory,
     UnitOfPower,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EvChargeConfigEntry
 from .entity import init_entity
-from .settings import RECALC_INTERVAL, SettingsStore
+from .settings import SettingsStore
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,41 +78,6 @@ NUMBERS: tuple[SettingNumberDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
         mode=NumberMode.BOX,
-    ),
-    SettingNumberDescription(
-        key="power_update_threshold",
-        field="power_update_threshold_w",
-        default=230,
-        native_min_value=0,
-        native_max_value=2000,
-        native_step=10,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=NumberDeviceClass.POWER,
-        mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SettingNumberDescription(
-        key="phase_switch_delay",
-        field="phase_hold_s",
-        default=5,
-        scale=60,
-        native_min_value=0,
-        native_max_value=60,
-        native_step=1,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SettingNumberDescription(
-        key="recalc_interval",
-        field=RECALC_INTERVAL,
-        default=10,
-        native_min_value=5,
-        native_max_value=60,
-        native_step=1,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG,
     ),
 )
 

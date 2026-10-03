@@ -16,7 +16,7 @@ The repository is public on GitHub (`straybiker/HA-EV-Charge-Control`).
 
 ## Status
 
-The decision engine (`custom_components/ev_charge_control/engine/`, `docs/engine.md`) and the Home Assistant wiring (config flow, device, settings and decision entities) exist. The integration runs in shadow mode: it computes the setpoint but `ShadowWriter` writes nothing to the charger.
+The decision engine (`custom_components/ev_charge_control/engine/`, `docs/engine.md`) and the Home Assistant wiring exist: a 7-step config flow that maps every parameter of the YAML user config, the device with settings, decision and energy entities, and the power limit that follows a monthly peak sensor. The integration runs in shadow mode: it computes the setpoint but `ShadowWriter` writes nothing to the charger.
 
 ## Engine rules
 

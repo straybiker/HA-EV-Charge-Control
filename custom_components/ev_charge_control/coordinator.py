@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,26 +13,44 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
 from .engine import Controller, Output
-from .inputs import InputReader
-from .settings import RECALC_INTERVAL, SettingsStore
+from .engine.energy import EnergyCounter, EnergyTotals
+from .engine.limit import effective_power_limit
+from .inputs import Extras, InputReader, Tuning
+from .settings import FOLLOW_MONTHLY_PEAK, SettingsStore
 from .writer import ChargerWriter
 
 # Merges triggers that arrive together (a mode change plus a tick) into one run.
 _DEBOUNCE_S = 1.0
+# Energy totals are saved at most this often; a restart loses at most this much.
+_ENERGY_SAVE_DELAY_S = 60
+_STORAGE_VERSION = 1
 
 
-class EvChargeCoordinator(DataUpdateCoordinator[Output]):
-    """Owns the controller. Its data is the latest controller output.
+@dataclass(frozen=True, slots=True)
+class Snapshot:
+    """What one run produced. Entities read their state from it."""
+
+    output: Output
+    power_limit_w: float
+    monthly_peak_w: float | None
+    max_current_a: float
+    energy: EnergyTotals
+    computed_at: datetime = field(compare=False)
+
+
+class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
+    """Owns the controller and the energy counter.
 
     The coordinator does not poll by itself: a run must not depend on
     whether any entity listens. It runs on its own interval timer and at
-    once when the mode, a setting, the connection or the phase changes.
-    Power sensors are read at each run but never trigger one.
+    once when a setting, the connection or the phase changes. Power sensors
+    are read at each run but never trigger one.
     """
 
     def __init__(
@@ -42,6 +61,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Output]):
         controller: Controller,
         reader: InputReader,
         writer: ChargerWriter,
+        tuning: Tuning,
     ) -> None:
         super().__init__(
             hass,
@@ -58,20 +78,89 @@ class EvChargeCoordinator(DataUpdateCoordinator[Output]):
         self.controller = controller
         self.reader = reader
         self.writer = writer
+        self.tuning = tuning
+        self.energy = EnergyCounter()
+        self._energy_store = self.energy_store(hass, entry)
+        self._configured_max_a = controller.charger.max_current_a
+        self._last_max_a: float | None = None
         self._cancel_timer: CALLBACK_TYPE | None = None
 
-    async def _async_update_data(self) -> Output:
+    @staticmethod
+    def energy_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict]:
+        """Where the energy totals of an entry are kept between restarts."""
+        return Store(hass, _STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.energy")
+
+    async def async_load_energy(self) -> None:
+        """Restore the energy totals saved before the last stop."""
+        self.energy = EnergyCounter.restore(await self._energy_store.async_load())
+
+    async def async_save_energy(self) -> None:
+        """Write the totals now, so an unload or reload loses nothing."""
+        await self._energy_store.async_save(self.energy.state())
+
+    async def _async_update_data(self) -> Snapshot:
+        now = dt_util.utcnow()
         measurements = self.reader.read()
-        output = self.controller.step(
-            self.store.snapshot(), measurements, dt_util.utcnow()
+        extras = self.reader.read_extras()
+        max_a = self._max_current(extras)
+        self.controller.charger = replace(self.controller.charger, max_current_a=max_a)
+        settings = self.store.snapshot()
+        power_limit_w = effective_power_limit(
+            settings.power_limit_w,
+            extras.monthly_peak_w,
+            self.tuning.peak_factor,
+            bool(self.store.get(FOLLOW_MONTHLY_PEAK)),
         )
+        settings = replace(
+            settings,
+            power_limit_w=power_limit_w,
+            power_update_threshold_w=self.tuning.power_update_threshold_w,
+            phase_hold_s=self.tuning.phase_hold_s,
+        )
+        output = self.controller.step(settings, measurements, now)
         await self.writer.async_apply(output)
-        return output
+        energy = self.energy.update(
+            now,
+            measurements.charger_power_w,
+            measurements.house_power_w,
+            extras.meter_kwh,
+        )
+        self._energy_store.async_delay_save(self.energy.state, _ENERGY_SAVE_DELAY_S)
+        return Snapshot(
+            output=output,
+            power_limit_w=power_limit_w,
+            monthly_peak_w=extras.monthly_peak_w,
+            max_current_a=max_a,
+            energy=energy,
+            computed_at=now,
+        )
+
+    def _max_current(self, extras: Extras) -> float:
+        """The charger maximum for this run.
+
+        From the max current entity when set: its value, else the last value
+        seen, else the fallback current (the safe choice until the charger
+        reports). Never above the hardware limit. Without an entity: the
+        value from the setup.
+        """
+        if not self.reader.has_max_current_entity:
+            return self._configured_max_a
+        if extras.max_current_a is not None and extras.max_current_a > 0:
+            self._last_max_a = min(extras.max_current_a, HARDWARE_MAX_CURRENT)
+        if self._last_max_a is not None:
+            return self._last_max_a
+        return self.controller.charger.fallback_current_a
 
     async def async_start(self, hass: HomeAssistant) -> None:
         """Start once Home Assistant has started, so sources have loaded."""
         assert self.config_entry is not None
-        self._arm_timer()
+        self._cancel_timer = async_track_time_interval(
+            self.hass,
+            self._on_tick,
+            timedelta(seconds=self.tuning.recalc_interval_s),
+            name=f"{DOMAIN} controller",
+            cancel_on_shutdown=True,
+        )
         self.config_entry.async_on_unload(self._disarm_timer)
         self.config_entry.async_on_unload(
             async_track_state_change_event(
@@ -80,17 +169,6 @@ class EvChargeCoordinator(DataUpdateCoordinator[Output]):
         )
         self.config_entry.async_on_unload(self.store.add_listener(self._on_setting))
         await self.async_refresh()
-
-    @callback
-    def _arm_timer(self) -> None:
-        self._disarm_timer()
-        self._cancel_timer = async_track_time_interval(
-            self.hass,
-            self._on_tick,
-            timedelta(seconds=self.store.recalc_interval_s),
-            name=f"{DOMAIN} controller",
-            cancel_on_shutdown=True,
-        )
 
     @callback
     def _disarm_timer(self) -> None:
@@ -106,9 +184,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Output]):
         self._schedule_run()
 
     @callback
-    def _on_setting(self, key: str) -> None:
-        if key == RECALC_INTERVAL and self._cancel_timer is not None:
-            self._arm_timer()
+    def _on_setting(self, _key: str) -> None:
         self._schedule_run()
 
     @callback
