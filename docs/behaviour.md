@@ -46,7 +46,7 @@ Each run applies the first rule that matches.
 
 ## Power limit
 
-- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS, for example this month's capacity tariff peak. The EMS decides how it follows the peak.
+- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS. With the capacity tariff, the EMS gives it a floor and lets it follow the paid peak, for example max(default, 90 % × monthly peak); a raw monthly peak resets at the start of the month.
 - **Effective power limit** = peak factor × power limit. The peak factor is an optional setup field (50–100 %, empty: 100 %): a safety buffer, so a held charging power stays below the billed peak.
 - Limit unavailable: the last known value. No value since start: 0, so the controller has no power limit and writes nothing.
 - The controller uses the effective limit everywhere the rules above say "power limit".

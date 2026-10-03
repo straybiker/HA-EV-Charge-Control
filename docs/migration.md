@@ -71,7 +71,9 @@ The device settings keep their value across restarts; they replace the package's
 
 ### Capacity tariff
 
-The power limit stays with your EMS: pick the entity it keeps the limit in, for example `input_number.ev_load_balancer_power_limit` or the month's peak, as **Power limit** in the House step. The optional **Peak factor** is a safety buffer below that value (empty: 100 %).
+The power limit stays with your EMS. Pick the entity it keeps the EV limit in, usually `input_number.ev_load_balancer_power_limit` = max(default, 90 % × monthly peak), as **Power limit** in the House step, and leave **Peak factor** empty: that limit already has its buffer. Do not pick the raw monthly peak: it resets at the start of the month and would limit charging hard.
+
+`input_number.ev_load_balancer_power_limit` is defined in the package's `ev_loadbalancer.yaml`. Before you remove the package (step 5), create the same helper in the UI, or move its definition to your EMS configuration, so the automation that sets it keeps working.
 
 ## Modes
 

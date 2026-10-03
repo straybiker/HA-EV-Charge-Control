@@ -89,8 +89,8 @@
         "data_description": {
           "house_power_entity": "The grid power of the house without the charger, in W or kW: positive while importing, negative while exporting. Make a template sensor (grid power − charger power) if you only have a grid meter. A sensor smoothed over about 15 s works best.",
           "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
-          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS, for example this month's capacity tariff peak. When it is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
-          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Empty: 100 %."
+          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS. With the capacity tariff, use a limit with a floor, for example max(5000 W, 90 % of this month's peak). A raw monthly peak resets at the start of the month (to 2.5 kW in Flanders) and would limit charging hard. When the entity is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
+          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Leave empty (100 %) when the limit entity already has a buffer."
         }
       },
       "car": {
@@ -234,8 +234,8 @@
         "data_description": {
           "house_power_entity": "The grid power of the house without the charger, in W or kW: positive while importing, negative while exporting. Make a template sensor (grid power − charger power) if you only have a grid meter. A sensor smoothed over about 15 s works best.",
           "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
-          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS, for example this month's capacity tariff peak. When it is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
-          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Empty: 100 %."
+          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS. With the capacity tariff, use a limit with a floor, for example max(5000 W, 90 % of this month's peak). A raw monthly peak resets at the start of the month (to 2.5 kW in Flanders) and would limit charging hard. When the entity is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
+          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Leave empty (100 %) when the limit entity already has a buffer."
         }
       },
       "car": {

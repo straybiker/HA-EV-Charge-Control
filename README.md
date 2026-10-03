@@ -50,7 +50,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
   | Phase setting | A `select` entity with a 1-phase and a 3-phase option. |
 
 - **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
-- **A power limit entity** (W or kW): a helper or an entity of your EMS, for example this month's capacity tariff peak.
+- **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
 - Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
 
 ## Installation
@@ -147,9 +147,11 @@ All modes stay within the power limit. The car only gets the power that the hous
 
 The **power limit** is the most power the house may take from the grid, charger included. The car gets the remainder: limit − house power.
 
-The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. With the capacity tariff that is usually this month's peak: the tariff bills the highest quarter-hour, so charging up to it costs nothing extra. The EMS decides how the limit follows the peak; the controller only reads it.
+The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. The controller only reads it.
 
-The optional **peak factor** is a safety buffer: the controller uses that share of the limit. With 90 % and a peak of 8 kW, the car's limit is 7.2 kW, so a short overshoot stays below the billed peak. Empty means 100 %.
+With the capacity tariff, the tariff bills the highest quarter-hour of the month, so charging up to that peak costs nothing extra. Use a limit with a floor, which your EMS keeps up to date: **max(desired limit, 90 % × this month's peak)**. Do not use the raw monthly peak: it resets at the start of the month (to 2.5 kW in Flanders) and would limit charging hard until the house has set a new peak.
+
+The optional **peak factor** is a safety buffer: the controller uses that share of the limit. With 90 % and a limit of 8 kW, the car's limit is 7.2 kW, so a short overshoot stays below the billed peak. Empty means 100 %; leave it empty when the limit entity already has a buffer.
 
 - When the limit entity is unavailable, the controller uses its last value.
 - Until the entity has reported a value, the decision is **No power limit** and nothing is written.

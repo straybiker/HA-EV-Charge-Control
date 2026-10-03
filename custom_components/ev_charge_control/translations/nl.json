@@ -89,8 +89,8 @@
         "data_description": {
           "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
-          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS, bijvoorbeeld de kwartierpiek van deze maand voor het capaciteitstarief. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
-          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Leeg: 100 %."
+          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS. Gebruik bij het capaciteitstarief een limiet met een ondergrens, bijvoorbeeld max(5000 W, 90 % van de maandpiek). Een kale maandpiek wordt aan het begin van de maand teruggezet (in Vlaanderen naar 2,5 kW) en zou het laden sterk beperken. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
+          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Laat leeg (100 %) als de limiet-entiteit al een marge heeft."
         }
       },
       "car": {
@@ -234,8 +234,8 @@
         "data_description": {
           "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
-          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS, bijvoorbeeld de kwartierpiek van deze maand voor het capaciteitstarief. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
-          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Leeg: 100 %."
+          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS. Gebruik bij het capaciteitstarief een limiet met een ondergrens, bijvoorbeeld max(5000 W, 90 % van de maandpiek). Een kale maandpiek wordt aan het begin van de maand teruggezet (in Vlaanderen naar 2,5 kW) en zou het laden sterk beperken. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
+          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Laat leeg (100 %) als de limiet-entiteit al een marge heeft."
         }
       },
       "car": {
