@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
@@ -12,15 +12,18 @@ from .const import DOMAIN
 def device_info(entry: ConfigEntry) -> DeviceInfo:
     """One virtual device per entry.
 
-    It is not linked to the charger's device: that device belongs to the
-    charger's own integration.
+    A regular device, as the integration type says. It is not linked to
+    the charger's device: that device belongs to the charger's own
+    integration.
     """
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
         name=entry.title,
         manufacturer="EV Charge Control",
         model="Charge controller",
-        entry_type=DeviceEntryType.SERVICE,
+        # Explicit None: devices registered as a service by earlier versions
+        # become regular devices; leaving the key out would keep the old type.
+        entry_type=None,
     )
 
 

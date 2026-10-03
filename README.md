@@ -65,7 +65,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 1. Copy `custom_components/ev_charge_control` into the `custom_components` folder of your Home Assistant configuration.
 2. Restart Home Assistant.
 
-Then go to **Settings → Devices & services → Helpers → Create helper → EV Charge Control**.
+Then go to **Settings → Devices & services → Add integration → EV Charge Control**. Each setup creates one charge-controller device for one charger.
 
 ## Configuration
 

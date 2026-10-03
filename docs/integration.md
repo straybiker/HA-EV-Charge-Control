@@ -43,7 +43,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 
 ## Entities
 
-- All entities belong to the controller device (`DeviceEntryType.SERVICE`) and use translation keys.
+- All entities belong to the controller device, a regular device entry, and use translation keys.
 - Settings are `RestoreEntity` / `RestoreNumber` entities. A default applies only when the device is first created (decision D09).
 - Selecting 3-Phases Minimum while Single phase only is on, or the reverse, raises `ServiceValidationError`.
 - **Follow monthly peak** exists only when a monthly peak sensor is set.
@@ -54,7 +54,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 
 | Key | Value | Reason |
 |---|---|---|
-| `integration_type` | `helper` | It provides calculated entities on top of other integrations, like `derivative` or `generic_thermostat`. It is not a device or a hub: the charger already has its own integration. |
+| `integration_type` | `device` | One entry creates one device, the charge controller, added through Add integration. The device is virtual: like Versatile Thermostat, it controls a real device only through that device's own integration. |
 | `iot_class` | `calculated` | It has no connection of its own to any device. |
 | `config_flow` | `true` | Setup and options only through the UI. `CONFIG_SCHEMA` is `config_entry_only_config_schema`. |
 | `requirements` | none | |

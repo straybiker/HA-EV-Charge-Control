@@ -340,7 +340,7 @@ OPTIONS_FLOW = _steps("init", with_name=False)
 
 
 class EvChargeControlConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Set up a charge controller as a helper."""
+    """Set up a charge controller: one virtual device per charger."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

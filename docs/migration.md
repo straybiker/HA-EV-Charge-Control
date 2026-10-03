@@ -4,7 +4,7 @@ This guide moves a Home Assistant installation from the [EV Load Balancer](https
 
 ## 1. Set up the integration next to the package
 
-Install the integration (see the [README](../README.md#installation)) and create the helper. Leave the package running. Use the table below to fill in the setup from `ev_loadbalancer_user_config.yaml`.
+Install the integration (see the [README](../README.md#installation)) and add it. Leave the package running. Use the table below to fill in the setup from `ev_loadbalancer_user_config.yaml`.
 
 ## 2. Parameter mapping
 

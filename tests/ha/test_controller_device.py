@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytest
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -15,6 +16,7 @@ from pytest_homeassistant_custom_component.common import (
     mock_restore_cache_with_extra_data,
 )
 
+from custom_components.ev_charge_control.const import DOMAIN
 from custom_components.ev_charge_control.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -289,3 +291,13 @@ async def test_unload(hass: HomeAssistant, sources, entry: MockConfigEntry) -> N
     await setup(hass, entry)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_controller_is_a_regular_device(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    await setup(hass, entry)
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert device is not None
+    assert device.entry_type is None
+    assert device.model == "Charge controller"
