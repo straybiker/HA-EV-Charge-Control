@@ -1,16 +1,18 @@
 """Collect the test-report data.
 
-Runs the full test suite and hassfest in Docker (the Home Assistant harness
-needs Linux), evaluates the golden cases with the engine and, when the
-sibling EV_Loadbalancer checkout exists, with the YAML package, and reads
-the decision record. Writes build/report/data.json.
+Gets the results of the full test suite and hassfest, evaluates the golden
+cases with the engine and, when the sibling EV_Loadbalancer checkout exists,
+with the YAML package, and reads the design decisions. Writes
+build/report/data.json; build.py turns it into docs/test-report.html and .md.
 
-    python scripts/report/collect.py
+    python scripts/report/collect.py        # run tests and hassfest in Docker
+    python scripts/report/collect.py --ci   # use the CI run of the pushed HEAD
     python scripts/report/build.py
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import platform
 import re
@@ -23,6 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / "build" / "report"
+JUNIT = BUILD / "junit.xml"
 IMAGE = "ev-charge-control-tests"
 
 sys.path.insert(0, str(ROOT))
@@ -35,7 +38,17 @@ from tests.engine import test_controller as tc  # noqa: E402
 from tests.engine.conftest import result, step  # noqa: E402
 
 
-def run_tests() -> tuple[str, list[dict]]:
+def run(*args: str) -> str:
+    return subprocess.run(
+        list(args), cwd=ROOT, capture_output=True, text=True
+    ).stdout.strip()
+
+
+# --- results from Docker ----------------------------------------------------------
+
+
+def docker_results() -> tuple[dict, dict]:
+    """Run the suite and hassfest locally in Docker."""
     subprocess.run(
         [
             "docker",
@@ -51,7 +64,7 @@ def run_tests() -> tuple[str, list[dict]]:
         check=True,
         capture_output=True,
     )
-    proc = subprocess.run(
+    subprocess.run(
         [
             "docker",
             "run",
@@ -72,9 +85,87 @@ def run_tests() -> tuple[str, list[dict]]:
         capture_output=True,
         text=True,
     )
-    summary = proc.stdout.strip().splitlines()[-1]
+    proc = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{ROOT}:/github/workspace",
+            "ghcr.io/home-assistant/hassfest",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    out = proc.stdout + proc.stderr
+    invalid = re.search(r"Invalid integrations: (\d+)", out)
+    hassfest = {
+        "invalid": int(invalid.group(1)) if invalid else None,
+        "errors": re.findall(r"\* \[ERROR\].*", out),
+    }
+    return hassfest, {"kind": "docker", "label": "local Docker run"}
+
+
+# --- results from CI ------------------------------------------------------------------
+
+
+def ci_results() -> tuple[dict, dict]:
+    """Download the results of the finished CI run for the pushed HEAD."""
+    sha = run("git", "rev-parse", "HEAD")
+    if not run("git", "branch", "-r", "--contains", sha):
+        sys.exit(f"HEAD {sha[:7]} is not pushed; push it and wait for CI.")
+    runs = json.loads(
+        run(
+            "gh",
+            "run",
+            "list",
+            "--workflow",
+            "test.yml",
+            "--commit",
+            sha,
+            "--json",
+            "databaseId,status,url",
+        )
+        or "[]"
+    )
+    done = [r for r in runs if r["status"] == "completed"]
+    if not done:
+        sys.exit(f"The Tests run for {sha[:7]} has not finished yet.")
+    JUNIT.unlink(missing_ok=True)
+    run(
+        "gh",
+        "run",
+        "download",
+        str(done[0]["databaseId"]),
+        "-n",
+        "junit",
+        "-D",
+        str(BUILD),
+    )
+    if not JUNIT.is_file():
+        sys.exit("The CI run has no junit artifact.")
+    repo = run("gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner")
+    conclusion = run(
+        "gh",
+        "api",
+        f"repos/{repo}/commits/{sha}/check-runs",
+        "--jq",
+        '.check_runs[] | select(.name == "hassfest") | .conclusion',
+    )
+    ok = conclusion == "success"
+    hassfest = {
+        "invalid": 0 if ok else None,
+        "errors": [] if ok else [f"hassfest: {conclusion or 'not run'}"],
+    }
+    return hassfest, {"kind": "ci", "label": "GitHub Actions", "url": done[0]["url"]}
+
+
+# --- shared ---------------------------------------------------------------------------
+
+
+def parse_junit() -> tuple[str, list[dict]]:
     tests = []
-    for case in ET.parse(BUILD / "junit.xml").getroot().iter("testcase"):
+    for case in ET.parse(JUNIT).getroot().iter("testcase"):
         outcome, message = "passed", ""
         for child in case:
             if child.tag in ("failure", "error"):
@@ -101,28 +192,9 @@ def run_tests() -> tuple[str, list[dict]]:
                 "message": message,
             }
         )
+    counts = Counter(t["outcome"] for t in tests)
+    summary = ", ".join(f"{n} {outcome}" for outcome, n in sorted(counts.items()))
     return summary, tests
-
-
-def run_hassfest() -> dict:
-    proc = subprocess.run(
-        [
-            "docker",
-            "run",
-            "--rm",
-            "-v",
-            f"{ROOT}:/github/workspace",
-            "ghcr.io/home-assistant/hassfest",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    out = proc.stdout + proc.stderr
-    invalid = re.search(r"Invalid integrations: (\d+)", out)
-    return {
-        "invalid": int(invalid.group(1)) if invalid else None,
-        "errors": re.findall(r"\* \[ERROR\].*", out),
-    }
 
 
 def _why(name: str, mode: str, yaml_: list | None, engine: list) -> str:
@@ -204,16 +276,15 @@ def decisions() -> list[dict]:
     return rows
 
 
-def git(*args: str) -> str:
-    return subprocess.run(
-        ["git", *args], cwd=ROOT, capture_output=True, text=True
-    ).stdout.strip()
-
-
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--ci", action="store_true", help="use the CI run of the pushed HEAD"
+    )
+    args = parser.parse_args()
     BUILD.mkdir(parents=True, exist_ok=True)
-    summary, tests = run_tests()
-    hassfest = run_hassfest()
+    hassfest, source = ci_results() if args.ci else docker_results()
+    summary, tests = parse_junit()
     requirements = (ROOT / "requirements-dev-windows.txt").read_text("utf-8")
     ha_version = re.search(r"homeassistant==([\d.]+)", requirements)
     data = {
@@ -222,9 +293,10 @@ def main() -> None:
         "env": {
             "python": platform.python_version(),
             "homeassistant": ha_version.group(1) if ha_version else "?",
-            "branch": git("branch", "--show-current"),
-            "base_commit": git("rev-parse", "--short", "HEAD"),
-            "dirty": bool(git("status", "--porcelain")),
+            "branch": run("git", "branch", "--show-current"),
+            "base_commit": run("git", "rev-parse", "--short", "HEAD"),
+            "dirty": bool(run("git", "status", "--porcelain")),
+            "source": source,
         },
         "counts": dict(Counter(t["outcome"] for t in tests)),
         "group_counts": {
@@ -237,7 +309,7 @@ def main() -> None:
         "hassfest": hassfest,
     }
     (BUILD / "data.json").write_text(json.dumps(data, indent=1), "utf-8")
-    print(summary, data["counts"], "hassfest invalid:", hassfest["invalid"])
+    print(summary, "| hassfest invalid:", hassfest["invalid"], "|", source["label"])
 
 
 if __name__ == "__main__":

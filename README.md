@@ -83,10 +83,10 @@ pytest -q
 
 Lint with `ruff check .` and `ruff format --check .`.
 
-**Test report:** [docs/test-report.html](docs/test-report.html) shows the full test run, hassfest, the golden cases at a 6 kW and 10 kW power limit next to what the EV Load Balancer YAML package does, and the decision record. Download the file and open it in a browser. Rebuild it (Docker needed; the YAML column needs `../EV_Loadbalancer` checked out):
+**Test report:** [docs/test-report.html](docs/test-report.html) shows the full test run, hassfest, the golden cases at a 6 kW and 10 kW power limit next to what the EV Load Balancer YAML package does, and the decision record. Download the file and open it in a browser. Rebuild it with Docker, or from the finished CI run of the pushed commit with `--ci` (the YAML column needs `../EV_Loadbalancer` checked out):
 
 ```powershell
-python scripts/report/collect.py
+python scripts/report/collect.py        # or: collect.py --ci
 python scripts/report/build.py
 ```
 
