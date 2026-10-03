@@ -32,6 +32,7 @@ FILE_LABEL = {
     "test_energy": "Energy metering",
     "test_config_flow": "Setup and options flow",
     "test_controller_device": "Device, triggers and shadow mode",
+    "test_charger_control": "Charger control",
     "test_translations": "Translations",
     "test_specs": "Options to specs",
     "test_manifest": "Repository metadata",
