@@ -1,0 +1,322 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Charger",
+        "description": "What the charger reports. Pick the entities of your charger's own integration.",
+        "data": {
+          "name": "Name",
+          "charger_power_entity": "Charger power",
+          "applied_current_entity": "Applied current limit",
+          "active_phases_entity": "Active phases",
+          "connection_entity": "Connection state",
+          "max_current_a": "Max current",
+          "min_current_a": "Min current",
+          "fallback_current_a": "Fallback current",
+          "voltage_v": "Voltage",
+          "current_step_a": "Current step",
+          "widen_small_decreases": "Widen small decreases",
+          "failsafe_keeps_phase": "Keep the phase on a sensor fault"
+        },
+        "data_description": {
+          "charger_power_entity": "Power the charger draws now.",
+          "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
+          "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
+          "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
+          "max_current_a": "The hardware rating of the charger or its cable. Do not use a sensor that changes with the load.",
+          "min_current_a": "Usually 6 A.",
+          "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
+          "current_step_a": "The smallest current change the charger accepts.",
+          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
+          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
+        }
+      },
+      "controls": {
+        "title": "Charger controls",
+        "description": "Where the controller will write its setpoints. In shadow mode nothing is written yet.",
+        "data": {
+          "current_limit_entity": "Current limit",
+          "phase_select_entity": "Phase setting"
+        }
+      },
+      "phases": {
+        "title": "Phase options",
+        "description": "Which option of the phase setting means 1 phase and which means 3 phases.",
+        "data": {
+          "phase_option_1": "Option for 1 phase",
+          "phase_option_3": "Option for 3 phases"
+        }
+      },
+      "household": {
+        "title": "Household",
+        "description": "The house power without the charger.",
+        "data": {
+          "house_power_entity": "House power without the charger"
+        },
+        "data_description": {
+          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best."
+        }
+      },
+      "car": {
+        "title": "Car",
+        "description": "Optional. Without a battery level the SOC targets do nothing.",
+        "data": {
+          "car_soc_entity": "Battery level",
+          "battery_capacity_kwh": "Battery capacity",
+          "car_max_current_a": "Car max current",
+          "car_min_current_a": "Car min current"
+        }
+      },
+      "price": {
+        "title": "Price and EMS",
+        "description": "Optional. Without a price the price check is skipped.",
+        "data": {
+          "price_entity": "Electricity price",
+          "price_attribute": "Price attribute",
+          "ems_entity": "EMS signal"
+        },
+        "data_description": {
+          "price_entity": "Import price in your currency per kWh.",
+          "price_attribute": "Leave empty to use the sensor state.",
+          "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
+        }
+      }
+    },
+    "error": {
+      "min_above_max": "The min current is higher than the max current.",
+      "fallback_out_of_range": "The fallback current must be between the min and max current.",
+      "connection_not_mode3": "This sensor does not show a Mode 3 state (A, B1–D2, E, F). Pick a Mode 3 sensor or a binary sensor.",
+      "phase_select_unavailable": "The phase setting has no options. Check that the charger is online.",
+      "current_entity_in_use": "Another charge controller already uses this current limit.",
+      "same_phase_option": "Pick two different options.",
+      "capacity_required": "Enter the battery capacity when you pick a battery level sensor.",
+      "car_min_above_max": "The car min current is higher than the car max current.",
+      "attribute_without_price": "Pick a price sensor to use a price attribute.",
+      "price_attribute_missing": "The price sensor has no attribute with this name."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Charger",
+        "description": "What the charger reports. Pick the entities of your charger's own integration.",
+        "data_description": {
+          "charger_power_entity": "Power the charger draws now.",
+          "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
+          "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
+          "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
+          "max_current_a": "The hardware rating of the charger or its cable. Do not use a sensor that changes with the load.",
+          "min_current_a": "Usually 6 A.",
+          "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
+          "current_step_a": "The smallest current change the charger accepts.",
+          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
+          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
+        },
+        "data": {
+          "charger_power_entity": "Charger power",
+          "applied_current_entity": "Applied current limit",
+          "active_phases_entity": "Active phases",
+          "connection_entity": "Connection state",
+          "max_current_a": "Max current",
+          "min_current_a": "Min current",
+          "fallback_current_a": "Fallback current",
+          "voltage_v": "Voltage",
+          "current_step_a": "Current step",
+          "widen_small_decreases": "Widen small decreases",
+          "failsafe_keeps_phase": "Keep the phase on a sensor fault"
+        }
+      },
+      "controls": {
+        "title": "Charger controls",
+        "description": "Where the controller will write its setpoints. In shadow mode nothing is written yet.",
+        "data": {
+          "current_limit_entity": "Current limit",
+          "phase_select_entity": "Phase setting"
+        }
+      },
+      "phases": {
+        "title": "Phase options",
+        "description": "Which option of the phase setting means 1 phase and which means 3 phases.",
+        "data": {
+          "phase_option_1": "Option for 1 phase",
+          "phase_option_3": "Option for 3 phases"
+        }
+      },
+      "household": {
+        "title": "Household",
+        "description": "The house power without the charger.",
+        "data": {
+          "house_power_entity": "House power without the charger"
+        },
+        "data_description": {
+          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best."
+        }
+      },
+      "car": {
+        "title": "Car",
+        "description": "Optional. Without a battery level the SOC targets do nothing.",
+        "data": {
+          "car_soc_entity": "Battery level",
+          "battery_capacity_kwh": "Battery capacity",
+          "car_max_current_a": "Car max current",
+          "car_min_current_a": "Car min current"
+        }
+      },
+      "price": {
+        "title": "Price and EMS",
+        "description": "Optional. Without a price the price check is skipped.",
+        "data": {
+          "price_entity": "Electricity price",
+          "price_attribute": "Price attribute",
+          "ems_entity": "EMS signal"
+        },
+        "data_description": {
+          "price_entity": "Import price in your currency per kWh.",
+          "price_attribute": "Leave empty to use the sensor state.",
+          "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
+        }
+      }
+    },
+    "error": {
+      "min_above_max": "The min current is higher than the max current.",
+      "fallback_out_of_range": "The fallback current must be between the min and max current.",
+      "connection_not_mode3": "This sensor does not show a Mode 3 state (A, B1–D2, E, F). Pick a Mode 3 sensor or a binary sensor.",
+      "phase_select_unavailable": "The phase setting has no options. Check that the charger is online.",
+      "current_entity_in_use": "Another charge controller already uses this current limit.",
+      "same_phase_option": "Pick two different options.",
+      "capacity_required": "Enter the battery capacity when you pick a battery level sensor.",
+      "car_min_above_max": "The car min current is higher than the car max current.",
+      "attribute_without_price": "Pick a price sensor to use a price attribute.",
+      "price_attribute_missing": "The price sensor has no attribute with this name."
+    }
+  },
+  "selector": {
+    "current_step": {
+      "options": {
+        "0_1": "0.1 A",
+        "1": "1 A"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "off": "Off",
+          "min_1p": "1-Phase Minimum",
+          "min_3p": "3-Phases Minimum",
+          "limited": "Limited",
+          "fast": "Fast",
+          "solar": "Solar",
+          "comfort": "Comfort"
+        }
+      }
+    },
+    "number": {
+      "power_limit": {
+        "name": "Power limit"
+      },
+      "max_charging_cost": {
+        "name": "Max charging cost"
+      },
+      "target_soc": {
+        "name": "Target SOC"
+      },
+      "comfort_soc": {
+        "name": "Comfort SOC"
+      },
+      "emergency_soc": {
+        "name": "Emergency SOC"
+      },
+      "solar_bridge": {
+        "name": "Solar bridge"
+      },
+      "power_update_threshold": {
+        "name": "Power update threshold"
+      },
+      "phase_switch_delay": {
+        "name": "Phase switch delay"
+      },
+      "recalc_interval": {
+        "name": "Recalculation interval"
+      }
+    },
+    "switch": {
+      "car_aware": {
+        "name": "Car aware"
+      },
+      "solar_when_ems_blocks": {
+        "name": "Charge on solar when EMS blocks"
+      },
+      "single_phase_only": {
+        "name": "Single phase only"
+      },
+      "ems_control": {
+        "name": "EMS control"
+      },
+      "ems_as_onoff": {
+        "name": "EMS as on/off"
+      }
+    },
+    "binary_sensor": {
+      "grid_allowed": {
+        "name": "Grid allowed"
+      },
+      "emergency": {
+        "name": "Emergency charging"
+      },
+      "target_reached": {
+        "name": "Target reached"
+      }
+    },
+    "sensor": {
+      "target_current": {
+        "name": "Target current"
+      },
+      "target_phases": {
+        "name": "Target phases"
+      },
+      "target_power": {
+        "name": "Target power"
+      },
+      "charger_efficiency": {
+        "name": "Charger efficiency"
+      },
+      "solar_surplus": {
+        "name": "Solar surplus"
+      },
+      "grid_share": {
+        "name": "Grid share"
+      },
+      "phase_hold_until": {
+        "name": "Phase hold until"
+      },
+      "decision": {
+        "name": "Decision",
+        "state": {
+          "charging": "Charging",
+          "emergency": "Emergency charging",
+          "off": "Off",
+          "target_reached": "Target reached",
+          "grid_blocked": "Grid blocked",
+          "insufficient_power": "Not enough power",
+          "refused": "Refused",
+          "failsafe": "Fail-safe",
+          "not_connected": "Not connected",
+          "charger_unavailable": "Charger unavailable",
+          "no_power_limit": "No power limit",
+          "grace_period": "Waiting after phase switch"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "mode_conflicts_single_phase": {
+      "message": "3-Phases Minimum is not possible while Single phase only is on."
+    },
+    "single_phase_conflicts_mode": {
+      "message": "Single phase only is not possible while the charge mode is 3-Phases Minimum."
+    }
+  }
+}

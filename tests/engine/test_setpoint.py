@@ -1,141 +1,125 @@
-"""The write filter: minimum rule, Alfen 0.2 A workaround, hysteresis."""
+"""Power to amps, and the write filter."""
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pytest
 
-from custom_components.ev_charge_control.engine import (
-    CarSpec,
-    Decision,
-    Phase,
-    Reason,
-    filter_setpoint,
+from custom_components.ev_charge_control.engine import ChargerSpec, Phase
+from custom_components.ev_charge_control.engine.setpoint import (
+    filter_write,
+    to_current,
 )
 
-from .conftest import CAR, MEASUREMENTS, SETTINGS, SPEC
+SPEC = ChargerSpec()
+ALFEN = ChargerSpec(widen_small_decreases=True)
+WHOLE_AMPS = ChargerSpec(current_step_a=1.0)
 
 
-def decision(current_a: float, phase: Phase = Phase.THREE) -> Decision:
-    return Decision(
-        reason=Reason.OK, should_write=True, phase=phase, current_a=current_a
+# --- to_current -------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("power", "phase", "spec", "expected"),
+    [
+        (9500, Phase.THREE, SPEC, 13.8),  # 13.77 rounds to the nearest step
+        (9500, Phase.THREE, WHOLE_AMPS, 14.0),
+        (4140, Phase.THREE, SPEC, 6.0),  # exact minimum despite float noise
+        (1380, Phase.ONE, SPEC, 6.0),
+        (1379, Phase.ONE, SPEC, 6.0),  # 5.996 A rounds up to the minimum
+        (1360, Phase.ONE, SPEC, 0.0),  # 5.9 A: below the minimum
+        (20000, Phase.ONE, SPEC, 16.0),  # capped at the maximum
+    ],
+)
+def test_to_current(power, phase, spec, expected):
+    assert to_current(power, phase, spec, 1.0, 6, 16) == expected
+
+
+def test_to_current_is_within_half_a_step():
+    for power in range(4140, 11040, 7):  # from the 3-phase minimum up
+        amps = to_current(power, Phase.THREE, SPEC, 1.0, 6, 16)
+        assert abs(amps * 690 - power) <= 0.05 * 690 + 1e-6
+
+
+def test_rounds_down_when_rounding_up_exceeds_the_headroom():
+    # 13.77 A: 13.8 A would draw 9522 W against 9500 W of headroom.
+    assert to_current(9500, Phase.THREE, SPEC, 1.0, 6, 16, headroom_w=9500) == 13.7
+
+
+def test_rounds_up_when_there_is_headroom():
+    assert to_current(9500, Phase.THREE, SPEC, 1.0, 6, 16, headroom_w=9600) == 13.8
+
+
+def test_round_down_at_the_limit_can_drop_below_the_minimum():
+    # 6.0 A needs 1380 W; with 1379 W of headroom the current is 0.
+    assert to_current(1379, Phase.ONE, SPEC, 1.0, 6, 16, headroom_w=1379) == 0.0
+
+
+def test_efficiency_raises_the_current_for_the_same_power():
+    assert to_current(9000, Phase.THREE, SPEC, 0.9, 6, 16) == 14.5
+
+
+# --- filter_write ---------------------------------------------------------------
+
+
+def write(target, commanded=10.0, phase=Phase.THREE, commanded_phase=Phase.THREE, **kw):
+    return filter_write(
+        phase,
+        target,
+        commanded_phase,
+        commanded,
+        kw.get("spec", SPEC),
+        6,
+        kw.get("threshold", 230),
     )
-
-
-def filt(d: Decision, commanded_current=10.0, commanded_phase=Phase.THREE, **kw):
-    m = replace(
-        MEASUREMENTS,
-        commanded_current_a=commanded_current,
-        commanded_phase=commanded_phase,
-    )
-    settings = replace(SETTINGS, **kw.pop("settings", {}))
-    car = kw.pop("car", CAR)
-    return filter_setpoint(d, SPEC, car, settings, m)
-
-
-# --- hysteresis -------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
     ("phase", "target", "writes"),
     [
-        (Phase.THREE, 10.3, False),  # 0.3 A < 230 W / 690 V = 0.333 A
+        (Phase.THREE, 10.3, False),  # 0.3 A < 230 W / 690 V
         (Phase.THREE, 10.4, True),
-        (Phase.ONE, 10.9, False),  # 0.9 A < 230 W / 230 V = 1.0 A
+        (Phase.ONE, 10.9, False),  # 0.9 A < 230 W / 230 V
         (Phase.ONE, 11.0, True),
     ],
 )
-def test_increase_needs_power_threshold(phase, target, writes):
-    sp = filt(decision(target, phase), commanded_current=10.0, commanded_phase=phase)
-    assert sp.write_current is writes
-    assert sp.current_a == target
+def test_increase_needs_the_threshold(phase, target, writes):
+    sp = write(target, phase=phase, commanded_phase=phase)
+    assert (sp is not None) is writes
 
 
-def test_decrease_is_always_written():
-    sp = filt(decision(9.5), commanded_current=10.0)
-    assert sp.write_current
-    assert sp.current_a == 9.5
+def test_decrease_is_written_at_once():
+    sp = write(9.9)
+    assert sp is not None and sp.write_current and sp.current_a == 9.9
 
 
-def test_threshold_scales_with_power_update_threshold():
-    sp = filt(decision(10.4), settings={"power_update_threshold_w": 460})
-    assert not sp.write_current  # 0.4 A < 460 W / 690 V = 0.667 A
+def test_nothing_to_write():
+    assert write(10.0) is None
 
 
-def test_no_write_when_commanded_current_unknown():
-    sp = filt(decision(12.0), commanded_current=None)
-    assert not sp.write_current
+def test_alfen_small_decrease_is_widened():
+    sp = write(9.9, spec=ALFEN)
+    assert sp is not None and sp.current_a == 9.8
 
 
-# --- Alfen 0.2 A workaround -------------------------------------------------
+def test_widening_stops_at_the_minimum():
+    sp = write(6.0, commanded=6.1, spec=ALFEN)
+    assert sp is not None and sp.current_a == 6.0
 
 
-def test_small_decrease_is_widened_to_0_2_a():
-    sp = filt(decision(9.9), commanded_current=10.0)
-    assert sp.current_a == 9.8
-    assert sp.write_current
+def test_widening_ignores_stop():
+    sp = write(0.0, spec=ALFEN)
+    assert sp is not None and sp.current_a == 0.0
 
 
-def test_widening_stops_at_minimum_current():
-    sp = filt(decision(6.0), commanded_current=6.1)
-    assert sp.current_a == 6.0  # 6.1 - 0.2 would go below 6 A
-
-
-def test_zero_target_is_not_widened():
-    sp = filt(decision(0.0), commanded_current=10.0)
-    assert sp.current_a == 0.0
-    assert sp.write_current
-
-
-def test_increase_is_not_widened():
-    sp = filt(decision(10.1), commanded_current=10.0)
-    assert sp.current_a == 10.1
-
-
-# --- minimum current ---------------------------------------------------------
-
-
-def test_below_minimum_becomes_zero():
-    sp = filt(decision(5.0))
-    assert sp.current_a == 0.0
-    assert sp.min_current_a == 6
-
-
-def test_minimum_uses_raw_car_aware_flag():
-    car = CarSpec(min_current_a=8, max_current_a=16, battery_capacity_wh=74000)
-    sp = filt(decision(7.0), car=car, settings={"car_aware": True})
-    assert sp.min_current_a == 8
-    assert sp.current_a == 0.0
-
-
-# --- phase ---------------------------------------------------------------------
-
-
-def test_phase_upgrade_zeroes_current_first():
-    sp = filt(decision(10.0, Phase.THREE), commanded_phase=Phase.ONE)
-    assert sp.write_phase
-    assert sp.zero_before_phase_change
+def test_phase_upgrade_zeroes_first():
+    sp = write(10.0, commanded_phase=Phase.ONE)
+    assert sp is not None and sp.write_phase and sp.zero_before_phase_change
 
 
 def test_phase_downgrade_does_not_zero_first():
-    sp = filt(decision(10.0, Phase.ONE), commanded_phase=Phase.THREE)
-    assert sp.write_phase
-    assert not sp.zero_before_phase_change
+    sp = write(10.0, phase=Phase.ONE)
+    assert sp is not None and sp.write_phase and not sp.zero_before_phase_change
 
 
-def test_same_phase_is_not_written():
-    sp = filt(decision(10.0, Phase.THREE), commanded_phase=Phase.THREE)
-    assert not sp.write_phase
-    assert not sp.zero_before_phase_change
-
-
-def test_unknown_commanded_phase_is_not_written():
-    sp = filt(decision(10.0, Phase.THREE), commanded_phase=None)
-    assert not sp.write_phase
-
-
-def test_skipped_decision_is_rejected():
-    skipped = Decision(reason=Reason.NOT_CONNECTED, should_write=False)
-    with pytest.raises(ValueError):
-        filt(skipped)
+def test_unknown_commanded_values_write_nothing():
+    assert filter_write(Phase.THREE, 12.0, None, None, SPEC, 6, 230) is None

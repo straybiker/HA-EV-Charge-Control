@@ -7,16 +7,17 @@ Checklist for Home Assistant and HACS. Sources: developers.home-assistant.io and
 | Requirement | Status |
 |---|---|
 | Directory `custom_components/<domain>/`, domain equals directory name | Done |
-| `__init__.py` with `async_setup` or `async_setup_entry` | Done (`async_setup` only) |
+| `__init__.py` with `async_setup` or `async_setup_entry` | Done (`async_setup_entry`, `async_unload_entry`) |
 | `manifest.json` with `domain`, `name`, `codeowners`, `dependencies`, `documentation`, `integration_type`, `iot_class`, `requirements`, `version` | Done |
-| `version` is SemVer or CalVer | Done (`0.0.1`) |
-| `CONFIG_SCHEMA` declared (hassfest warns without it) | Done |
+| `version` is SemVer or CalVer | Done (`0.1.0`) |
+| `CONFIG_SCHEMA` declared (hassfest warns without it) | Done (`config_entry_only_config_schema`) |
 | `brand/icon.png` in the integration directory (Home Assistant 2026.3 and later) | Placeholder |
-| `config_flow: true` and `config_flow.py` | Not yet |
-| `translations/en.json` for config flow text | Not yet |
-| `services.yaml` for each registered action | Not yet |
-| `diagnostics.py` | Not yet |
-| `icons.json` | Not yet |
+| `config_flow: true` and `config_flow.py` | Done (`SchemaConfigFlowHandler`, options flow reloads the entry) |
+| `strings.json` and `translations/*.json` | Done (`en`, `nl`). Custom integrations ship fully written text: `[%key:…%]` references are resolved only for core. Selector option keys must match `[a-z0-9-_]+`. |
+| `services.yaml` for each registered action | Not needed: no actions |
+| `diagnostics.py` | Done |
+| `icons.json` | Done |
+| hassfest passes locally | Done: `docker run --rm -v "<repo>:/github/workspace" ghcr.io/home-assistant/hassfest` |
 
 Allowed `integration_type`: `device`, `entity`, `hardware`, `helper`, `hub`, `service`, `system`, `virtual`.
 
@@ -44,7 +45,7 @@ Current choice: `helper` and `calculated`.
 | Repository description | Done |
 | Repository topics | Done |
 | Issues enabled | Done |
-| README with install and usage | Draft |
+| README with install and usage | Done |
 | One integration in `custom_components/<domain>/` | Done |
 | Manifest has `domain`, `documentation`, `issue_tracker`, `codeowners`, `name`, `version` | Done |
 | `hacs.json` in root with `name` | Done |
@@ -57,4 +58,8 @@ Without a release, HACS uses the latest commit hash as the version.
 
 ## Python and Home Assistant versions
 
-Home Assistant 2026.3 is the first release on Python 3.14. This repository requires Python 3.14 and Home Assistant 2026.3 or later. CI tests the latest Home Assistant release only. The lower bound is not tested.
+Home Assistant 2026.3 is the first release on Python 3.14. This repository requires Python 3.14 and Home Assistant 2026.3 or later.
+
+Tests run against the Home Assistant version that `pytest-homeassistant-custom-component` pins in `requirements-dev.txt` (now 2026.9.4). Bump that pin for each Home Assistant release. The 2026.3 lower bound is not tested.
+
+The test harness does not run on native Windows (it imports `fcntl`). On Windows, run the engine tests natively and the full suite with `scripts/test-ha.ps1` (Docker).

@@ -6,7 +6,7 @@ Paths are relative to this repository. The folders are read-only reference for t
 
 GitHub: [straybiker/HA-load-balancer](https://github.com/straybiker/HA-load-balancer). Local: `../EV_Loadbalancer/`.
 
-The YAML package stays the source of truth for behaviour until this integration reaches parity.
+The YAML package explains the intent. Where the integration behaves differently, `behaviour.md` records the decision.
 
 | Path | Content |
 |---|---|
