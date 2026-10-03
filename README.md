@@ -6,7 +6,7 @@
 
 A Home Assistant integration for EV smart charging.
 
-> **Status: planning.** The repository is set up. The integration has no behaviour yet. Do not install it.
+> **Status: engine only.** The decision engine is implemented and tested. It is not wired to Home Assistant yet. Do not install it.
 
 ## Planned scope
 
@@ -38,6 +38,8 @@ ruff check .
 
 More information:
 
+- [Decision engine](docs/engine.md)
+- [Known defects kept for parity](docs/known-defects.md)
 - [Integration requirements](docs/integration-requirements.md)
 - [Reference sources](docs/sources.md)
 

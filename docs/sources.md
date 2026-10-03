@@ -15,6 +15,8 @@ The YAML package stays the source of truth for behaviour until this integration 
 | `../EV_Loadbalancer/tests/` | Tests for output and trigger logic |
 | `../EV_Loadbalancer/dashboards/` | Logic dashboard |
 
+The GitHub `dev` branch of that repository (22/10/2025, `custom_components/ev_load_balancer/`) is an earlier Python prototype. It predates EMS, the price gate and Comfort mode, imports `hass` inside the engine, and has no tests. It is not reused. Two ideas from it are worth a look for the Home Assistant wiring: the config-flow entity-mapping dataclasses in its `models.py`, and a car-aware "extended power limit" that the YAML never had.
+
 ## Live Home Assistant configuration
 
 | Path | Content |
