@@ -66,7 +66,7 @@
         "data_description": {
           "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
           "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on."
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on. A sensor or a number entity (W or kW)."
         }
       },
       "car": {
@@ -194,7 +194,7 @@
         "data_description": {
           "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
           "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on."
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on. A sensor or a number entity (W or kW)."
         }
       },
       "car": {

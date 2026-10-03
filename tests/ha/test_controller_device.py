@@ -179,6 +179,14 @@ async def test_monthly_peak_raises_the_limit(hass: HomeAssistant, sources) -> No
     assert hass.states.get(TARGET_CURRENT).state == "9.7"
 
 
+async def test_monthly_peak_from_a_number_entity(hass: HomeAssistant, sources) -> None:
+    """Peak automations often ratchet an input_number instead of a sensor."""
+    peak = "input_number.test_monthly_peak"
+    hass.states.async_set(peak, "8000", {"unit_of_measurement": "W"})
+    await setup(hass, make_entry(hass, monthly_peak_entity=peak))
+    assert hass.states.get(EFFECTIVE_LIMIT).state == "7200"
+
+
 async def test_follow_off_uses_the_base_limit(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(MONTHLY_PEAK, "8000", W)
     await setup(hass, make_entry(hass, monthly_peak_entity=MONTHLY_PEAK))

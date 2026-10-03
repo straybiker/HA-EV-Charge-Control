@@ -48,7 +48,7 @@ Each run applies the first rule that matches.
 
 - **Base power limit:** the device's own number entity.
 - **Effective power limit:** while "Follow monthly peak" is on and a monthly peak sensor is set and has a value: `max(base, peak factor × monthly peak)`. The peak factor is a setup field (default 90 %). Otherwise the base limit. The capacity tariff bills the month's highest quarter-hour, so once that peak is set, charging up to a share of it costs nothing extra.
-- The integration does not compute the peak. It reads an existing sensor (W or kW).
+- The integration does not compute the peak. It reads an existing sensor or number entity (W or kW).
 - The controller uses the effective limit everywhere the rules above say "power limit".
 
 ## Charger maximum

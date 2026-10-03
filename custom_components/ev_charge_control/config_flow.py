@@ -152,7 +152,8 @@ HOUSEHOLD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOUSE_POWER): _entity("sensor", SensorDeviceClass.POWER),
         vol.Optional(CONF_SOLAR_POWER): _entity("sensor", SensorDeviceClass.POWER),
-        vol.Optional(CONF_MONTHLY_PEAK): _entity("sensor", SensorDeviceClass.POWER),
+        # A sensor, or the number many capacity-tariff setups ratchet up.
+        vol.Optional(CONF_MONTHLY_PEAK): _entity(["sensor", "input_number", "number"]),
     }
 )
 

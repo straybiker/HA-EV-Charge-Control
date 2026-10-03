@@ -66,7 +66,7 @@
         "data_description": {
           "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
           "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat."
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat. Een sensor of een getal-entiteit (W of kW)."
         }
       },
       "car": {
@@ -194,7 +194,7 @@
         "data_description": {
           "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
           "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat."
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat. Een sensor of een getal-entiteit (W of kW)."
         }
       },
       "car": {

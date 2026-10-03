@@ -50,7 +50,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
   | Phase setting | A `select` entity with a 1-phase and a 3-phase option. |
 
 - **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
-- Optional: the car's battery level, an electricity price, an EMS signal, a monthly peak sensor, the charger's energy meter.
+- Optional: the car's battery level, an electricity price, an EMS signal, the monthly peak (a sensor or number entity), the charger's energy meter.
 
 ## Installation
 
@@ -141,7 +141,7 @@ All modes stay within the power limit. The car only gets the power that the hous
 
 The **base power limit** is the maximum power that the house can take from the grid, charger included. The car gets the remainder: limit − house power.
 
-The capacity tariff bills the highest quarter-hour of the month. When that peak is set, charging up to it costs nothing extra. With a **monthly peak** sensor in the setup and **Follow monthly peak** on, the limit is the higher of:
+The capacity tariff bills the highest quarter-hour of the month. When that peak is set, charging up to it costs nothing extra. With a **monthly peak** entity in the setup (a sensor, or a number such as an `input_number` your peak automation raises) and **Follow monthly peak** on, the limit is the higher of:
 
 - the base power limit, and
 - the peak factor (90 %) × the monthly peak.
