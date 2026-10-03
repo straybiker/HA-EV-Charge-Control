@@ -3,39 +3,39 @@
     "step": {
       "user": {
         "title": "Nieuwe laadregelaar",
-        "description": "Een laadregelaar stelt de laadstroom en het aantal fasen van één laadpaal in. Hij beslist op basis van het huisverbruik, het zonne-overschot, de vermogenslimiet, de elektriciteitsprijs, het EMS-signaal en het batterijniveau.\n\nHij gebruikt entiteiten die al bestaan: hij **leest** sensoren en **schrijft** naar twee entiteiten van de integratie van je laadpaal. Een nieuwe regelaar start in schaduwmodus: hij toont zijn beslissingen maar schrijft niets tot je **Laadpaal aansturen** op zijn apparaat aanzet.\n\nDe volgende stappen vragen:\n1. **Uitgangen laadpaal**: wat de regelaar instelt.\n2. **Ingangen laadpaal**: wat de laadpaal meldt.\n3. **Grenzen en veiligheid laadpaal**: vaste waarden.\n4. **Huis**: huisverbruik en capaciteitstarief.\n5. **Auto** (optioneel): het batterijniveau.\n6. **Prijs en EMS** (optioneel).\n7. **Fijnregeling**: waarden die zelden moeten veranderen.",
+        "description": "**Hoe het werkt**\nOm de paar seconden (standaard 10 s) leest de regelaar zijn **ingangen**, beslist hoe snel de auto mag laden, en stelt zijn **uitgangen** in.\n\n- **Ingangen** (alleen gelezen): wat de laadpaal meldt, het huisverbruik, en optioneel het batterijniveau, de elektriciteitsprijs en een EMS-signaal.\n- **Uitgangen** (geschreven): twee entiteiten van de integratie van je laadpaal, de laadstroomlimiet en de fase-instelling.\n\nEen nieuwe regelaar start in **schaduwmodus**: hij toont wat hij zou instellen, maar schrijft niets tot je **Laadpaal aansturen** op zijn apparaat aanzet.\n\n**Stappen**\n1. Uitgangen: wat de regelaar wijzigt\n2. Uitgangen: fase-opties\n3. Ingangen: de laadpaal\n4. Grenzen en veiligheid laadpaal\n5. Ingangen: het huis\n6. Ingangen: de auto (optioneel)\n7. Ingangen: prijs en EMS (optioneel)\n8. Fijnregeling",
         "data": {
           "name": "Naam",
           "import_yaml": "Importeren uit EV Load Balancer"
         },
         "data_description": {
-          "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat.",
+          "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat. Zijn entiteiten krijgen deze naam.",
           "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan."
         }
       },
       "outputs": {
-        "title": "Uitgangen laadpaal: wat de regelaar instelt",
-        "description": "De twee entiteiten van de integratie van je laadpaal waarnaar deze regelaar schrijft. Er wordt niets geschreven zolang Laadpaal aansturen uit staat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
+        "title": "1/8 Uitgangen: wat de regelaar wijzigt",
+        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de twee entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
-          "current_limit_entity": "Laadstroomlimiet",
-          "phase_select_entity": "Fase-instelling"
+          "current_limit_entity": "Laadstroomlimiet (uitgang)",
+          "phase_select_entity": "Fase-instelling (uitgang)"
         },
         "data_description": {
-          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst, bijvoorbeeld de maximale stroomlimiet van de laadpaal.",
-          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Alfen: Max Current Limit S1.",
+          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen. Alfen: Usable phases."
         }
       },
       "phases": {
-        "title": "Fase-opties",
-        "description": "Welke optie van de fase-instelling 1 fase betekent, en welke 3 fasen.",
+        "title": "2/8 Uitgangen: fase-opties",
+        "description": "De fase-instelling heeft eigen optieteksten. Kies de optie die 1 fase betekent en de optie die 3 fasen betekent.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
         }
       },
       "inputs": {
-        "title": "Ingangen laadpaal: wat de laadpaal meldt",
-        "description": "Sensoren van de integratie van je laadpaal. De regelaar leest ze alleen.",
+        "title": "3/8 Ingangen: de laadpaal",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nKies de sensoren van de integratie van je laadpaal die haar toestand tonen. De regelaar ziet daarmee of een auto verbonden is en wat de laadpaal nu doet.",
         "data": {
           "connection_entity": "Verbindingsstatus",
           "charger_power_entity": "Laadvermogen",
@@ -45,17 +45,17 @@
           "charger_energy_entity": "Energiemeter"
         },
         "data_description": {
-          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is.",
-          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW.",
-          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt.",
-          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling.",
-          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A.",
-          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Zonder meter wordt de energie berekend uit het laadvermogen."
+          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is. Alfen: Mode 3 State.",
+          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW. Alfen: Real power sum.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt. Alfen: Actual applied max current.",
+          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling. Alfen: Charging Mode.",
+          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A. Alfen: Actual max current.",
+          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Leeg: de energie wordt berekend uit het laadvermogen."
         }
       },
       "limits": {
-        "title": "Grenzen en veiligheid laadpaal",
-        "description": "Vaste waarden van je laadpaal, en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
+        "title": "4/8 Grenzen en veiligheid laadpaal",
+        "description": "Vaste waarden, geen entiteiten. Ze beschrijven je laadpaal en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
         "data": {
           "min_current_a": "Minimale stroom",
           "voltage_v": "Spanning per fase",
@@ -78,22 +78,22 @@
         }
       },
       "household": {
-        "title": "Huis",
-        "description": "Het vermogen van het huis, en de piek van je capaciteitstarief.",
+        "title": "5/8 Ingangen: het huis",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen.",
         "data": {
           "house_power_entity": "Huisverbruik zonder laadpaal",
           "solar_power_entity": "Zonnevermogen",
           "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW. Negatief bij injectie. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
+          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
           "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
         }
       },
       "car": {
-        "title": "Auto (optioneel)",
-        "description": "Met het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
+        "title": "6/8 Ingangen: de auto (optioneel)",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nMet het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
         "data": {
           "car_soc_entity": "Batterijniveau",
           "battery_capacity_kwh": "Batterijcapaciteit",
@@ -101,15 +101,15 @@
           "car_min_current_a": "Minimale stroom auto"
         },
         "data_description": {
-          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %.",
+          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %, meestal van de eigen integratie van de auto.",
           "battery_capacity_kwh": "Nodig bij een batterijniveau.",
           "car_max_current_a": "De hoogste stroom per fase die de auto aanvaardt.",
           "car_min_current_a": "De laagste stroom per fase die de auto aanvaardt."
         }
       },
       "price": {
-        "title": "Prijs en EMS (optioneel)",
-        "description": "Ingangen die laden van het net toelaten of beperken. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "title": "7/8 Ingangen: prijs en EMS (optioneel)",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nZe laten laden van het net toe of beperken het. Leeg: de prijscontrole wordt overgeslagen en geen EMS beperkt het net.",
         "data": {
           "price_entity": "Elektriciteitsprijs",
           "price_attribute": "Prijsattribuut",
@@ -122,8 +122,8 @@
         }
       },
       "tuning": {
-        "title": "Fijnregeling",
-        "description": "Waarden die zelden moeten veranderen.",
+        "title": "8/8 Fijnregeling",
+        "description": "Vaste waarden die zelden moeten veranderen.",
         "data": {
           "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",
@@ -159,28 +159,28 @@
   "options": {
     "step": {
       "init": {
-        "title": "Uitgangen laadpaal: wat de regelaar instelt",
-        "description": "De twee entiteiten van de integratie van je laadpaal waarnaar deze regelaar schrijft. Er wordt niets geschreven zolang Laadpaal aansturen uit staat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
+        "title": "1/8 Uitgangen: wat de regelaar wijzigt",
+        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de twee entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
-          "current_limit_entity": "Laadstroomlimiet",
-          "phase_select_entity": "Fase-instelling"
+          "current_limit_entity": "Laadstroomlimiet (uitgang)",
+          "phase_select_entity": "Fase-instelling (uitgang)"
         },
         "data_description": {
-          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst, bijvoorbeeld de maximale stroomlimiet van de laadpaal.",
-          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Alfen: Max Current Limit S1.",
+          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen. Alfen: Usable phases."
         }
       },
       "phases": {
-        "title": "Fase-opties",
-        "description": "Welke optie van de fase-instelling 1 fase betekent, en welke 3 fasen.",
+        "title": "2/8 Uitgangen: fase-opties",
+        "description": "De fase-instelling heeft eigen optieteksten. Kies de optie die 1 fase betekent en de optie die 3 fasen betekent.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
         }
       },
       "inputs": {
-        "title": "Ingangen laadpaal: wat de laadpaal meldt",
-        "description": "Sensoren van de integratie van je laadpaal. De regelaar leest ze alleen.",
+        "title": "3/8 Ingangen: de laadpaal",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nKies de sensoren van de integratie van je laadpaal die haar toestand tonen. De regelaar ziet daarmee of een auto verbonden is en wat de laadpaal nu doet.",
         "data": {
           "connection_entity": "Verbindingsstatus",
           "charger_power_entity": "Laadvermogen",
@@ -190,17 +190,17 @@
           "charger_energy_entity": "Energiemeter"
         },
         "data_description": {
-          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is.",
-          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW.",
-          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt.",
-          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling.",
-          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A.",
-          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Zonder meter wordt de energie berekend uit het laadvermogen."
+          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is. Alfen: Mode 3 State.",
+          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW. Alfen: Real power sum.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt. Alfen: Actual applied max current.",
+          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling. Alfen: Charging Mode.",
+          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A. Alfen: Actual max current.",
+          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Leeg: de energie wordt berekend uit het laadvermogen."
         }
       },
       "limits": {
-        "title": "Grenzen en veiligheid laadpaal",
-        "description": "Vaste waarden van je laadpaal, en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
+        "title": "4/8 Grenzen en veiligheid laadpaal",
+        "description": "Vaste waarden, geen entiteiten. Ze beschrijven je laadpaal en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
         "data": {
           "min_current_a": "Minimale stroom",
           "voltage_v": "Spanning per fase",
@@ -223,22 +223,22 @@
         }
       },
       "household": {
-        "title": "Huis",
-        "description": "Het vermogen van het huis, en de piek van je capaciteitstarief.",
+        "title": "5/8 Ingangen: het huis",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen.",
         "data": {
           "house_power_entity": "Huisverbruik zonder laadpaal",
           "solar_power_entity": "Zonnevermogen",
           "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW. Negatief bij injectie. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
+          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
           "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
         }
       },
       "car": {
-        "title": "Auto (optioneel)",
-        "description": "Met het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
+        "title": "6/8 Ingangen: de auto (optioneel)",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nMet het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
         "data": {
           "car_soc_entity": "Batterijniveau",
           "battery_capacity_kwh": "Batterijcapaciteit",
@@ -246,15 +246,15 @@
           "car_min_current_a": "Minimale stroom auto"
         },
         "data_description": {
-          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %.",
+          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %, meestal van de eigen integratie van de auto.",
           "battery_capacity_kwh": "Nodig bij een batterijniveau.",
           "car_max_current_a": "De hoogste stroom per fase die de auto aanvaardt.",
           "car_min_current_a": "De laagste stroom per fase die de auto aanvaardt."
         }
       },
       "price": {
-        "title": "Prijs en EMS (optioneel)",
-        "description": "Ingangen die laden van het net toelaten of beperken. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "title": "7/8 Ingangen: prijs en EMS (optioneel)",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nZe laten laden van het net toe of beperken het. Leeg: de prijscontrole wordt overgeslagen en geen EMS beperkt het net.",
         "data": {
           "price_entity": "Elektriciteitsprijs",
           "price_attribute": "Prijsattribuut",
@@ -267,8 +267,8 @@
         }
       },
       "tuning": {
-        "title": "Fijnregeling",
-        "description": "Waarden die zelden moeten veranderen.",
+        "title": "8/8 Fijnregeling",
+        "description": "Vaste waarden die zelden moeten veranderen.",
         "data": {
           "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",

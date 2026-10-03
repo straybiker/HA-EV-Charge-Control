@@ -69,7 +69,12 @@ Then go to **Settings → Devices & services → Add integration → EV Charge C
 
 ## Configuration
 
-Each step says whether it asks for what the controller **writes** (outputs), what it **reads** (inputs) or fixed values. To change the setup later, select **Configure** on the integration page; it shows the same steps, without the name.
+**Inputs and outputs.** Every few seconds the controller reads its **inputs**, decides how fast the car may charge, and sets its **outputs**.
+
+- **Inputs** are entities the controller only reads: what the charger reports, the house power, and optionally the battery level, the electricity price and an EMS signal.
+- **Outputs** are the two entities of your charger's own integration that the controller changes: the charging current limit and the phase setting. It writes to them only while **Control charger** is on.
+
+The setup steps are numbered and named after what they ask for: outputs, inputs or fixed values. To change the setup later, select **Configure** on the integration page; it shows the same steps, without the name.
 
 | Step | Kind | What you enter |
 |---|---|---|
