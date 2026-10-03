@@ -31,6 +31,9 @@
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
+        },
+        "data_description": {
+          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
         }
       },
       "inputs": {
@@ -153,7 +156,8 @@
       "capacity_required": "Vul de batterijcapaciteit in wanneer je een batterijniveausensor kiest.",
       "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
       "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
-      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam."
+      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam.",
+      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn."
     }
   },
   "options": {
@@ -176,6 +180,9 @@
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
+        },
+        "data_description": {
+          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
         }
       },
       "inputs": {
@@ -298,7 +305,8 @@
       "capacity_required": "Vul de batterijcapaciteit in wanneer je een batterijniveausensor kiest.",
       "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
       "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
-      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam."
+      "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam.",
+      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn."
     }
   },
   "selector": {
@@ -445,6 +453,9 @@
     },
     "single_phase_conflicts_mode": {
       "message": "Enkel 1 fase kan niet zolang de laadmodus Minimum 3 fasen is."
+    },
+    "single_phase_fixed": {
+      "message": "Enkel 1 fase blijft aan: de laadpaal heeft geen optie voor 3 fasen. Voeg er een toe onder Configureren om dit uit te zetten."
     }
   },
   "issues": {

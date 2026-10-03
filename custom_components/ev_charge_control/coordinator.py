@@ -119,6 +119,8 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             power_update_threshold_w=self.tuning.power_update_threshold_w,
             phase_hold_s=self.tuning.phase_hold_s,
         )
+        if not self.reader.three_phases:
+            settings = replace(settings, single_phase_only=True)
         output = self.controller.step(settings, measurements, now)
         output = self._apply(output, measurements)
         energy = self.energy.update(

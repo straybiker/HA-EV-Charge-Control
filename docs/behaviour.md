@@ -59,6 +59,7 @@ Each run applies the first rule that matches.
 ## Phases
 
 - Minimum modes use their own phase count. Single phase only forces 1 phase in the other modes.
+- **Single-phase charger.** Without an option for 3 phases in the setup, Single phase only is always on and cannot be switched off. The fallback phases must be 1. Any other state of the phase setting counts as "not 1 phase", so the controller writes the 1-phase option.
 - Otherwise 3 phases when the target power gives at least the minimum current on 3 phases, else 1.
 - **Phase hold.** After the charger drops from 3 to 1 phase in Limited, Solar or Comfort, a 1→3 upgrade waits for the phase switch delay (default 5 min). A downgrade is never held. Seeing the charger on 1 phase after a restart is not a drop and starts no hold.
 - **Grace period.** After the charger goes from 1 to 3 phases, the controller waits 40 s for the charger sensors to catch up.
@@ -164,3 +165,4 @@ A change to the charging behaviour adds or updates a row here.
 | B15 | Confirmation | The charger must follow: applied current within 30 s, active phases within 60 s, as in the YAML package. Without a car, or with those sensors unavailable, the control entities confirm. |
 | B16 | Not responding | Retry at each run; after 3 unconfirmed writes in a row a repair issue and decision `charger_not_responding`; the first confirmed write clears both. |
 | B17 | Control switched off | Hand the charger over once. Setup option: fallback current and phases (default), leave as it is, or stop (0 A). |
+| B18 | Single-phase charger | The option for 3 phases is optional. Without it, Single phase only is forced on and its switch refuses to turn off; 3-Phases Minimum is refused and the fallback phases must be 1. |

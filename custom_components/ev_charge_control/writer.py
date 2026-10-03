@@ -75,10 +75,9 @@ class ChargerWriter:
         self._phase_entity: str = o[CONF_PHASE_SELECT]
         self._applied_entity: str = o[CONF_APPLIED_CURRENT]
         self._active_entity: str = o[CONF_ACTIVE_PHASES]
-        self._options = {
-            Phase.ONE: o[CONF_PHASE_OPTION_1],
-            Phase.THREE: o[CONF_PHASE_OPTION_3],
-        }
+        self._options = {Phase.ONE: o[CONF_PHASE_OPTION_1]}
+        if o.get(CONF_PHASE_OPTION_3):
+            self._options[Phase.THREE] = o[CONF_PHASE_OPTION_3]
         self._off_action: str = o.get(CONF_CONTROL_OFF, DEFAULT_CONTROL_OFF)
         self.last_setpoint: Setpoint | None = None
         self.failures = 0

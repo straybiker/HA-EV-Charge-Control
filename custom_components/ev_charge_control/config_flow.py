@@ -69,7 +69,7 @@ from .const import (
     HARDWARE_MAX_CURRENT,
     PHASES,
 )
-from .engine import ConnectionState, connection_from_mode3
+from .engine import ConnectionState, Phase, connection_from_mode3
 from .yaml_import import async_import, package_present
 
 
@@ -303,6 +303,10 @@ async def _validate_limits(
         user_input[CONF_MIN_CURRENT] <= user_input[CONF_FALLBACK_CURRENT] <= ceiling
     ):
         raise SchemaFlowError("fallback_out_of_range")
+    if not handler.options.get(CONF_PHASE_OPTION_3) and user_input[
+        CONF_FALLBACK_PHASE
+    ] != str(int(Phase.ONE)):
+        raise SchemaFlowError("fallback_needs_three_phases")
     return user_input
 
 
@@ -318,7 +322,8 @@ async def _phases_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_PHASE_OPTION_1): choice,
-            vol.Required(CONF_PHASE_OPTION_3): choice,
+            # Empty for a charger that only charges on 1 phase (B18).
+            vol.Optional(CONF_PHASE_OPTION_3): choice,
         }
     )
 
@@ -326,7 +331,7 @@ async def _phases_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 async def _validate_phases(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    if user_input[CONF_PHASE_OPTION_1] == user_input[CONF_PHASE_OPTION_3]:
+    if user_input[CONF_PHASE_OPTION_1] == user_input.get(CONF_PHASE_OPTION_3):
         raise SchemaFlowError("same_phase_option")
     return user_input
 

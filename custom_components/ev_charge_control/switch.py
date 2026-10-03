@@ -25,6 +25,8 @@ class SettingSwitchDescription(SwitchEntityDescription):
     default: bool = False
 
 
+SINGLE_PHASE_ONLY = "single_phase_only"
+
 SWITCHES: tuple[SettingSwitchDescription, ...] = tuple(
     SettingSwitchDescription(key=key, field=key)
     for key in (
@@ -46,8 +48,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     runtime = entry.runtime_data
+    single_phase_charger = not runtime.coordinator.reader.three_phases
     async_add_entities(
-        SettingSwitch(entry, runtime.store, d) for d in (CONTROL, *SWITCHES)
+        SettingSwitch(
+            entry,
+            runtime.store,
+            d,
+            fixed_on=single_phase_charger and d.key == SINGLE_PHASE_ONLY,
+        )
+        for d in (CONTROL, *SWITCHES)
     )
 
 
@@ -61,9 +70,13 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
         entry: EvChargeConfigEntry,
         store: SettingsStore,
         description: SettingSwitchDescription,
+        *,
+        fixed_on: bool = False,
     ) -> None:
         init_entity(self, entry, description)
         self._store = store
+        # A charger without a 3-phase option: Single phase only stays on (B18).
+        self._fixed_on = fixed_on
         # Control charger is never imported: a new device starts in shadow mode.
         self._attr_is_on = (
             description.default
@@ -76,6 +89,8 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
         last = await self.async_get_last_state()
         if last is not None and last.state in (STATE_ON, STATE_OFF):
             self._attr_is_on = last.state == STATE_ON
+        if self._fixed_on:
+            self._attr_is_on = True
         self._store.set(self.entity_description.field, self._attr_is_on, notify=False)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -91,6 +106,11 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
         self._set(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        if self._fixed_on:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="single_phase_fixed",
+            )
         self._set(False)
 
     def _set(self, on: bool) -> None:

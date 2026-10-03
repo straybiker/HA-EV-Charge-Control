@@ -252,3 +252,23 @@ async def test_no_import_offer_without_the_package(
 ) -> None:
     result = await _start(hass)
     assert "import_yaml" not in result["data_schema"].schema
+
+
+async def test_three_phase_option_is_optional(hass: HomeAssistant, sources) -> None:
+    """A charger that only charges on 1 phase: no 3-phase option (B18)."""
+    result = await _to_step(hass, "phases")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"phase_option_1": "1 Phase"}
+    )
+    assert result["step_id"] == "inputs"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], INPUTS_STEP
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], LIMITS_STEP | {"fallback_phase": "3"}
+    )
+    assert result["errors"]["base"] == "fallback_needs_three_phases"
+    for data in (LIMITS_STEP, HOUSEHOLD_STEP, {}, {}, {}):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "phase_option_3" not in result["options"]

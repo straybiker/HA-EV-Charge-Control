@@ -31,6 +31,9 @@
         "data": {
           "phase_option_1": "Option for 1 phase",
           "phase_option_3": "Option for 3 phases"
+        },
+        "data_description": {
+          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
         }
       },
       "inputs": {
@@ -153,7 +156,8 @@
       "capacity_required": "Enter the battery capacity when you pick a battery level sensor.",
       "car_min_above_max": "The car min current is higher than the car max current.",
       "attribute_without_price": "Pick a price sensor to use a price attribute.",
-      "price_attribute_missing": "The price sensor has no attribute with this name."
+      "price_attribute_missing": "The price sensor has no attribute with this name.",
+      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase."
     }
   },
   "options": {
@@ -176,6 +180,9 @@
         "data": {
           "phase_option_1": "Option for 1 phase",
           "phase_option_3": "Option for 3 phases"
+        },
+        "data_description": {
+          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
         }
       },
       "inputs": {
@@ -298,7 +305,8 @@
       "capacity_required": "Enter the battery capacity when you pick a battery level sensor.",
       "car_min_above_max": "The car min current is higher than the car max current.",
       "attribute_without_price": "Pick a price sensor to use a price attribute.",
-      "price_attribute_missing": "The price sensor has no attribute with this name."
+      "price_attribute_missing": "The price sensor has no attribute with this name.",
+      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase."
     }
   },
   "selector": {
@@ -445,6 +453,9 @@
     },
     "single_phase_conflicts_mode": {
       "message": "Single phase only is not possible while the charge mode is 3-Phases Minimum."
+    },
+    "single_phase_fixed": {
+      "message": "Single phase only stays on: the charger has no option for 3 phases. Add one under Configure to switch it off."
     }
   },
   "issues": {

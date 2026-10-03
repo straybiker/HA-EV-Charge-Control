@@ -181,6 +181,21 @@ async def test_grid_share_is_the_grid_part_of_the_target(
     assert grid == pytest.approx(target - 1000, abs=1)
 
 
+async def test_charger_without_three_phase_option(hass: HomeAssistant, sources) -> None:
+    """Single phase only stays on, and the controller stays on 1 phase (B18)."""
+    await setup(hass, make_entry(hass, phase_option_3=None))
+    single = "switch.test_charger_single_phase_only"
+    assert hass.states.get(single).state == "on"
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "switch", "turn_off", {"entity_id": single}, blocking=True
+        )
+    assert hass.states.get(single).state == "on"
+    # 4500 W headroom would be 3 phases on a 3-phase charger.
+    await _select(hass, "fast")
+    assert hass.states.get(TARGET_PHASES).state == "1"
+
+
 async def test_kw_sensors_are_converted(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(HOUSE_POWER, "0.5", {"unit_of_measurement": "kW"})
     await setup(hass, make_entry(hass))

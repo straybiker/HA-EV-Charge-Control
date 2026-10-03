@@ -164,6 +164,11 @@ class InputReader:
         return self.last_extras
 
     @property
+    def three_phases(self) -> bool:
+        """Whether the phase setting has a 3-phase option (B18)."""
+        return bool(self._options.get(CONF_PHASE_OPTION_3))
+
+    @property
     def event_entities(self) -> list[str]:
         """Entities whose changes trigger an immediate run.
 
@@ -288,6 +293,10 @@ class InputReader:
         if state.state == option_1:
             return Phase.ONE
         if state.state == option_3:
+            return Phase.THREE
+        if not option_3:
+            # No 3-phase option (B18): any other option is not 1 phase, so the
+            # controller writes the 1-phase option back.
             return Phase.THREE
         return None
 

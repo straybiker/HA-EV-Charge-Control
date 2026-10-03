@@ -81,7 +81,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 |---|---|---|
 | New charge controller | | The device name. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
 | Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`) of your charger. |
-| Phase options | | The option of the phase setting for 1 phase and for 3 phases. |
+| Phase options | | The option of the phase setting for 1 phase and, optionally, for 3 phases. Leave the 3-phase option empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
 | Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
 | House | Reads | House power without the charger, power limit (sensor or number). Optional: peak factor as a safety buffer (empty: 100 %), solar power. |
@@ -108,7 +108,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | Solar bridge (W) | The grid power that Solar mode can import to reach the minimum. Default 0 W: solar only. |
 | Setting | Car aware | Use the car's battery level. |
 | Setting | Charge on solar when EMS blocks | When the EMS signal is 0 W, grid modes charge on solar instead of stopping. |
-| Setting | Single phase only | Never use 3 phases. |
+| Setting | Single phase only | Never use 3 phases. Always on, and cannot be switched off, when the setup has no option for 3 phases. |
 | Setting | EMS control, EMS as on/off | The EMS signal limits the grid, as a watt budget or as on/off. |
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
 | Decision | Effective power limit | The limit in use: the power limit entity × the peak factor. See [power limit](#power-limit-and-the-capacity-tariff). |
