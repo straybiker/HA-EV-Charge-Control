@@ -37,10 +37,14 @@
       },
       "controls": {
         "title": "Bediening laadpaal",
-        "description": "Waar de regelaar zijn instelwaarden schrijft. In schaduwmodus wordt nog niets geschreven.",
+        "description": "Waar de regelaar zijn instelwaarden schrijft zolang Laadpaal aansturen aan staat.",
         "data": {
           "current_limit_entity": "Stroomlimiet",
-          "phase_select_entity": "Fase-instelling"
+          "phase_select_entity": "Fase-instelling",
+          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+        },
+        "data_description": {
+          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
         }
       },
       "phases": {
@@ -156,10 +160,14 @@
       },
       "controls": {
         "title": "Bediening laadpaal",
-        "description": "Waar de regelaar zijn instelwaarden schrijft. In schaduwmodus wordt nog niets geschreven.",
+        "description": "Waar de regelaar zijn instelwaarden schrijft zolang Laadpaal aansturen aan staat.",
         "data": {
           "current_limit_entity": "Stroomlimiet",
-          "phase_select_entity": "Fase-instelling"
+          "phase_select_entity": "Fase-instelling",
+          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+        },
+        "data_description": {
+          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
         }
       },
       "phases": {
@@ -250,6 +258,13 @@
         "1": "1 fase",
         "3": "3 fasen"
       }
+    },
+    "control_off_action": {
+      "options": {
+        "fallback": "Terugvalstroom en -fasen",
+        "keep": "Laten zoals het is",
+        "stop": "Laden stoppen (0 A)"
+      }
     }
   },
   "entity": {
@@ -288,6 +303,9 @@
       }
     },
     "switch": {
+      "control_charger": {
+        "name": "Laadpaal aansturen"
+      },
       "car_aware": {
         "name": "Autobewust"
       },
@@ -366,7 +384,8 @@
           "not_connected": "Niet verbonden",
           "charger_unavailable": "Laadpaal niet beschikbaar",
           "no_power_limit": "Geen vermogenslimiet",
-          "grace_period": "Wachten na faseschakeling"
+          "grace_period": "Wachten na faseschakeling",
+          "charger_not_responding": "Laadpaal reageert niet"
         }
       }
     }
@@ -377,6 +396,12 @@
     },
     "single_phase_conflicts_mode": {
       "message": "Enkel 1 fase kan niet zolang de laadmodus Minimum 3 fasen is."
+    }
+  },
+  "issues": {
+    "charger_not_responding": {
+      "title": "{name}: de laadpaal reageert niet",
+      "description": "De laadpaal volgde de laatste 3 schrijfopdrachten niet: de toegepaste stroom of de actieve fasen veranderden niet op tijd. De regelaar probeert het bij elke run opnieuw, en deze melding verdwijnt zodra de laadpaal weer volgt.\n\nControleer of de laadpaal online is en of haar integratie werkt. Schakel Laadpaal aansturen uit om de pogingen te stoppen."
     }
   }
 }

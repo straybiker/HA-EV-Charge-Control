@@ -184,23 +184,41 @@ class InputReader:
 
     def read(self) -> Measurements:
         o = self._options
-        option_1 = o.get(CONF_PHASE_OPTION_1)
-        option_3 = o.get(CONF_PHASE_OPTION_3)
         self.last = Measurements(
             connection=self._connection(o[CONF_CONNECTION]),
             house_power_w=self._power(o[CONF_HOUSE_POWER]),
             charger_power_w=self._power(o[CONF_CHARGER_POWER]),
-            applied_current_a=self._number(o[CONF_APPLIED_CURRENT]),
-            active_phases=self._phases(o[CONF_ACTIVE_PHASES], option_1, option_3),
-            commanded_phase=self._commanded_phase(
-                o[CONF_PHASE_SELECT], option_1, option_3
-            ),
-            commanded_current_a=self._number(o[CONF_CURRENT_LIMIT]),
+            applied_current_a=self.applied_current(),
+            active_phases=self.active_phases(),
+            commanded_phase=self.commanded_phase(),
+            commanded_current_a=self.commanded_current(),
             car_soc=self._number(o.get(CONF_CAR_SOC)),
             price=self._number(o.get(CONF_PRICE), o.get(CONF_PRICE_ATTRIBUTE)),
             ems_signal_w=self._power(o.get(CONF_EMS)),
         )
         return self.last
+
+    # Single values, read fresh while a write waits for the charger.
+
+    def applied_current(self) -> float | None:
+        return self._number(self._options[CONF_APPLIED_CURRENT])
+
+    def commanded_current(self) -> float | None:
+        return self._number(self._options[CONF_CURRENT_LIMIT])
+
+    def active_phases(self) -> Phase | None:
+        o = self._options
+        return self._phases(
+            o[CONF_ACTIVE_PHASES],
+            o.get(CONF_PHASE_OPTION_1),
+            o.get(CONF_PHASE_OPTION_3),
+        )
+
+    def commanded_phase(self) -> Phase | None:
+        o = self._options
+        return self._commanded_phase(
+            o[CONF_PHASE_SELECT], o.get(CONF_PHASE_OPTION_1), o.get(CONF_PHASE_OPTION_3)
+        )
 
     def _state(self, entity_id: str | None) -> State | None:
         if not entity_id:

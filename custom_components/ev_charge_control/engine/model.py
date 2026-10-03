@@ -61,6 +61,9 @@ class Reason(StrEnum):
     CHARGER_UNAVAILABLE = "charger_unavailable"
     NO_POWER_LIMIT = "no_power_limit"
     GRACE_PERIOD = "grace_period"
+    # Set by the integration's writer, never by the controller: the charger
+    # did not follow the last writes.
+    CHARGER_NOT_RESPONDING = "charger_not_responding"
 
 
 @dataclass(frozen=True, slots=True)

@@ -40,6 +40,7 @@ CONF_CURRENT_LIMIT = "current_limit_entity"
 CONF_PHASE_SELECT = "phase_select_entity"
 CONF_PHASE_OPTION_1 = "phase_option_1"
 CONF_PHASE_OPTION_3 = "phase_option_3"
+CONF_CONTROL_OFF = "control_off_action"
 
 # Config flow: household
 CONF_HOUSE_POWER = "house_power_entity"
@@ -75,6 +76,12 @@ HARDWARE_MAX_CURRENT = 32
 # Current step options: translation keys may not contain a dot.
 CURRENT_STEPS = {"0_1": 0.1, "1": 1.0}
 DEFAULT_CURRENT_STEP = "0_1"
+# What the charger gets when Control charger is switched off.
+CONTROL_OFF_FALLBACK = "fallback"
+CONTROL_OFF_KEEP = "keep"
+CONTROL_OFF_STOP = "stop"
+CONTROL_OFF_ACTIONS = [CONTROL_OFF_FALLBACK, CONTROL_OFF_KEEP, CONTROL_OFF_STOP]
+DEFAULT_CONTROL_OFF = CONTROL_OFF_FALLBACK
 
 # Tuning defaults, as in the EV Load Balancer package.
 DEFAULT_POWER_UPDATE_THRESHOLD_W = 230

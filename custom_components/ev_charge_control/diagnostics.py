@@ -30,5 +30,9 @@ async def async_get_config_entry_diagnostics(
         "snapshot": asdict(snapshot) if snapshot else None,
         "energy": coordinator.energy.state(),
         "intended_setpoint": asdict(setpoint) if setpoint else None,
+        "writer": {
+            "busy": coordinator.writer.busy,
+            "unconfirmed_writes": coordinator.writer.failures,
+        },
         "last_update_success": coordinator.last_update_success,
     }

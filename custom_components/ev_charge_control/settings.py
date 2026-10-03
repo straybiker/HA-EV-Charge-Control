@@ -8,9 +8,10 @@ from typing import Any
 
 from .engine import Settings
 
-# A setting the integration uses around the controller, not inside it.
+# Settings the integration uses around the controller, not inside it.
 FOLLOW_MONTHLY_PEAK = "follow_monthly_peak"
-_EXTRA_DEFAULTS: dict[str, Any] = {FOLLOW_MONTHLY_PEAK: True}
+CONTROL_CHARGER = "control_charger"
+_EXTRA_DEFAULTS: dict[str, Any] = {FOLLOW_MONTHLY_PEAK: True, CONTROL_CHARGER: False}
 _ENGINE_FIELDS = {f.name for f in fields(Settings)}
 
 type SettingsListener = Callable[[str], None]

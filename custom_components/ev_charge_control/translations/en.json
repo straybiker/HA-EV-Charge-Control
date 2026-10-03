@@ -37,10 +37,14 @@
       },
       "controls": {
         "title": "Charger controls",
-        "description": "Where the controller will write its setpoints. In shadow mode nothing is written yet.",
+        "description": "Where the controller writes its setpoints while Control charger is on.",
         "data": {
           "current_limit_entity": "Current limit",
-          "phase_select_entity": "Phase setting"
+          "phase_select_entity": "Phase setting",
+          "control_off_action": "When Control charger is switched off"
+        },
+        "data_description": {
+          "control_off_action": "What the charger gets once when you switch Control charger off."
         }
       },
       "phases": {
@@ -156,10 +160,14 @@
       },
       "controls": {
         "title": "Charger controls",
-        "description": "Where the controller will write its setpoints. In shadow mode nothing is written yet.",
+        "description": "Where the controller writes its setpoints while Control charger is on.",
         "data": {
           "current_limit_entity": "Current limit",
-          "phase_select_entity": "Phase setting"
+          "phase_select_entity": "Phase setting",
+          "control_off_action": "When Control charger is switched off"
+        },
+        "data_description": {
+          "control_off_action": "What the charger gets once when you switch Control charger off."
         }
       },
       "phases": {
@@ -250,6 +258,13 @@
         "1": "1 phase",
         "3": "3 phases"
       }
+    },
+    "control_off_action": {
+      "options": {
+        "fallback": "Fallback current and phases",
+        "keep": "Leave as it is",
+        "stop": "Stop charging (0 A)"
+      }
     }
   },
   "entity": {
@@ -288,6 +303,9 @@
       }
     },
     "switch": {
+      "control_charger": {
+        "name": "Control charger"
+      },
       "car_aware": {
         "name": "Car aware"
       },
@@ -366,7 +384,8 @@
           "not_connected": "Not connected",
           "charger_unavailable": "Charger unavailable",
           "no_power_limit": "No power limit",
-          "grace_period": "Waiting after phase switch"
+          "grace_period": "Waiting after phase switch",
+          "charger_not_responding": "Charger not responding"
         }
       }
     }
@@ -377,6 +396,12 @@
     },
     "single_phase_conflicts_mode": {
       "message": "Single phase only is not possible while the charge mode is 3-Phases Minimum."
+    }
+  },
+  "issues": {
+    "charger_not_responding": {
+      "title": "{name}: the charger does not respond",
+      "description": "The charger did not follow the last 3 writes: its applied current or active phases did not change in time. The controller tries again at each run, and this issue closes when the charger follows again.\n\nCheck that the charger is online and that its integration works. To stop the attempts, switch Control charger off."
     }
   }
 }

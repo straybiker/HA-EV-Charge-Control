@@ -81,11 +81,25 @@ The ratio of measured charger power to commanded power (`current × voltage × p
 
 ## Writing
 
+What the controller writes, before the charger control below applies it.
+
 - A decrease is written at once.
 - An increase is written only when it is worth at least the power update threshold (default 230 W), so solar ripple causes no writes.
 - "Widen small decreases" (on for Alfen): a decrease below 0.15 A is written as 0.2 A, unless that drops below the minimum. Some chargers ignore 0.1 A decreases.
 - Going from 1 to 3 phases: current 0 A first, then the phase, then the current.
-- In shadow mode nothing is written. The decision sensors show what would be written.
+
+## Charger control
+
+- **Control charger** (a switch on the device, off on a new device) turns writing on. While it is off, nothing is written and the decision sensors show what would be written (shadow mode).
+- Writes go to the charger's current-limit number and phase select, in this order: 0 A (only before a 1→3 switch), phase, current.
+- **Confirmation.** With a car connected, a write counts as confirmed when the charger follows: the applied current comes within the power update threshold of the written value (never stricter than half a current step) within 30 s, and the active phases match within 60 s. Without a car the charger's sensors may not follow, so the current-limit number and the phase select must show the written value. After the 0 A step the sequence goes on after at most 30 s, confirmed or not.
+- **One write at a time.** A write sequence runs in the background. Runs that come while it waits for the charger write nothing.
+- **Retry.** A write that is not confirmed is written again at the next run, also when the write filter sees nothing new.
+- **Not responding.** After 3 unconfirmed writes in a row, a repair issue is raised and the decision becomes `charger_not_responding`. The controller keeps retrying at each run. The first confirmed write closes the issue. A restart or switching Control charger off also closes it.
+- **Switching control off** hands the charger over once, without confirmation. A setup option sets what it gets:
+  - **Fallback current and phases** (default): the fallback phase and fallback current.
+  - **Leave as it is**: nothing is written.
+  - **Stop charging**: 0 A, phase unchanged.
 
 ## Energy
 
@@ -111,6 +125,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 | `charger_unavailable` | The charger's current or phase setting is unknown |
 | `no_power_limit` | The power limit is 0 |
 | `grace_period` | Waiting after a 1→3 phase switch |
+| `charger_not_responding` | The charger did not follow the last 3 writes (shown while Control charger is on) |
 
 ## Decision record
 
@@ -146,11 +161,7 @@ A change to the charging behaviour adds or updates a row here.
 | B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
 | B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
 | B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |
-
-## Planned: charger control
-
-Not built yet. Until then nothing is written to the charger.
-
-- A **Control charger** switch turns writing on and off.
-- A write that the charger does not confirm is retried at the next run. After 3 failures in a row, a repair issue is raised and the decision becomes "charger not responding".
-- A setup option sets what the charger gets when Control charger is switched off.
+| B14 | Control charger | A device switch, off on a new device: a new controller starts in shadow mode until the user switches it on. |
+| B15 | Confirmation | The charger must follow: applied current within 30 s, active phases within 60 s, as in the YAML package. Without a car, the control entities confirm. |
+| B16 | Not responding | Retry at each run; after 3 unconfirmed writes in a row a repair issue and decision `charger_not_responding`; the first confirmed write clears both. |
+| B17 | Control switched off | Hand the charger over once. Setup option: fallback current and phases (default), leave as it is, or stop (0 A). |

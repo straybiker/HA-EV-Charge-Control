@@ -7,7 +7,7 @@
 A Home Assistant integration for smart EV charging. It sets the charge current and the number of phases from your house power, solar surplus, power limit, electricity price, EMS signal and the car's battery level. It also counts the energy that goes into the car.
 
 > [!IMPORTANT]
-> **Shadow mode.** This version calculates what it would set and shows it on its sensors. It does **not** write to the charger yet. Run it next to your current charging automation and compare the results.
+> **A new device starts in shadow mode.** It calculates what it would set and shows it on its sensors, but writes nothing until you switch **Control charger** on. See [Taking control of the charger](#taking-control-of-the-charger).
 
 ## Contents
 
@@ -31,7 +31,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - **Car aware:** emergency, target and comfort battery levels.
 - **1 and 3 phases:** switches phases, with a hold time that prevents flapping.
 - **Energy:** charged energy, split into grid and solar, for the Energy dashboard or an EMS.
-- **Safe by design:** a sensor fault never increases the current. Settings survive restarts.
+- **Safe by design:** a sensor fault never increases the current. Writes are confirmed, retried and reported as a repair issue when the charger does not follow. Settings survive restarts.
 - **Any charger** whose Home Assistant integration has a current-limit number and a phase select.
 
 ## Requirements
@@ -74,7 +74,7 @@ The setup has seven steps. To change them later, select **Configure** on the int
 | Step | What you enter |
 |---|---|
 | 1. Charger | Entities: charger power, applied current, active phases, connection state, maximum current. Values: minimum current (6 A), fallback current (7 A), fallback phases (1), voltage (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), keep the phase on a sensor fault (off). Optional: the charger's energy meter. |
-| 2. Charger controls | The current-limit `number` and the phase `select`. |
+| 2. Charger controls | The current-limit `number` and the phase `select`. What the charger gets when you switch Control charger off (fallback current and phases). |
 | 3. Phase options | The option of the phase select for 1 phase and for 3 phases. |
 | 4. Household | House power without the charger. Optional: solar power, monthly peak. |
 | 5. Car | Optional: battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
@@ -91,6 +91,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 
 | Kind | Entity | Function |
 |---|---|---|
+| Setting | Control charger | Write to the charger. Off on a new device. See [Taking control of the charger](#taking-control-of-the-charger). |
 | Setting | Charge mode | See [charge modes](#charge-modes). |
 | Setting | Base power limit (W) | The maximum power of the whole house, charger included. Default 5000 W. |
 | Setting | Follow monthly peak | Only with a monthly peak sensor. See [power limit](#power-limit-and-the-capacity-tariff). |
@@ -101,7 +102,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | Charge on solar when EMS blocks | When the EMS signal is 0 W, grid modes charge on solar instead of stopping. |
 | Setting | Single phase only | Never use 3 phases. |
 | Setting | EMS control, EMS as on/off | The EMS signal limits the grid, as a watt budget or as on/off. |
-| Decision | Target current, Target phases, Target power | What the controller sets now. |
+| Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
 | Decision | Effective power limit | The limit in use, after it follows the monthly peak. |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
 | Decision | Grid allowed, Emergency charging, Target reached | Yes/no details of the decision. |
@@ -109,6 +110,16 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Diagnostic | Charger efficiency, Solar surplus, Grid share, Phase hold until | More detail. |
 
 Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting, the connection or the phase changes.
+
+### Taking control of the charger
+
+1. Leave **Control charger** off for some days. Compare **Target current** and **Target phases** with what your current automation does.
+2. Turn off the automation that sets the charger now. Two controllers on one charger work against each other.
+3. Switch **Control charger** on.
+
+The controller then writes to the charger's current-limit number and phase select. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
+
+When you switch **Control charger** off, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in step 2 can change this to *Leave as it is* or *Stop charging (0 A)*.
 
 ### Charge modes
 
@@ -181,6 +192,7 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | Charger unavailable | The charger's current or phase setting is unknown. |
 | No power limit | The power limit is 0. |
 | Waiting after phase switch | A 40 s pause after a change to 3 phases. |
+| Charger not responding | The charger did not follow the last 3 writes. See [Taking control of the charger](#taking-control-of-the-charger). |
 
 ## Troubleshooting
 
@@ -191,13 +203,14 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | The current goes up and down at each run. | The house power sensor probably includes the charger. It must exclude the charger. |
 | **Grid blocked** during daylight. | The price is above Max charging cost, or the EMS signal is 0 W. Turn on **Charge on solar when EMS blocks** to use solar. |
 | **Comfort** never changes to Solar. | Car aware is off, or the battery level is unavailable. |
+| **Charger not responding**, with a repair issue. | The charger is offline, or its integration does not pass the values on. Check the charger's current-limit number and applied current. Switch Control charger off to stop the attempts. |
+| The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |
 | The target current stays at the fallback current. | The maximum current entity has not sent a value since the start. |
 
 For a support request, download the diagnostics from the device page (⋮ → **Download diagnostics**) and attach them to an [issue](https://github.com/straybiker/HA-EV-Charge-Control/issues).
 
 ## Roadmap
 
-- Write to the charger, with a **Control charger** switch, retries, and a repair issue when the charger does not respond.
 - A brand icon and the first HACS release.
 
 ## Documentation

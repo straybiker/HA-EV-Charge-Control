@@ -26,6 +26,7 @@ from .const import (
     CONF_CAR_SOC,
     CONF_CHARGER_POWER,
     CONF_CONNECTION,
+    CONF_CONTROL_OFF,
     CONF_CURRENT_LIMIT,
     CONF_CURRENT_STEP,
     CONF_EMS,
@@ -50,7 +51,9 @@ from .const import (
     CONF_SOLAR_POWER,
     CONF_VOLTAGE,
     CONF_WIDEN_DECREASES,
+    CONTROL_OFF_ACTIONS,
     CURRENT_STEPS,
+    DEFAULT_CONTROL_OFF,
     DEFAULT_CURRENT_STEP,
     DEFAULT_FALLBACK_CURRENT,
     DEFAULT_FALLBACK_PHASE,
@@ -139,6 +142,9 @@ CONTROLS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CURRENT_LIMIT): _entity("number"),
         vol.Required(CONF_PHASE_SELECT): _entity("select"),
+        vol.Required(CONF_CONTROL_OFF, default=DEFAULT_CONTROL_OFF): _choice(
+            CONTROL_OFF_ACTIONS, "control_off_action"
+        ),
     }
 )
 

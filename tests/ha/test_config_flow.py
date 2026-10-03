@@ -58,6 +58,7 @@ async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
     assert options["phase_option_3"] == "3 Phases"
     assert "price_entity" not in options
     assert options["max_current_entity"] == CHARGER_STEP["max_current_entity"]
+    assert options["control_off_action"] == "fallback"
     # Tuning defaults, as in the EV Load Balancer package.
     assert {k: options[k] for k in TUNING_STEP} == TUNING_STEP
 

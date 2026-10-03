@@ -35,6 +35,9 @@
       }
     },
     "switch": {
+      "control_charger": {
+        "default": "mdi:ev-plug-type2"
+      },
       "car_aware": {
         "default": "mdi:car-electric"
       },
@@ -89,7 +92,8 @@
           "not_connected": "mdi:power-plug-off-outline",
           "charger_unavailable": "mdi:ev-plug-type2",
           "no_power_limit": "mdi:block-helper",
-          "grace_period": "mdi:timer-sand"
+          "grace_period": "mdi:timer-sand",
+          "charger_not_responding": "mdi:lan-disconnect"
         }
       },
       "charger_efficiency": {

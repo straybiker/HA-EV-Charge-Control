@@ -18,11 +18,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
-from .engine import Controller, Output
+from .engine import Controller, Measurements, Output, Reason
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
 from .inputs import Extras, InputReader, Tuning
-from .settings import FOLLOW_MONTHLY_PEAK, SettingsStore
+from .settings import CONTROL_CHARGER, FOLLOW_MONTHLY_PEAK, SettingsStore
 from .writer import ChargerWriter
 
 # Merges triggers that arrive together (a mode change plus a tick) into one run.
@@ -51,6 +51,9 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
     whether any entity listens. It runs on its own interval timer and at
     once when a setting, the connection or the phase changes. Power sensors
     are read at each run but never trigger one.
+
+    The writer gets every run's output. It writes only while Control
+    charger is on; switching it off hands the charger over once.
     """
 
     def __init__(
@@ -84,6 +87,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self._configured_max_a = controller.charger.max_current_a
         self._last_max_a: float | None = None
         self._cancel_timer: CALLBACK_TYPE | None = None
+        self._control_was: bool | None = None
 
     @staticmethod
     def energy_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict]:
@@ -118,7 +122,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             phase_hold_s=self.tuning.phase_hold_s,
         )
         output = self.controller.step(settings, measurements, now)
-        await self.writer.async_apply(output)
+        output = self._apply(output, measurements)
         energy = self.energy.update(
             now,
             measurements.charger_power_w,
@@ -134,6 +138,19 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             energy=energy,
             computed_at=now,
         )
+
+    def _apply(self, output: Output, measurements: Measurements) -> Output:
+        control = bool(self.store.get(CONTROL_CHARGER))
+        if self._control_was and not control:
+            self.writer.release(measurements)
+        elif control and self._control_was is False:
+            self.writer.reset()
+        self._control_was = control
+        self.writer.spec = self.controller.charger
+        self.writer.apply(output, measurements, control)
+        if control and self.writer.not_responding:
+            return replace(output, reason=Reason.CHARGER_NOT_RESPONDING)
+        return output
 
     def _max_current(self, extras: Extras) -> float:
         """The charger maximum for this run.
