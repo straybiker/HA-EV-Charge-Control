@@ -41,6 +41,11 @@ CONF_CURRENT_LIMIT = "current_limit_entity"
 CONF_PHASE_SELECT = "phase_select_entity"
 CONF_PHASE_OPTION_1 = "phase_option_1"
 CONF_PHASE_OPTION_3 = "phase_option_3"
+# The phase options step asks these for a switch or a number; the flow
+# turns them into the two phase options above.
+CONF_PHASE_SWITCH_ON = "phase_switch_on"
+CONF_PHASE_VALUE_1 = "phase_value_1"
+CONF_PHASE_VALUE_3 = "phase_value_3"
 CONF_CONTROL_OFF = "control_off_action"
 
 # Config flow: household
@@ -71,6 +76,10 @@ DEFAULT_MIN_CURRENT = 6
 DEFAULT_FALLBACK_CURRENT = 7
 DEFAULT_VOLTAGE = 230
 PHASES = ["1", "3"]
+# Entity kinds that can switch the charger between 1 and 3 phases.
+SELECT_DOMAINS = ("select", "input_select")
+SWITCH_DOMAINS = ("switch", "input_boolean")
+NUMBER_DOMAINS = ("number", "input_number")
 DEFAULT_FALLBACK_PHASE = "1"
 # A charger reporting a higher maximum is ignored above this.
 HARDWARE_MAX_CURRENT = 32

@@ -196,6 +196,22 @@ async def test_charger_without_three_phase_option(hass: HomeAssistant, sources) 
     assert hass.states.get(TARGET_PHASES).state == "1"
 
 
+async def test_phase_setting_as_a_number_is_read(hass: HomeAssistant, sources) -> None:
+    """A number entity reports 1.0 for the value 1."""
+    phase = "input_number.test_phase_count"
+    hass.states.async_set(phase, "1.0")
+    entry = make_entry(
+        hass,
+        phase_select_entity=phase,
+        phase_option_1="1.0",
+        phase_option_3="3.0",
+    )
+    await setup(hass, entry)
+    await _select(hass, "fast")
+    assert hass.states.get(DECISION).state == "charging"
+    assert hass.states.get(TARGET_PHASES).state == "3"
+
+
 async def test_kw_sensors_are_converted(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(HOUSE_POWER, "0.5", {"unit_of_measurement": "kW"})
     await setup(hass, make_entry(hass))

@@ -21,19 +21,24 @@
           "phase_select_entity": "Phase setting (output)"
         },
         "data_description": {
-          "current_limit_entity": "A number entity in A that limits the charging current. Alfen: Max Current Limit S1.",
-          "phase_select_entity": "A select entity that switches the charger between 1 and 3 phases. Alfen: Usable phases."
+          "current_limit_entity": "A number entity in A that limits the charging current. Examples: Alfen Max Current Limit S1, go-e Requested current.",
+          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select)."
         }
       },
       "phases": {
         "title": "2/8 Outputs: phase options",
-        "description": "The phase setting has its own option texts. Pick the option that means 1 phase and the option that means 3 phases.",
+        "description": "How the phase setting says 1 phase and 3 phases. This depends on your charger's integration: a select has its own option texts, a switch is on or off, and a number has a value per phase count.",
         "data": {
           "phase_option_1": "Option for 1 phase",
-          "phase_option_3": "Option for 3 phases"
+          "phase_option_3": "Option for 3 phases",
+          "phase_switch_on": "When the switch is on, the charger uses",
+          "phase_value_1": "Value for 1 phase",
+          "phase_value_3": "Value for 3 phases"
         },
         "data_description": {
-          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
+          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1.",
+          "phase_switch_on": "For example, a switch named Force single phase is on for 1 phase.",
+          "phase_value_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
         }
       },
       "inputs": {
@@ -170,19 +175,24 @@
           "phase_select_entity": "Phase setting (output)"
         },
         "data_description": {
-          "current_limit_entity": "A number entity in A that limits the charging current. Alfen: Max Current Limit S1.",
-          "phase_select_entity": "A select entity that switches the charger between 1 and 3 phases. Alfen: Usable phases."
+          "current_limit_entity": "A number entity in A that limits the charging current. Examples: Alfen Max Current Limit S1, go-e Requested current.",
+          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select)."
         }
       },
       "phases": {
         "title": "2/8 Outputs: phase options",
-        "description": "The phase setting has its own option texts. Pick the option that means 1 phase and the option that means 3 phases.",
+        "description": "How the phase setting says 1 phase and 3 phases. This depends on your charger's integration: a select has its own option texts, a switch is on or off, and a number has a value per phase count.",
         "data": {
           "phase_option_1": "Option for 1 phase",
-          "phase_option_3": "Option for 3 phases"
+          "phase_option_3": "Option for 3 phases",
+          "phase_switch_on": "When the switch is on, the charger uses",
+          "phase_value_1": "Value for 1 phase",
+          "phase_value_3": "Value for 3 phases"
         },
         "data_description": {
-          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
+          "phase_option_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1.",
+          "phase_switch_on": "For example, a switch named Force single phase is on for 1 phase.",
+          "phase_value_3": "Optional. Leave empty for a charger that only charges on 1 phase: Single phase only is then always on, and the fallback phases must be 1."
         }
       },
       "inputs": {

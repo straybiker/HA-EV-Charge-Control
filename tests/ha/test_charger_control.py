@@ -214,3 +214,30 @@ async def test_a_restart_clears_an_old_repair_issue(
     )
     await setup(hass, entry)
     assert _issue(hass, entry) is None
+
+
+async def test_phase_switch_is_written_with_turn_on_and_off(
+    hass: HomeAssistant, sources
+) -> None:
+    """A "force single phase" switch: on means 1 phase."""
+    phase = "input_boolean.test_single_phase"
+    hass.states.async_set(phase, "on")
+    _start_in(hass, "fast")
+    entry = make_entry(
+        hass, phase_select_entity=phase, phase_option_1="on", phase_option_3="off"
+    )
+    await setup(hass, entry)
+    charger = FakeCharger(hass)
+
+    async def _toggle(call: ServiceCall) -> None:
+        on = call.service == "turn_on"
+        charger.calls.append(("phase", "on" if on else "off"))
+        hass.states.async_set(phase, "on" if on else "off")
+        hass.states.async_set(ACTIVE_PHASES, "1" if on else "3")
+
+    hass.services.async_register("input_boolean", "turn_on", _toggle)
+    hass.services.async_register("input_boolean", "turn_off", _toggle)
+    await _switch(hass, True)
+    await _settle(hass)
+    # 4500 W headroom: from 1 to 3 phases, so 0 A, switch off, then the current.
+    assert charger.calls == [("current", 0.0), ("phase", "off"), ("current", 6.5)]

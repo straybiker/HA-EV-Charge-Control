@@ -44,6 +44,9 @@ from .const import (
     CONF_PHASE_OPTION_3,
     CONF_PHASE_SELECT,
     CONF_PHASE_SWITCH_DELAY,
+    CONF_PHASE_SWITCH_ON,
+    CONF_PHASE_VALUE_1,
+    CONF_PHASE_VALUE_3,
     CONF_POWER_LIMIT,
     CONF_POWER_UPDATE_THRESHOLD,
     CONF_PRICE,
@@ -67,7 +70,10 @@ from .const import (
     DEFAULT_VOLTAGE,
     DOMAIN,
     HARDWARE_MAX_CURRENT,
+    NUMBER_DOMAINS,
     PHASES,
+    SELECT_DOMAINS,
+    SWITCH_DOMAINS,
 )
 from .engine import ConnectionState, Phase, connection_from_mode3
 from .yaml_import import async_import, package_present
@@ -138,8 +144,10 @@ async def _validate_name(
 # Outputs: the two entities the controller writes.
 OUTPUTS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CURRENT_LIMIT): _entity("number"),
-        vol.Required(CONF_PHASE_SELECT): _entity("select"),
+        vol.Required(CONF_CURRENT_LIMIT): _entity(list(NUMBER_DOMAINS)),
+        vol.Required(CONF_PHASE_SELECT): _entity(
+            [*SELECT_DOMAINS, *SWITCH_DOMAINS, *NUMBER_DOMAINS]
+        ),
     }
 )
 
@@ -255,9 +263,11 @@ async def _validate_outputs(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     hass = _hass(handler)
-    state = hass.states.get(user_input[CONF_PHASE_SELECT])
-    if state is None or len(state.attributes.get("options") or []) < 2:
-        raise SchemaFlowError("phase_select_unavailable")
+    phase_entity = user_input[CONF_PHASE_SELECT]
+    if _domain(phase_entity) in SELECT_DOMAINS:
+        state = hass.states.get(phase_entity)
+        if state is None or not state.attributes.get("options"):
+            raise SchemaFlowError("phase_select_unavailable")
     # Two controllers writing the same output would overwrite each other at
     # every run, and neither could confirm its writes.
     own = _own_entry_id(handler)
@@ -310,9 +320,36 @@ async def _validate_limits(
     return user_input
 
 
+def _domain(entity_id: str) -> str:
+    return entity_id.split(".", 1)[0]
+
+
 async def _phases_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    """Offer the options of the phase select chosen in the previous step."""
-    state = _hass(handler).states.get(handler.options[CONF_PHASE_SELECT])
+    """Ask how the phase setting says 1 and 3 phases; it depends on its kind."""
+    phase_entity = handler.options[CONF_PHASE_SELECT]
+    domain = _domain(phase_entity)
+    if domain in SWITCH_DOMAINS:
+        return vol.Schema(
+            {
+                vol.Required(CONF_PHASE_SWITCH_ON, default="3"): _choice(
+                    PHASES, "fallback_phase"
+                )
+            }
+        )
+    if domain in NUMBER_DOMAINS:
+        value = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+            )
+        )
+        return vol.Schema(
+            {
+                vol.Required(CONF_PHASE_VALUE_1, default=1): value,
+                # Empty for a charger that only charges on 1 phase (B18).
+                vol.Optional(CONF_PHASE_VALUE_3): value,
+            }
+        )
+    state = _hass(handler).states.get(phase_entity)
     options = list(state.attributes.get("options") or []) if state else []
     choice = selector.SelectSelector(
         selector.SelectSelectorConfig(
@@ -331,6 +368,27 @@ async def _phases_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 async def _validate_phases(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
+    """Store the phase options as the texts or values the entity uses.
+
+    A switch uses "on" and "off"; a number its two values. The setup's other
+    code then treats every kind the same way.
+    """
+    domain = _domain(handler.options[CONF_PHASE_SELECT])
+    if domain in SWITCH_DOMAINS:
+        three_on = user_input[CONF_PHASE_SWITCH_ON] == "3"
+        return user_input | {
+            CONF_PHASE_OPTION_1: "off" if three_on else "on",
+            CONF_PHASE_OPTION_3: "on" if three_on else "off",
+        }
+    if domain in NUMBER_DOMAINS:
+        one = float(user_input[CONF_PHASE_VALUE_1])
+        three = user_input.get(CONF_PHASE_VALUE_3)
+        if three is not None and float(three) == one:
+            raise SchemaFlowError("same_phase_option")
+        return user_input | {
+            CONF_PHASE_OPTION_1: str(one),
+            CONF_PHASE_OPTION_3: None if three is None else str(float(three)),
+        }
     if user_input[CONF_PHASE_OPTION_1] == user_input.get(CONF_PHASE_OPTION_3):
         raise SchemaFlowError("same_phase_option")
     return user_input

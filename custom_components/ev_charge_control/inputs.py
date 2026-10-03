@@ -65,6 +65,7 @@ from .const import (
     DEFAULT_POWER_UPDATE_THRESHOLD_W,
     DEFAULT_RECALC_INTERVAL_S,
     DEFAULT_VOLTAGE,
+    NUMBER_DOMAINS,
 )
 from .engine import (
     CarSpec,
@@ -290,15 +291,28 @@ class InputReader:
         state = self._state(entity_id)
         if state is None:
             return None
-        if state.state == option_1:
+        numeric = entity_id.split(".", 1)[0] in NUMBER_DOMAINS
+        if _is_option(state.state, option_1, numeric):
             return Phase.ONE
-        if state.state == option_3:
+        if _is_option(state.state, option_3, numeric):
             return Phase.THREE
         if not option_3:
             # No 3-phase option (B18): any other option is not 1 phase, so the
             # controller writes the 1-phase option back.
             return Phase.THREE
         return None
+
+
+def _is_option(state: str, option: str | None, numeric: bool) -> bool:
+    """A number entity reports 3.0 for the value 3."""
+    if option is None:
+        return False
+    if not numeric:
+        return state == option
+    try:
+        return float(state) == float(option)
+    except ValueError:
+        return False
 
 
 def _parse_phase(text: str, option_1: str | None, option_3: str | None) -> Phase | None:

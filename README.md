@@ -32,7 +32,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - **1 and 3 phases:** switches phases, with a hold time that prevents flapping.
 - **Energy:** charged energy, split into grid and solar, for the Energy dashboard or an EMS.
 - **Safe by design:** a sensor fault never increases the current. Writes are confirmed, retried and reported as a repair issue when the charger does not follow. Settings survive restarts.
-- **Any charger** whose Home Assistant integration has a current-limit number and a phase select.
+- **Any charger** whose Home Assistant integration has a current-limit number and a phase setting: a select, a switch or a number.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
   | Connection state | A Mode 3 sensor (A, B1 … D2, E, F), or a binary sensor that is on while a car is connected. |
   | Maximum current (A) | The charger's configured or installation maximum. |
   | Current limit | A `number` entity that the charger accepts. |
-  | Phase setting | A `select` entity with a 1-phase and a 3-phase option. |
+  | Phase setting | The entity that switches between 1 and 3 phases: a `select` (an option per phase count), a `switch` (on/off) or a `number` (a value per phase count). For a charger that only charges on 1 phase, the 3-phase option or value can stay empty. |
 
 - **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
 - **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
@@ -80,8 +80,8 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Step | Kind | What you enter |
 |---|---|---|
 | New charge controller | | The device name. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
-| Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`) of your charger. |
-| Phase options | | The option of the phase setting for 1 phase and, optionally, for 3 phases. Leave the 3-phase option empty for a charger that only charges on 1 phase. |
+| Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. |
+| Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
 | Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
 | House | Reads | House power without the charger, power limit (sensor or number). Optional: peak factor as a safety buffer (empty: 100 %), solar power. |
@@ -129,7 +129,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 2. Turn off the automation that sets the charger now. Two controllers on one charger work against each other.
 3. Switch **Control charger** on.
 
-The controller then writes to the charger's current-limit number and phase select. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
+The controller then writes to the charger's current-limit number and phase setting. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
 
 When you switch **Control charger** off, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in Charger limits and safety can change this to *Leave as it is* or *Stop charging (0 A)*.
 

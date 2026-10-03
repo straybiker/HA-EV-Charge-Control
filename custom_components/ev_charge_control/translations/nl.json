@@ -21,19 +21,24 @@
           "phase_select_entity": "Fase-instelling (uitgang)"
         },
         "data_description": {
-          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Alfen: Max Current Limit S1.",
-          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen. Alfen: Usable phases."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Voorbeelden: Alfen Max Current Limit S1, go-e Requested current.",
+          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze)."
         }
       },
       "phases": {
         "title": "2/8 Uitgangen: fase-opties",
-        "description": "De fase-instelling heeft eigen optieteksten. Kies de optie die 1 fase betekent en de optie die 3 fasen betekent.",
+        "description": "Hoe de fase-instelling 1 fase en 3 fasen aangeeft. Dat hangt af van de integratie van je laadpaal: een keuze heeft eigen optieteksten, een schakelaar staat aan of uit, en een getal heeft een waarde per aantal fasen.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
-          "phase_option_3": "Optie voor 3 fasen"
+          "phase_option_3": "Optie voor 3 fasen",
+          "phase_switch_on": "Als de schakelaar aan staat, gebruikt de laadpaal",
+          "phase_value_1": "Waarde voor 1 fase",
+          "phase_value_3": "Waarde voor 3 fasen"
         },
         "data_description": {
-          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
+          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn.",
+          "phase_switch_on": "Een schakelaar met de naam Force single phase staat bijvoorbeeld aan voor 1 fase.",
+          "phase_value_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
         }
       },
       "inputs": {
@@ -170,19 +175,24 @@
           "phase_select_entity": "Fase-instelling (uitgang)"
         },
         "data_description": {
-          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Alfen: Max Current Limit S1.",
-          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen. Alfen: Usable phases."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Voorbeelden: Alfen Max Current Limit S1, go-e Requested current.",
+          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze)."
         }
       },
       "phases": {
         "title": "2/8 Uitgangen: fase-opties",
-        "description": "De fase-instelling heeft eigen optieteksten. Kies de optie die 1 fase betekent en de optie die 3 fasen betekent.",
+        "description": "Hoe de fase-instelling 1 fase en 3 fasen aangeeft. Dat hangt af van de integratie van je laadpaal: een keuze heeft eigen optieteksten, een schakelaar staat aan of uit, en een getal heeft een waarde per aantal fasen.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
-          "phase_option_3": "Optie voor 3 fasen"
+          "phase_option_3": "Optie voor 3 fasen",
+          "phase_switch_on": "Als de schakelaar aan staat, gebruikt de laadpaal",
+          "phase_value_1": "Waarde voor 1 fase",
+          "phase_value_3": "Waarde voor 3 fasen"
         },
         "data_description": {
-          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
+          "phase_option_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn.",
+          "phase_switch_on": "Een schakelaar met de naam Force single phase staat bijvoorbeeld aan voor 1 fase.",
+          "phase_value_3": "Optioneel. Laat leeg voor een laadpaal die alleen op 1 fase laadt: Enkel 1 fase staat dan altijd aan, en de terugvalfasen moeten 1 zijn."
         }
       },
       "inputs": {

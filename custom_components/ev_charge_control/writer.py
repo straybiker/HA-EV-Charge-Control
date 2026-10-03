@@ -31,6 +31,8 @@ from .const import (
     DEFAULT_CONTROL_OFF,
     DOMAIN,
     LOGGER,
+    NUMBER_DOMAINS,
+    SWITCH_DOMAINS,
 )
 from .engine import ChargerSpec, ConnectionState, Measurements, Output, Phase, Setpoint
 from .inputs import InputReader
@@ -243,19 +245,24 @@ class ChargerWriter:
 
     async def _set_current(self, current_a: float) -> None:
         await self._hass.services.async_call(
-            "number",
+            _domain(self._current_entity),
             "set_value",
             {"entity_id": self._current_entity, "value": current_a},
             blocking=True,
         )
 
     async def _set_phase(self, phase: Phase) -> None:
-        await self._hass.services.async_call(
-            "select",
-            "select_option",
-            {"entity_id": self._phase_entity, "option": self._options[phase]},
-            blocking=True,
-        )
+        """Write the phase in the way the entity's kind takes it."""
+        entity, option = self._phase_entity, self._options[phase]
+        domain = _domain(entity)
+        if domain in SWITCH_DOMAINS:
+            service = "turn_on" if option == "on" else "turn_off"
+            data: dict = {"entity_id": entity}
+        elif domain in NUMBER_DOMAINS:
+            service, data = "set_value", {"entity_id": entity, "value": float(option)}
+        else:
+            service, data = "select_option", {"entity_id": entity, "option": option}
+        await self._hass.services.async_call(domain, service, data, blocking=True)
 
     async def _wait_for(
         self, entity_id: str, check: Callable[[], bool], timeout_s: float
@@ -282,6 +289,10 @@ class ChargerWriter:
         finally:
             unsub_state()
             unsub_timer()
+
+
+def _domain(entity_id: str) -> str:
+    return entity_id.split(".", 1)[0]
 
 
 def _charger_can_confirm(m: Measurements) -> bool:

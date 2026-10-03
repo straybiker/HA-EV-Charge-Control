@@ -272,3 +272,40 @@ async def test_three_phase_option_is_optional(hass: HomeAssistant, sources) -> N
         result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "phase_option_3" not in result["options"]
+
+
+async def _phases_step_for(hass: HomeAssistant, phase_entity: str):
+    result = await _to_step(hass, "outputs")
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], OUTPUTS_STEP | {"phase_select_entity": phase_entity}
+    )
+
+
+async def test_phase_setting_can_be_a_switch(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set("input_boolean.test_single_phase", "off")
+    result = await _phases_step_for(hass, "input_boolean.test_single_phase")
+    assert result["step_id"] == "phases"
+    assert "phase_switch_on" in result["data_schema"].schema
+    # A "force single phase" switch: on means 1 phase.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"phase_switch_on": "1"}
+    )
+    for data in (INPUTS_STEP, LIMITS_STEP, HOUSEHOLD_STEP, {}, {}, {}):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["phase_option_1"] == "on"
+    assert result["options"]["phase_option_3"] == "off"
+
+
+async def test_phase_setting_can_be_a_number(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set("input_number.test_phase_count", "3.0")
+    result = await _phases_step_for(hass, "input_number.test_phase_count")
+    assert "phase_value_1" in result["data_schema"].schema
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"phase_value_1": 1, "phase_value_3": 3}
+    )
+    for data in (INPUTS_STEP, LIMITS_STEP, HOUSEHOLD_STEP, {}, {}, {}):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["phase_option_1"] == "1.0"
+    assert result["options"]["phase_option_3"] == "3.0"
