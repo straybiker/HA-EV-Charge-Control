@@ -36,6 +36,7 @@ FILE_LABEL = {
     "test_translations": "Translations",
     "test_specs": "Options to specs",
     "test_manifest": "Repository metadata",
+    "test_yaml_import": "Import from EV Load Balancer",
 }
 GROUP_LABEL = {"engine": "Engine", "ha": "Home Assistant", "repo": "Repository"}
 SETS = (("original", "Original cases"), ("comfort", "Comfort cases"))
