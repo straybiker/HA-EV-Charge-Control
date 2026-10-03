@@ -22,7 +22,7 @@ from .engine import Controller, Measurements, Output, Reason
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
 from .inputs import Extras, InputReader, Tuning
-from .settings import CONTROL_CHARGER, FOLLOW_MONTHLY_PEAK, SettingsStore
+from .settings import CONTROL_CHARGER, SettingsStore
 from .writer import ChargerWriter
 
 # Merges triggers that arrive together (a mode change plus a tick) into one run.
@@ -38,7 +38,7 @@ class Snapshot:
 
     output: Output
     power_limit_w: float
-    monthly_peak_w: float | None
+    limit_entity_w: float | None
     max_current_a: float
     energy: EnergyTotals
     computed_at: datetime = field(compare=False)
@@ -85,6 +85,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self.energy = EnergyCounter()
         self._energy_store = self.energy_store(hass, entry)
         self._last_max_a: float | None = None
+        self._last_limit_w: float | None = None
         self._cancel_timer: CALLBACK_TYPE | None = None
         self._control_was: bool | None = None
 
@@ -108,12 +109,8 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         max_a = self._max_current(extras)
         self.controller.charger = replace(self.controller.charger, max_current_a=max_a)
         settings = self.store.snapshot()
-        power_limit_w = effective_power_limit(
-            settings.power_limit_w,
-            extras.monthly_peak_w,
-            self.tuning.peak_factor,
-            bool(self.store.get(FOLLOW_MONTHLY_PEAK)),
-        )
+        limit_w = self._limit(extras)
+        power_limit_w = effective_power_limit(limit_w, self.tuning.peak_factor)
         settings = replace(
             settings,
             power_limit_w=power_limit_w,
@@ -132,7 +129,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         return Snapshot(
             output=output,
             power_limit_w=power_limit_w,
-            monthly_peak_w=extras.monthly_peak_w,
+            limit_entity_w=limit_w,
             max_current_a=max_a,
             energy=energy,
             computed_at=now,
@@ -150,6 +147,16 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         if control and self.writer.not_responding:
             return replace(output, reason=Reason.CHARGER_NOT_RESPONDING)
         return output
+
+    def _limit(self, extras: Extras) -> float | None:
+        """The power limit entity's value, else the last value seen.
+
+        None until it has reported once: the controller then has no power
+        limit and writes nothing.
+        """
+        if extras.power_limit_w is not None and extras.power_limit_w > 0:
+            self._last_limit_w = extras.power_limit_w
+        return self._last_limit_w
 
     def _max_current(self, extras: Extras) -> float:
         """The charger maximum for this run.

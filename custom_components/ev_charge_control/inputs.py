@@ -42,12 +42,12 @@ from .const import (
     CONF_HOUSE_POWER,
     CONF_MAX_CURRENT_ENTITY,
     CONF_MIN_CURRENT,
-    CONF_MONTHLY_PEAK,
     CONF_PEAK_FACTOR,
     CONF_PHASE_OPTION_1,
     CONF_PHASE_OPTION_3,
     CONF_PHASE_SELECT,
     CONF_PHASE_SWITCH_DELAY,
+    CONF_POWER_LIMIT,
     CONF_POWER_UPDATE_THRESHOLD,
     CONF_PRICE,
     CONF_PRICE_ATTRIBUTE,
@@ -61,7 +61,6 @@ from .const import (
     DEFAULT_FALLBACK_PHASE,
     DEFAULT_MAX_CURRENT,
     DEFAULT_MIN_CURRENT,
-    DEFAULT_PEAK_FACTOR_PCT,
     DEFAULT_PHASE_SWITCH_DELAY_MIN,
     DEFAULT_POWER_UPDATE_THRESHOLD_W,
     DEFAULT_RECALC_INTERVAL_S,
@@ -100,7 +99,7 @@ def charger_spec(options: Mapping[str, Any]) -> ChargerSpec:
 
 @dataclass(frozen=True, slots=True)
 class Tuning:
-    """Fixed values from the setup's Tuning step."""
+    """Fixed values from the setup."""
 
     power_update_threshold_w: float
     phase_hold_s: float
@@ -118,7 +117,8 @@ def tuning(options: Mapping[str, Any]) -> Tuning:
         recalc_interval_s=float(
             options.get(CONF_RECALC_INTERVAL, DEFAULT_RECALC_INTERVAL_S)
         ),
-        peak_factor=float(options.get(CONF_PEAK_FACTOR, DEFAULT_PEAK_FACTOR_PCT)) / 100,
+        # Optional safety buffer below the power limit; empty means 100 %.
+        peak_factor=float(options.get(CONF_PEAK_FACTOR) or 100) / 100,
     )
 
 
@@ -127,7 +127,7 @@ class Extras:
     """Values read each run that are not controller measurements."""
 
     max_current_a: float | None = None
-    monthly_peak_w: float | None = None
+    power_limit_w: float | None = None
     meter_kwh: float | None = None
     solar_power_w: float | None = None
 
@@ -153,15 +153,11 @@ class InputReader:
         self.last: Measurements | None = None
         self.last_extras: Extras | None = None
 
-    @property
-    def has_monthly_peak(self) -> bool:
-        return bool(self._options.get(CONF_MONTHLY_PEAK))
-
     def read_extras(self) -> Extras:
         o = self._options
         self.last_extras = Extras(
             max_current_a=self._number(o[CONF_MAX_CURRENT_ENTITY]),
-            monthly_peak_w=self._power(o.get(CONF_MONTHLY_PEAK)),
+            power_limit_w=self._power(o.get(CONF_POWER_LIMIT)),
             meter_kwh=self._energy(o.get(CONF_ENERGY_METER)),
             solar_power_w=self._power(o.get(CONF_SOLAR_POWER)),
         )

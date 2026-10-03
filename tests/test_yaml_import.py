@@ -44,6 +44,7 @@ template:
 
       - unique_id: ev_load_balancer
         attributes:
+          power_limit: "{{ states('input_number.test_limit') | int }}"
           ems_signal: "{{ states('sensor.test_ems') | float(0) }}"
           electricity_price: "{{ state_attr('sensor.test_price','rate_import') }}"
 """
@@ -68,6 +69,7 @@ def test_input_entities_from_the_templates():
         "connection_entity": "sensor.test_mode3",
         "max_current_entity": "sensor.test_max",
         "car_soc_entity": "sensor.test_soc",
+        "power_limit_entity": "input_number.test_limit",
         "ems_entity": "sensor.test_ems",
         "price_entity": "sensor.test_price",
         "price_attribute": "rate_import",
@@ -124,7 +126,6 @@ BALANCER = {
 def test_settings_follow_the_package():
     assert initial_settings("Limited", BALANCER) == {
         "charge_mode": "limited",
-        "power_limit": 5200.0,
         "max_charging_cost": 0.29,
         "target_soc": 100.0,
         "comfort_soc": 45.0,

@@ -79,16 +79,18 @@
       },
       "household": {
         "title": "5/8 Ingangen: het huis",
-        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen.",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen. De vermogenslimiet komt uit een entiteit, zodat een helper of je EMS ze bepaalt.",
         "data": {
           "house_power_entity": "Huisverbruik zonder laadpaal",
-          "solar_power_entity": "Zonnevermogen",
-          "monthly_peak_entity": "Maandpiek"
+          "power_limit_entity": "Vermogenslimiet",
+          "peak_factor_pct": "Piekfactor (veiligheidsmarge)",
+          "solar_power_entity": "Zonnevermogen"
         },
         "data_description": {
           "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
+          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS, bijvoorbeeld de kwartierpiek van deze maand voor het capaciteitstarief. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
+          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Leeg: 100 %."
         }
       },
       "car": {
@@ -127,14 +129,12 @@
         "data": {
           "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",
-          "recalc_interval_s": "Herberekeningsinterval",
-          "peak_factor_pct": "Piekfactor"
+          "recalc_interval_s": "Herberekeningsinterval"
         },
         "data_description": {
           "power_update_threshold_w": "Een verhoging wordt pas geschreven als ze minstens zoveel vermogen toevoegt, zodat schommelingen van de zon geen schrijfopdrachten geven. Verlagingen worden altijd geschreven.",
           "phase_switch_delay_min": "Na een wissel naar 1 fase zo lang wachten voor terug naar 3 fasen.",
-          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening.",
-          "peak_factor_pct": "Met Maandpiek volgen aan kan de vermogenslimiet stijgen tot dit deel van de maandpiek."
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening."
         }
       },
       "shared": {
@@ -224,16 +224,18 @@
       },
       "household": {
         "title": "5/8 Ingangen: het huis",
-        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen.",
+        "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen. De vermogenslimiet komt uit een entiteit, zodat een helper of je EMS ze bepaalt.",
         "data": {
           "house_power_entity": "Huisverbruik zonder laadpaal",
-          "solar_power_entity": "Zonnevermogen",
-          "monthly_peak_entity": "Maandpiek"
+          "power_limit_entity": "Vermogenslimiet",
+          "peak_factor_pct": "Piekfactor (veiligheidsmarge)",
+          "solar_power_entity": "Zonnevermogen"
         },
         "data_description": {
           "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW: positief bij afname, negatief bij injectie. Maak een templatesensor (netvermogen − laadvermogen) als je alleen een netmeter hebt. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
           "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
+          "power_limit_entity": "Het hoogste vermogen dat het huis van het net mag nemen, laadpaal inbegrepen, in W of kW: een helper of een entiteit van je EMS, bijvoorbeeld de kwartierpiek van deze maand voor het capaciteitstarief. Is ze niet beschikbaar, dan geldt de laatste waarde. Zolang ze geen waarde heeft, schrijft de regelaar niets.",
+          "peak_factor_pct": "Optionele veiligheidsmarge: de regelaar gebruikt dit deel van de vermogenslimiet, bijvoorbeeld 90 % om onder de piek te blijven. Leeg: 100 %."
         }
       },
       "car": {
@@ -272,14 +274,12 @@
         "data": {
           "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",
-          "recalc_interval_s": "Herberekeningsinterval",
-          "peak_factor_pct": "Piekfactor"
+          "recalc_interval_s": "Herberekeningsinterval"
         },
         "data_description": {
           "power_update_threshold_w": "Een verhoging wordt pas geschreven als ze minstens zoveel vermogen toevoegt, zodat schommelingen van de zon geen schrijfopdrachten geven. Verlagingen worden altijd geschreven.",
           "phase_switch_delay_min": "Na een wissel naar 1 fase zo lang wachten voor terug naar 3 fasen.",
-          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening.",
-          "peak_factor_pct": "Met Maandpiek volgen aan kan de vermogenslimiet stijgen tot dit deel van de maandpiek."
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening."
         }
       },
       "shared": {
@@ -338,9 +338,6 @@
       }
     },
     "number": {
-      "power_limit": {
-        "name": "Basisvermogenslimiet"
-      },
       "max_charging_cost": {
         "name": "Maximale laadkost"
       },
@@ -375,9 +372,6 @@
       },
       "ems_as_onoff": {
         "name": "EMS als aan/uit"
-      },
-      "follow_monthly_peak": {
-        "name": "Maandpiek volgen"
       }
     },
     "binary_sensor": {

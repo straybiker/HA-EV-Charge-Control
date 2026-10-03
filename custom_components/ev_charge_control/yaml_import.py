@@ -36,6 +36,7 @@ from .const import (
     CONF_PHASE_OPTION_3,
     CONF_PHASE_SELECT,
     CONF_PHASE_SWITCH_DELAY,
+    CONF_POWER_LIMIT,
     CONF_POWER_UPDATE_THRESHOLD,
     CONF_PRICE,
     CONF_PRICE_ATTRIBUTE,
@@ -71,7 +72,11 @@ _INPUTS = {
     },
     "house": {"state": CONF_HOUSE_POWER, "pv_power": CONF_SOLAR_POWER},
     "car": {"battery_percentage": CONF_CAR_SOC},
-    "balancer": {"ems_signal": CONF_EMS, "electricity_price": CONF_PRICE},
+    "balancer": {
+        "power_limit": CONF_POWER_LIMIT,
+        "ems_signal": CONF_EMS,
+        "electricity_price": CONF_PRICE,
+    },
 }
 
 _ENTITY = re.compile(r"\b((?:sensor|binary_sensor|number|input_number)\.[a-z0-9_]+)")
@@ -221,7 +226,6 @@ def initial_settings(mode: str | None, balancer: Mapping[str, Any]) -> dict[str,
         if mode == "Limited" and pv_first:
             settings["charge_mode"] = "solar"
     for key, attribute in (
-        ("power_limit", "power_limit"),
         ("max_charging_cost", "max_cost_rate"),
         ("target_soc", "target_soc"),
         ("comfort_soc", "comfort_soc"),

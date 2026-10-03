@@ -46,7 +46,6 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - All entities belong to the controller device, a regular device entry, and use translation keys.
 - Settings are `RestoreEntity` / `RestoreNumber` entities. A default applies only when the device is first created (decision D09).
 - Selecting 3-Phases Minimum while Single phase only is on, or the reverse, raises `ServiceValidationError`.
-- **Follow monthly peak** exists only when a monthly peak sensor is set.
 - **Control charger** is off on a new device. The decision `charger_not_responding` comes from the writer; the engine never returns it.
 - The energy sensors are `energy` / `total_increasing` in kWh, so the Energy dashboard accepts them.
 

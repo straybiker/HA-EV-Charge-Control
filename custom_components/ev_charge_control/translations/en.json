@@ -79,16 +79,18 @@
       },
       "household": {
         "title": "5/8 Inputs: the house",
-        "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThe controller gives the car the power that the house leaves under the power limit. Solar export counts as extra power.",
+        "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThe controller gives the car the power that the house leaves under the power limit. Solar export counts as extra power. The power limit comes from an entity, so a helper or your EMS decides it.",
         "data": {
           "house_power_entity": "House power without the charger",
-          "solar_power_entity": "Solar power",
-          "monthly_peak_entity": "Monthly peak"
+          "power_limit_entity": "Power limit",
+          "peak_factor_pct": "Peak factor (safety buffer)",
+          "solar_power_entity": "Solar power"
         },
         "data_description": {
           "house_power_entity": "The grid power of the house without the charger, in W or kW: positive while importing, negative while exporting. Make a template sensor (grid power − charger power) if you only have a grid meter. A sensor smoothed over about 15 s works best.",
           "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff), as a sensor or number entity in W or kW. With Follow monthly peak on, the power limit rises to the peak factor of this value."
+          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS, for example this month's capacity tariff peak. When it is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
+          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Empty: 100 %."
         }
       },
       "car": {
@@ -127,14 +129,12 @@
         "data": {
           "power_update_threshold_w": "Power update threshold",
           "phase_switch_delay_min": "Phase switch delay",
-          "recalc_interval_s": "Recalculation interval",
-          "peak_factor_pct": "Peak factor"
+          "recalc_interval_s": "Recalculation interval"
         },
         "data_description": {
           "power_update_threshold_w": "An increase is written only when it adds at least this much power, so solar ripple causes no writes. Decreases are always written.",
           "phase_switch_delay_min": "After a change to 1 phase, wait this long before going back to 3 phases.",
-          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once.",
-          "peak_factor_pct": "With Follow monthly peak on, the power limit can rise to this share of the monthly peak."
+          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once."
         }
       },
       "shared": {
@@ -224,16 +224,18 @@
       },
       "household": {
         "title": "5/8 Inputs: the house",
-        "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThe controller gives the car the power that the house leaves under the power limit. Solar export counts as extra power.",
+        "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThe controller gives the car the power that the house leaves under the power limit. Solar export counts as extra power. The power limit comes from an entity, so a helper or your EMS decides it.",
         "data": {
           "house_power_entity": "House power without the charger",
-          "solar_power_entity": "Solar power",
-          "monthly_peak_entity": "Monthly peak"
+          "power_limit_entity": "Power limit",
+          "peak_factor_pct": "Peak factor (safety buffer)",
+          "solar_power_entity": "Solar power"
         },
         "data_description": {
           "house_power_entity": "The grid power of the house without the charger, in W or kW: positive while importing, negative while exporting. Make a template sensor (grid power − charger power) if you only have a grid meter. A sensor smoothed over about 15 s works best.",
           "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff), as a sensor or number entity in W or kW. With Follow monthly peak on, the power limit rises to the peak factor of this value."
+          "power_limit_entity": "The most power the house may take from the grid, charger included, in W or kW: a helper or an entity of your EMS, for example this month's capacity tariff peak. When it is unavailable, the last value is used. Until it has a value, the controller writes nothing.",
+          "peak_factor_pct": "Optional safety buffer: the controller uses this share of the power limit, for example 90 % to stay below the peak. Empty: 100 %."
         }
       },
       "car": {
@@ -272,14 +274,12 @@
         "data": {
           "power_update_threshold_w": "Power update threshold",
           "phase_switch_delay_min": "Phase switch delay",
-          "recalc_interval_s": "Recalculation interval",
-          "peak_factor_pct": "Peak factor"
+          "recalc_interval_s": "Recalculation interval"
         },
         "data_description": {
           "power_update_threshold_w": "An increase is written only when it adds at least this much power, so solar ripple causes no writes. Decreases are always written.",
           "phase_switch_delay_min": "After a change to 1 phase, wait this long before going back to 3 phases.",
-          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once.",
-          "peak_factor_pct": "With Follow monthly peak on, the power limit can rise to this share of the monthly peak."
+          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once."
         }
       },
       "shared": {
@@ -338,9 +338,6 @@
       }
     },
     "number": {
-      "power_limit": {
-        "name": "Base power limit"
-      },
       "max_charging_cost": {
         "name": "Max charging cost"
       },
@@ -375,9 +372,6 @@
       },
       "ems_as_onoff": {
         "name": "EMS as on/off"
-      },
-      "follow_monthly_peak": {
-        "name": "Follow monthly peak"
       }
     },
     "binary_sensor": {

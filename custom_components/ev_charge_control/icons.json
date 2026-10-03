@@ -15,9 +15,6 @@
       }
     },
     "number": {
-      "power_limit": {
-        "default": "mdi:transmission-tower"
-      },
       "max_charging_cost": {
         "default": "mdi:currency-eur"
       },
@@ -52,9 +49,6 @@
       },
       "ems_as_onoff": {
         "default": "mdi:toggle-switch-outline"
-      },
-      "follow_monthly_peak": {
-        "default": "mdi:chart-bell-curve-cumulative"
       }
     },
     "binary_sensor": {

@@ -11,7 +11,7 @@
 | `budget.py` | Grid gate, EMS rules, grid allowance, the solar-first rule. Returns a `Budget`. |
 | `phases.py` | 1 or 3 phases, with the phase hold. |
 | `setpoint.py` | Power to amps (nearest charger step, rounded down at the power limit), and the write filter. |
-| `limit.py` | The effective power limit: the base limit, raised to a share of the monthly peak. |
+| `limit.py` | The effective power limit: the limit entity's value times the safety factor. |
 | `energy.py` | `EnergyCounter`: charged kWh from a meter or integrated power, split into grid and solar. |
 | `controller.py` | `Controller`: the order of rules, plus the state shared between runs (phase hold, grace period, efficiency, unplug timer). |
 

@@ -233,7 +233,6 @@ async def test_first_controller_can_import_the_package(
     assert "import_yaml" not in entry.options
     await hass.async_block_till_done()
     assert hass.states.get("select.test_charger_charge_mode").state == "limited"
-    assert hass.states.get("number.test_charger_base_power_limit").state == "6000.0"
     assert hass.states.get("switch.test_charger_car_aware").state == "on"
     # Imported or not, a new device starts in shadow mode.
     assert hass.states.get("switch.test_charger_control_charger").state == "off"

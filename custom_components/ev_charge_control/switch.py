@@ -16,7 +16,7 @@ from . import EvChargeConfigEntry
 from .const import DOMAIN
 from .engine import ChargeMode
 from .entity import init_entity
-from .settings import CONTROL_CHARGER, FOLLOW_MONTHLY_PEAK, SettingsStore
+from .settings import CONTROL_CHARGER, SettingsStore
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,10 +39,6 @@ SWITCHES: tuple[SettingSwitchDescription, ...] = tuple(
 # Off on a new device: it starts in shadow mode until the user opts in.
 CONTROL = SettingSwitchDescription(key=CONTROL_CHARGER, field=CONTROL_CHARGER)
 
-FOLLOW_PEAK = SettingSwitchDescription(
-    key=FOLLOW_MONTHLY_PEAK, field=FOLLOW_MONTHLY_PEAK, default=True
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -50,11 +46,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     runtime = entry.runtime_data
-    switches = [CONTROL, *SWITCHES]
-    # Following the monthly peak needs a peak sensor from the setup.
-    if runtime.coordinator.reader.has_monthly_peak:
-        switches.append(FOLLOW_PEAK)
-    async_add_entities(SettingSwitch(entry, runtime.store, d) for d in switches)
+    async_add_entities(
+        SettingSwitch(entry, runtime.store, d) for d in (CONTROL, *SWITCHES)
+    )
 
 
 class SettingSwitch(SwitchEntity, RestoreEntity):

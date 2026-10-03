@@ -46,7 +46,7 @@ CONF_CONTROL_OFF = "control_off_action"
 # Config flow: household
 CONF_HOUSE_POWER = "house_power_entity"
 CONF_SOLAR_POWER = "solar_power_entity"
-CONF_MONTHLY_PEAK = "monthly_peak_entity"
+CONF_POWER_LIMIT = "power_limit_entity"
 
 # Config flow: car
 CONF_CAR_SOC = "car_soc_entity"
@@ -89,4 +89,3 @@ DEFAULT_POWER_UPDATE_THRESHOLD_W = 230
 DEFAULT_PHASE_SWITCH_DELAY_MIN = 5
 # How often the controller runs. Power sensors do not trigger runs.
 DEFAULT_RECALC_INTERVAL_S = 10
-DEFAULT_PEAK_FACTOR_PCT = 90

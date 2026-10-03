@@ -54,12 +54,12 @@ def test_car_capacity_in_wh():
     assert spec == CarSpec(max_current_a=16, min_current_a=6, battery_capacity_wh=74000)
 
 
-def test_tuning_defaults_match_the_yaml_package():
+def test_tuning_defaults():
     assert tuning({}) == Tuning(
         power_update_threshold_w=230,
         phase_hold_s=300,
         recalc_interval_s=10,
-        peak_factor=0.9,
+        peak_factor=1.0,
     )
 
 

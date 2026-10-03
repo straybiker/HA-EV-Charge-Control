@@ -46,17 +46,6 @@ def _soc(key: str, default: float) -> SettingNumberDescription:
 
 NUMBERS: tuple[SettingNumberDescription, ...] = (
     SettingNumberDescription(
-        key="power_limit",
-        field="power_limit_w",
-        default=5000,
-        native_min_value=0,
-        native_max_value=25000,
-        native_step=100,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=NumberDeviceClass.POWER,
-        mode=NumberMode.BOX,
-    ),
-    SettingNumberDescription(
         key="max_charging_cost",
         field="max_cost_rate",
         default=0.30,

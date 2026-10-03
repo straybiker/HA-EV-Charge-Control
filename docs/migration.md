@@ -54,7 +54,7 @@ Alfen chargers: in Charger limits and safety, set **Current step** to 0.1 A and 
 | Package attribute | Integration |
 |---|---|
 | state (charge mode) | Device: Charge mode. See [modes](#modes) below. |
-| `power_limit` | Device: Base power limit |
+| `power_limit` | House: Power limit (the entity the template reads) |
 | `car_aware` | Device: Car aware |
 | `pv_prioritized` | Device: Charge on solar when EMS blocks. Its other job, solar first in Limited, is now Solar mode. |
 | `pv_prio_threshold` | Device: Solar bridge |
@@ -71,7 +71,7 @@ The device settings keep their value across restarts; they replace the package's
 
 ### Capacity tariff
 
-If an automation raised `input_number.ev_load_balancer_power_limit` to follow the month's peak, pick the monthly peak (a sensor or number entity) in the House step instead and leave **Follow monthly peak** on. The limit becomes the higher of the base power limit and 90 % (Peak factor in the Tuning step) of the peak.
+The power limit stays with your EMS: pick the entity it keeps the limit in, for example `input_number.ev_load_balancer_power_limit` or the month's peak, as **Power limit** in the House step. The optional **Peak factor** is a safety buffer below that value (empty: 100 %).
 
 ## Modes
 

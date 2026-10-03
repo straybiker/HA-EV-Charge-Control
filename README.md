@@ -25,7 +25,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 ## Features
 
 - **Seven charge modes:** Off, 1-Phase Minimum, 3-Phases Minimum, Limited, Fast, Solar and Comfort.
-- **Capacity tariff:** one power limit for the whole house. It can follow your monthly peak.
+- **Capacity tariff:** one power limit for the whole house, from a helper or your EMS, with an optional safety buffer.
 - **Solar first:** charges on surplus. A small grid bridge closes the gap when the surplus is just below the minimum.
 - **EMS and price:** an EMS signal (watt budget or on/off) and a maximum electricity price control the grid share.
 - **Car aware:** emergency, target and comfort battery levels.
@@ -50,7 +50,8 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
   | Phase setting | A `select` entity with a 1-phase and a 3-phase option. |
 
 - **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
-- Optional: the car's battery level, an electricity price, an EMS signal, the monthly peak (a sensor or number entity), the charger's energy meter.
+- **A power limit entity** (W or kW): a helper or an entity of your EMS, for example this month's capacity tariff peak.
+- Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
 
 ## Installation
 
@@ -83,12 +84,12 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Phase options | | The option of the phase setting for 1 phase and for 3 phases. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
 | Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
-| House | Reads | House power without the charger. Optional: solar power, monthly peak (sensor or number). |
+| House | Reads | House power without the charger, power limit (sensor or number). Optional: peak factor as a safety buffer (empty: 100 %), solar power. |
 | Car (optional) | Reads | Battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
 | Price and EMS (optional) | Reads | Price sensor (or one of its attributes), EMS signal. Without a price, the price check is skipped. |
-| Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s), peak factor (90 %). |
+| Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s). |
 
-**More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power, the monthly peak and the price can be shared.
+**More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power, power limit or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power and the price can be shared.
 
 The controller uses the **fallback current and phases** after a sensor fault, and one minute after the car is unplugged. This makes the next session start gently. With **Keep the phase on a sensor fault** off, a fault switches to the fallback phases. A charger that stops responding then does not stay on an unintended phase.
 
@@ -102,8 +103,6 @@ The setup creates one device, **EV charger controller**, with these entities:
 |---|---|---|
 | Setting | Control charger | Write to the charger. Off on a new device. See [Taking control of the charger](#taking-control-of-the-charger). |
 | Setting | Charge mode | See [charge modes](#charge-modes). |
-| Setting | Base power limit (W) | The maximum power of the whole house, charger included. Default 5000 W. |
-| Setting | Follow monthly peak | Only with a monthly peak sensor. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Setting | Max charging cost (per kWh) | Above this price, the car does not use the grid. Default 0.30. |
 | Setting | Target SOC, Comfort SOC, Emergency SOC (%) | Battery levels. They need **Car aware**. Defaults 80, 50 and 20 %. |
 | Setting | Solar bridge (W) | The grid power that Solar mode can import to reach the minimum. Default 0 W: solar only. |
@@ -112,7 +111,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | Single phase only | Never use 3 phases. |
 | Setting | EMS control, EMS as on/off | The EMS signal limits the grid, as a watt budget or as on/off. |
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
-| Decision | Effective power limit | The limit in use, after it follows the monthly peak. |
+| Decision | Effective power limit | The limit in use: the power limit entity × the peak factor. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
 | Decision | Grid allowed, Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
@@ -146,14 +145,16 @@ All modes stay within the power limit. The car only gets the power that the hous
 
 ### Power limit and the capacity tariff
 
-The **base power limit** is the maximum power that the house can take from the grid, charger included. The car gets the remainder: limit − house power.
+The **power limit** is the most power the house may take from the grid, charger included. The car gets the remainder: limit − house power.
 
-The capacity tariff bills the highest quarter-hour of the month. When that peak is set, charging up to it costs nothing extra. With a **monthly peak** entity in the setup (a sensor, or a number such as an `input_number` your peak automation raises) and **Follow monthly peak** on, the limit is the higher of:
+The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. With the capacity tariff that is usually this month's peak: the tariff bills the highest quarter-hour, so charging up to it costs nothing extra. The EMS decides how the limit follows the peak; the controller only reads it.
 
-- the base power limit, and
-- the peak factor (90 %) × the monthly peak.
+The optional **peak factor** is a safety buffer: the controller uses that share of the limit. With 90 % and a peak of 8 kW, the car's limit is 7.2 kW, so a short overshoot stays below the billed peak. Empty means 100 %.
 
-Example: base 5 kW, monthly peak 8 kW → limit 7.2 kW. The **Effective power limit** sensor shows the value in use.
+- When the limit entity is unavailable, the controller uses its last value.
+- Until the entity has reported a value, the decision is **No power limit** and nothing is written.
+
+The **Effective power limit** sensor shows the value in use.
 
 ### Solar charging
 
@@ -199,7 +200,7 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | Fail-safe | A necessary sensor is unavailable. |
 | Not connected | No car is connected, or the charger reports an error. |
 | Charger unavailable | The charger's current or phase setting is unknown. |
-| No power limit | The power limit is 0. |
+| No power limit | The power limit entity has not reported a value yet, or is 0. |
 | Waiting after phase switch | A 40 s pause after a change to 3 phases. |
 | Charger not responding | The charger did not follow the last 3 writes. See [Taking control of the charger](#taking-control-of-the-charger). |
 

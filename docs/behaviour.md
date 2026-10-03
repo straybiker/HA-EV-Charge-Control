@@ -46,9 +46,9 @@ Each run applies the first rule that matches.
 
 ## Power limit
 
-- **Base power limit:** the device's own number entity.
-- **Effective power limit:** while "Follow monthly peak" is on and a monthly peak sensor is set and has a value: `max(base, peak factor × monthly peak)`. The peak factor is a setup field (default 90 %). Otherwise the base limit. The capacity tariff bills the month's highest quarter-hour, so once that peak is set, charging up to a share of it costs nothing extra.
-- The integration does not compute the peak. It reads an existing sensor or number entity (W or kW).
+- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS, for example this month's capacity tariff peak. The EMS decides how it follows the peak.
+- **Effective power limit** = peak factor × power limit. The peak factor is an optional setup field (50–100 %, empty: 100 %): a safety buffer, so a held charging power stays below the billed peak.
+- Limit unavailable: the last known value. No value since start: 0, so the controller has no power limit and writes nothing.
 - The controller uses the effective limit everywhere the rules above say "power limit".
 
 ## Charger maximum
@@ -122,7 +122,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 | `failsafe` | A required sensor is unavailable |
 | `not_connected` | No car plugged in, or the charger reports an error |
 | `charger_unavailable` | The charger's current or phase setting is unknown |
-| `no_power_limit` | The power limit is 0 |
+| `no_power_limit` | The power limit entity has no value yet, or is 0 |
 | `grace_period` | Waiting after a 1→3 phase switch |
 | `charger_not_responding` | The charger did not follow the last 3 writes (shown while Control charger is on) |
 
@@ -155,8 +155,8 @@ A change to the charging behaviour adds or updates a row here.
 | B6 | Efficiency learning | Running average, steady samples only, reset on unplug. |
 | B7 | Charger quirks | Current step (0.1 A or 1 A) and "widen small decreases" are charger options. |
 | B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and connection changes. Power sensor updates do not trigger a run. |
-| B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the runtime settings are device entities. |
-| B10 | Power limit | Effective limit = max(base, peak factor × monthly peak) with "Follow monthly peak" on. The monthly peak is an existing sensor; the integration does not compute it. |
+| B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the power limit is an existing entity; the runtime settings are device entities. |
+| B10 | Power limit | From a required entity (helper or EMS); the EMS, not the integration, makes it follow the monthly peak. Effective limit = peak factor × limit; the optional peak factor is a safety buffer (empty: 100 %). Unavailable: last known value; none yet: no power limit. |
 | B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
 | B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
 | B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |

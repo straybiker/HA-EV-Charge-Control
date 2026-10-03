@@ -38,13 +38,13 @@ from .const import (
     CONF_INITIAL_SETTINGS,
     CONF_MAX_CURRENT_ENTITY,
     CONF_MIN_CURRENT,
-    CONF_MONTHLY_PEAK,
     CONF_NAME,
     CONF_PEAK_FACTOR,
     CONF_PHASE_OPTION_1,
     CONF_PHASE_OPTION_3,
     CONF_PHASE_SELECT,
     CONF_PHASE_SWITCH_DELAY,
+    CONF_POWER_LIMIT,
     CONF_POWER_UPDATE_THRESHOLD,
     CONF_PRICE,
     CONF_PRICE_ATTRIBUTE,
@@ -61,7 +61,6 @@ from .const import (
     DEFAULT_MAX_CURRENT,
     DEFAULT_MIN_CURRENT,
     DEFAULT_NAME,
-    DEFAULT_PEAK_FACTOR_PCT,
     DEFAULT_PHASE_SWITCH_DELAY_MIN,
     DEFAULT_POWER_UPDATE_THRESHOLD_W,
     DEFAULT_RECALC_INTERVAL_S,
@@ -185,9 +184,10 @@ LIMITS_SCHEMA = vol.Schema(
 HOUSEHOLD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOUSE_POWER): _entity("sensor", SensorDeviceClass.POWER),
+        # A helper or an EMS entity, for example the capacity tariff peak.
+        vol.Required(CONF_POWER_LIMIT): _entity(["sensor", "input_number", "number"]),
+        vol.Optional(CONF_PEAK_FACTOR): _number(50, 100, 1, "%"),
         vol.Optional(CONF_SOLAR_POWER): _entity("sensor", SensorDeviceClass.POWER),
-        # A sensor, or the number many capacity-tariff setups ratchet up.
-        vol.Optional(CONF_MONTHLY_PEAK): _entity(["sensor", "input_number", "number"]),
     }
 )
 
@@ -227,9 +227,6 @@ TUNING_SCHEMA = vol.Schema(
         ): _number(0, 60, 1, "min"),
         vol.Required(CONF_RECALC_INTERVAL, default=DEFAULT_RECALC_INTERVAL_S): _number(
             5, 60, 1, "s"
-        ),
-        vol.Required(CONF_PEAK_FACTOR, default=DEFAULT_PEAK_FACTOR_PCT): _number(
-            50, 100, 1, "%"
         ),
     }
 )
@@ -371,6 +368,7 @@ _PER_CONTROLLER_INPUTS = (
     CONF_MAX_CURRENT_ENTITY,
     CONF_ENERGY_METER,
     CONF_HOUSE_POWER,
+    CONF_POWER_LIMIT,
     CONF_CAR_SOC,
     CONF_EMS,
 )

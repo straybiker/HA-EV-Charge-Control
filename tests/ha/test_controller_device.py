@@ -21,7 +21,6 @@ from custom_components.ev_charge_control.diagnostics import (
 )
 
 from .conftest import (
-    BASE_LIMIT,
     CHARGED,
     CHARGED_GRID,
     CHARGED_SOLAR,
@@ -29,12 +28,11 @@ from .conftest import (
     CHARGER_POWER,
     DECISION,
     EFFECTIVE_LIMIT,
-    FOLLOW_PEAK,
     HOUSE_POWER,
     MAX_CURRENT,
     MODE3,
     MODE_SELECT,
-    MONTHLY_PEAK,
+    POWER_LIMIT,
     TARGET_CURRENT,
     TARGET_PHASES,
     W,
@@ -73,7 +71,8 @@ async def test_defaults_on_first_creation(
 ) -> None:
     await setup(hass, entry)
     assert hass.states.get(MODE_SELECT).state == "off"
-    assert hass.states.get(BASE_LIMIT).state == "5000"
+    # The power limit comes from an entity; the device has no own number.
+    assert hass.states.get("number.test_charger_base_power_limit") is None
     assert hass.states.get("number.test_charger_target_soc").state == "80"
     assert (
         hass.states.get("switch.test_charger_charge_on_solar_when_ems_blocks").state
@@ -82,34 +81,32 @@ async def test_defaults_on_first_creation(
     assert hass.states.get(DECISION).state == "off"
     # Tuning values are setup fields, not entities.
     assert hass.states.get("number.test_charger_phase_switch_delay") is None
-    # No monthly peak sensor in the setup: no follow switch.
-    assert hass.states.get(FOLLOW_PEAK) is None
 
 
 async def test_settings_restore_after_restart(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
     number_extra = {
-        "native_value": 7000,
+        "native_value": 60,
         "native_min_value": 0,
-        "native_max_value": 25000,
-        "native_step": 100,
-        "native_unit_of_measurement": "W",
+        "native_max_value": 100,
+        "native_step": 1,
+        "native_unit_of_measurement": "%",
     }
     mock_restore_cache_with_extra_data(
         hass,
         (
             (State(MODE_SELECT, "limited"), {}),
             (State("switch.test_charger_car_aware", "on"), {}),
-            (State(BASE_LIMIT, "7000"), number_extra),
+            (State("number.test_charger_target_soc", "60"), number_extra),
         ),
     )
     await setup(hass, entry)
     assert hass.states.get(MODE_SELECT).state == "limited"
     assert hass.states.get("switch.test_charger_car_aware").state == "on"
-    assert hass.states.get(BASE_LIMIT).state == "7000"
-    # 7000 W limit - 500 W house = 6500 W on 3 phases = 9.4 A
-    assert hass.states.get(TARGET_CURRENT).state == "9.4"
+    assert hass.states.get("number.test_charger_target_soc").state == "60"
+    # 5000 W limit - 500 W house = 4500 W on 3 phases = 6.5 A
+    assert hass.states.get(TARGET_CURRENT).state == "6.5"
 
 
 async def test_mode_change_runs_at_once(
@@ -169,40 +166,34 @@ async def test_kw_sensors_are_converted(hass: HomeAssistant, sources) -> None:
     assert hass.states.get(TARGET_CURRENT).state == "6.5"
 
 
-async def test_monthly_peak_raises_the_limit(hass: HomeAssistant, sources) -> None:
-    hass.states.async_set(MONTHLY_PEAK, "8", {"unit_of_measurement": "kW"})
-    await setup(hass, make_entry(hass, monthly_peak_entity=MONTHLY_PEAK))
-    assert hass.states.get(FOLLOW_PEAK).state == "on"  # default on
+async def test_power_limit_from_the_entity_with_the_factor(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set(POWER_LIMIT, "8", {"unit_of_measurement": "kW"})
+    await setup(hass, make_entry(hass, peak_factor_pct=90))
     await _select(hass, "limited")
-    # max(5000 W base, 90 % x 8000 W) = 7200 W; 6700 W headroom on 3 phases
+    # 90 % x 8000 W = 7200 W; 6700 W headroom on 3 phases
     assert hass.states.get(EFFECTIVE_LIMIT).state == "7200"
     assert hass.states.get(TARGET_CURRENT).state == "9.7"
 
 
-async def test_monthly_peak_from_a_number_entity(hass: HomeAssistant, sources) -> None:
-    """Peak automations often ratchet an input_number instead of a sensor."""
-    peak = "input_number.test_monthly_peak"
-    hass.states.async_set(peak, "8000", {"unit_of_measurement": "W"})
-    await setup(hass, make_entry(hass, monthly_peak_entity=peak))
-    assert hass.states.get(EFFECTIVE_LIMIT).state == "7200"
-
-
-async def test_follow_off_uses_the_base_limit(hass: HomeAssistant, sources) -> None:
-    hass.states.async_set(MONTHLY_PEAK, "8000", W)
-    await setup(hass, make_entry(hass, monthly_peak_entity=MONTHLY_PEAK))
-    await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": FOLLOW_PEAK}, blocking=True
-    )
-    await _tick(hass, _DEBOUNCE)
-    assert hass.states.get(EFFECTIVE_LIMIT).state == "5000"
-
-
-async def test_unavailable_peak_uses_the_base_limit(
-    hass: HomeAssistant, sources
+async def test_unavailable_limit_keeps_the_last_value(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
-    hass.states.async_set(MONTHLY_PEAK, "unavailable")
-    await setup(hass, make_entry(hass, monthly_peak_entity=MONTHLY_PEAK))
+    await setup(hass, entry)
+    hass.states.async_set(POWER_LIMIT, "unavailable")
+    await _tick(hass)
     assert hass.states.get(EFFECTIVE_LIMIT).state == "5000"
+
+
+async def test_no_limit_value_yet_means_no_power_limit(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    hass.states.async_set(POWER_LIMIT, "unavailable")
+    await setup(hass, entry)
+    await _select(hass, "limited")
+    assert hass.states.get(DECISION).state == "no_power_limit"
+    assert hass.states.get(EFFECTIVE_LIMIT).state == "0"
 
 
 async def test_max_current_entity_and_its_fallback(
@@ -210,7 +201,7 @@ async def test_max_current_entity_and_its_fallback(
 ) -> None:
     hass.states.async_set(MAX_CURRENT, "unavailable")
     await setup(hass, entry)
-    await _set_number(hass, BASE_LIMIT, 10000)
+    hass.states.async_set(POWER_LIMIT, "10000", W)
     await _select(hass, "fast")
     await _tick(hass, _DEBOUNCE)
     # No max seen yet: the 7 A fallback current is the maximum.

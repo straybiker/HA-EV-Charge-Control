@@ -17,7 +17,7 @@ CHARGER_ENERGY = "sensor.test_charger_energy"
 CURRENT_LIMIT = "number.test_current_limit"
 PHASE_SELECT = "select.test_phases"
 HOUSE_POWER = "sensor.test_house_power"
-MONTHLY_PEAK = "sensor.test_monthly_peak"
+POWER_LIMIT = "input_number.test_power_limit"
 CAR_SOC = "sensor.test_car_soc"
 
 NAME_STEP = {"name": "Test charger"}
@@ -42,12 +42,11 @@ LIMITS_STEP = {
     "failsafe_keeps_phase": False,
 }
 PHASES_STEP = {"phase_option_1": "1 Phase", "phase_option_3": "3 Phases"}
-HOUSEHOLD_STEP = {"house_power_entity": HOUSE_POWER}
+HOUSEHOLD_STEP = {"house_power_entity": HOUSE_POWER, "power_limit_entity": POWER_LIMIT}
 TUNING_STEP = {
     "power_update_threshold_w": 230,
     "phase_switch_delay_min": 5,
     "recalc_interval_s": 10,
-    "peak_factor_pct": 90,
 }
 
 OPTIONS = (
@@ -63,12 +62,10 @@ OPTIONS = (
 
 # Device "Test charger" gives entity ids test_charger_<key>.
 MODE_SELECT = "select.test_charger_charge_mode"
-BASE_LIMIT = "number.test_charger_base_power_limit"
 DECISION = "sensor.test_charger_decision"
 TARGET_CURRENT = "sensor.test_charger_target_current"
 TARGET_PHASES = "sensor.test_charger_target_phases"
 EFFECTIVE_LIMIT = "sensor.test_charger_effective_power_limit"
-FOLLOW_PEAK = "switch.test_charger_follow_monthly_peak"
 CONTROL = "switch.test_charger_control_charger"
 CHARGED = "sensor.test_charger_charged_energy"
 CHARGED_GRID = "sensor.test_charger_charged_from_grid"
@@ -93,6 +90,7 @@ def sources(hass: HomeAssistant) -> None:
     hass.states.async_set(CURRENT_LIMIT, "0")
     hass.states.async_set(PHASE_SELECT, "1 Phase", {"options": ["1 Phase", "3 Phases"]})
     hass.states.async_set(HOUSE_POWER, "500", W)
+    hass.states.async_set(POWER_LIMIT, "5000", {"unit_of_measurement": "W"})
 
 
 def make_entry(hass: HomeAssistant, **options) -> MockConfigEntry:
