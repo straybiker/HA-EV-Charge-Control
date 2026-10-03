@@ -318,6 +318,48 @@ async def _validate_price(
     return user_input
 
 
+# Inputs that belong to one charger, car, house budget or load. Another
+# controller reading them can work against this one, so setup warns. Solar
+# power, the monthly peak and the price are shared by one house by nature.
+_PER_CONTROLLER_INPUTS = (
+    CONF_CHARGER_POWER,
+    CONF_APPLIED_CURRENT,
+    CONF_ACTIVE_PHASES,
+    CONF_CONNECTION,
+    CONF_MAX_CURRENT_ENTITY,
+    CONF_ENERGY_METER,
+    CONF_HOUSE_POWER,
+    CONF_CAR_SOC,
+    CONF_EMS,
+)
+
+
+def _shared_inputs(handler: SchemaCommonFlowHandler) -> list[str]:
+    """Lines like '- sensor.x (Garage)' for inputs other controllers also use."""
+    own = _own_entry_id(handler)
+    ours = [handler.options.get(key) for key in _PER_CONTROLLER_INPUTS]
+    lines: list[str] = []
+    for entry in _hass(handler).config_entries.async_entries(DOMAIN):
+        if entry.entry_id == own:
+            continue
+        theirs = {entry.options.get(key) for key in _PER_CONTROLLER_INPUTS}
+        lines += [
+            f"- {entity} ({entry.title})"
+            for entity in dict.fromkeys(ours)
+            if entity and entity in theirs
+        ]
+    return lines
+
+
+async def _shared_schema(handler: SchemaCommonFlowHandler) -> vol.Schema | None:
+    """An empty confirmation form, or None to skip the step."""
+    return vol.Schema({}) if _shared_inputs(handler) else None
+
+
+async def _shared_placeholders(handler: SchemaCommonFlowHandler) -> dict[str, str]:
+    return {"shared": "\n".join(_shared_inputs(handler))}
+
+
 def _steps(first: str, with_name: bool) -> dict[str, SchemaFlowFormStep]:
     return {
         first: SchemaFlowFormStep(
@@ -338,7 +380,13 @@ def _steps(first: str, with_name: bool) -> dict[str, SchemaFlowFormStep]:
         "price": SchemaFlowFormStep(
             PRICE_SCHEMA, validate_user_input=_validate_price, next_step="tuning"
         ),
-        "tuning": SchemaFlowFormStep(TUNING_SCHEMA, next_step=None),
+        "tuning": SchemaFlowFormStep(TUNING_SCHEMA, next_step="shared"),
+        # A warning, not an error: one car can use two chargers, for example.
+        "shared": SchemaFlowFormStep(
+            _shared_schema,
+            description_placeholders=_shared_placeholders,
+            next_step=None,
+        ),
     }
 
 

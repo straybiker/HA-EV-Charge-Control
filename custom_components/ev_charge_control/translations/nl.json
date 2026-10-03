@@ -108,6 +108,10 @@
           "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
           "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
         }
+      },
+      "shared": {
+        "title": "Invoer gedeeld met een andere regelaar",
+        "description": "Deze entiteiten worden ook gebruikt door een andere laadregelaar:\n\n{shared}\n\nTwee regelaars die dezelfde laadpaal, auto, huisverbruik of EMS-signaal lezen, kunnen elkaar tegenwerken. Zo nemen ze allebei de volledige ruimte onder de vermogenslimiet, en samen overschrijden ze die. Verstuur om toch verder te gaan, of sluit dit venster om te annuleren."
       }
     },
     "error": {
@@ -232,6 +236,10 @@
           "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
           "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
         }
+      },
+      "shared": {
+        "title": "Invoer gedeeld met een andere regelaar",
+        "description": "Deze entiteiten worden ook gebruikt door een andere laadregelaar:\n\n{shared}\n\nTwee regelaars die dezelfde laadpaal, auto, huisverbruik of EMS-signaal lezen, kunnen elkaar tegenwerken. Zo nemen ze allebei de volledige ruimte onder de vermogenslimiet, en samen overschrijden ze die. Verstuur om toch verder te gaan, of sluit dit venster om te annuleren."
       }
     },
     "error": {

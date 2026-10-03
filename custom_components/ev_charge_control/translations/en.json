@@ -108,6 +108,10 @@
           "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
           "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
         }
+      },
+      "shared": {
+        "title": "Inputs shared with another controller",
+        "description": "These entities are also used by another charge controller:\n\n{shared}\n\nTwo controllers that read the same charger, car, house power or EMS signal can work against each other. For example, both take the full headroom under the power limit, so together they exceed it. Submit to continue anyway, or close this dialog to cancel."
       }
     },
     "error": {
@@ -232,6 +236,10 @@
           "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
           "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
         }
+      },
+      "shared": {
+        "title": "Inputs shared with another controller",
+        "description": "These entities are also used by another charge controller:\n\n{shared}\n\nTwo controllers that read the same charger, car, house power or EMS signal can work against each other. For example, both take the full headroom under the power limit, so together they exceed it. Submit to continue anyway, or close this dialog to cancel."
       }
     },
     "error": {

@@ -81,6 +81,8 @@ The setup has seven steps. To change them later, select **Configure** on the int
 | 6. Price and EMS | Optional: price sensor (or one of its attributes) and EMS signal. Without a price, the price check is skipped. |
 | 7. Tuning | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s), peak factor (90 %). |
 
+**More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power, the monthly peak and the price can be shared.
+
 The controller uses the **fallback current and phases** after a sensor fault, and one minute after the car is unplugged. This makes the next session start gently. With **Keep the phase on a sensor fault** off, a fault switches to the fallback phases. A charger that stops responding then does not stay on an unintended phase.
 
 ## User manual

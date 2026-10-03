@@ -11,8 +11,10 @@ from custom_components.ev_charge_control.const import DOMAIN
 
 from .conftest import (
     CAR_SOC,
+    CHARGER_POWER,
     CHARGER_STEP,
     CONTROLS_STEP,
+    HOUSE_POWER,
     HOUSEHOLD_STEP,
     MODE3,
     OPTIONS,
@@ -155,3 +157,22 @@ async def test_options_flow_edits_and_clears(
     assert entry.options["fallback_current_a"] == 8
     assert entry.options["recalc_interval_s"] == 30
     assert "price_entity" not in entry.options  # cleared optional field
+
+
+async def test_shared_inputs_give_a_warning_step(hass: HomeAssistant, sources) -> None:
+    """Another controller on other outputs but the same charger sensors."""
+    other = OPTIONS | {
+        "current_limit_entity": "number.test_other_limit",
+        "phase_select_entity": "select.test_other_phases",
+    }
+    MockConfigEntry(domain=DOMAIN, title="Garage", options=other).add_to_hass(hass)
+    result = await _to_step(hass, "tuning")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "shared"
+    shared = result["description_placeholders"]["shared"]
+    assert f"- {CHARGER_POWER} (Garage)" in shared
+    assert f"- {HOUSE_POWER} (Garage)" in shared
+    # A warning only: submitting continues.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
