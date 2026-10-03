@@ -250,13 +250,20 @@ async def _validate_controls(
     state = hass.states.get(user_input[CONF_PHASE_SELECT])
     if state is None or len(state.attributes.get("options") or []) < 2:
         raise SchemaFlowError("phase_select_unavailable")
+    # Two controllers writing the same output would overwrite each other at
+    # every run, and neither could confirm its writes.
     own = _own_entry_id(handler)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            entry.entry_id != own
-            and entry.options.get(CONF_CURRENT_LIMIT) == user_input[CONF_CURRENT_LIMIT]
-        ):
-            raise SchemaFlowError("current_entity_in_use")
+    others = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != own]
+    if any(
+        e.options.get(CONF_CURRENT_LIMIT) == user_input[CONF_CURRENT_LIMIT]
+        for e in others
+    ):
+        raise SchemaFlowError("current_entity_in_use")
+    if any(
+        e.options.get(CONF_PHASE_SELECT) == user_input[CONF_PHASE_SELECT]
+        for e in others
+    ):
+        raise SchemaFlowError("phase_entity_in_use")
     return user_input
 
 

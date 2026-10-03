@@ -74,7 +74,7 @@ The setup has seven steps. To change them later, select **Configure** on the int
 | Step | What you enter |
 |---|---|
 | 1. Charger | Entities: charger power, applied current, active phases, connection state, maximum current. Values: minimum current (6 A), fallback current (7 A), fallback phases (1), voltage (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), keep the phase on a sensor fault (off). Optional: the charger's energy meter. |
-| 2. Charger controls | The current-limit `number` and the phase `select`. What the charger gets when you switch Control charger off (fallback current and phases). |
+| 2. Charger controls | The current-limit `number` and the phase `select`. Each can belong to one controller only, so two controllers never write the same output. What the charger gets when you switch Control charger off (fallback current and phases). |
 | 3. Phase options | The option of the phase select for 1 phase and for 3 phases. |
 | 4. Household | House power without the charger. Optional: solar power, monthly peak. |
 | 5. Car | Optional: battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |

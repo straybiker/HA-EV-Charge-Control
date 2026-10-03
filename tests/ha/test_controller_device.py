@@ -16,7 +16,6 @@ from pytest_homeassistant_custom_component.common import (
     mock_restore_cache_with_extra_data,
 )
 
-from custom_components.ev_charge_control.const import DOMAIN
 from custom_components.ev_charge_control.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -297,7 +296,8 @@ async def test_controller_is_a_regular_device(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
     await setup(hass, entry)
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
-    assert device is not None
+    devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+    assert len(devices) == 1
+    device = devices[0]
     assert device.entry_type is None
     assert device.model == "Charge controller"

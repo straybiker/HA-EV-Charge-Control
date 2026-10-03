@@ -103,6 +103,13 @@ async def test_one_entry_per_charger(hass: HomeAssistant, sources) -> None:
     assert await _error(hass, "controls", CONTROLS_STEP) == "current_entity_in_use"
 
 
+async def test_phase_setting_is_not_shared(hass: HomeAssistant, sources) -> None:
+    """A two-socket charger: own current limits, one phase setting."""
+    other = OPTIONS | {"current_limit_entity": "number.test_socket_2_limit"}
+    MockConfigEntry(domain=DOMAIN, options=other).add_to_hass(hass)
+    assert await _error(hass, "controls", CONTROLS_STEP) == "phase_entity_in_use"
+
+
 async def test_phase_options_must_differ(hass: HomeAssistant, sources) -> None:
     data = {"phase_option_1": "1 Phase", "phase_option_3": "1 Phase"}
     assert await _error(hass, "phases", data) == "same_phase_option"
