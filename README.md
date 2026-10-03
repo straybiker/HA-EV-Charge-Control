@@ -211,10 +211,11 @@ For a support request, download the diagnostics from the device page (⋮ → **
 
 ## Roadmap
 
-- A brand icon and the first HACS release.
+- Listing in the HACS default store.
 
 ## Documentation
 
+- [Migrating from EV Load Balancer](docs/migration.md): parameter mapping and switch-over steps.
 - [Charging behaviour](docs/behaviour.md): all rules and the design decisions.
 - [Engine](docs/engine.md): the decision engine.
 - [Home Assistant integration](docs/integration.md): runtime, entities and validation.
@@ -224,7 +225,7 @@ For a support request, download the diagnostics from the device page (⋮ → **
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, the tests and the conventions.
 
-This project replaces [EV Load Balancer](https://github.com/straybiker/HA-load-balancer), a YAML package for the same purpose. It keeps the intent of that package, not its design.
+This project replaces [EV Load Balancer](https://github.com/straybiker/HA-load-balancer), a YAML package for the same purpose. It keeps the intent of that package, not its design. To move over, follow the [migration guide](docs/migration.md).
 
 ## License
 

@@ -68,6 +68,12 @@ python scripts/report/build.py
 
 The YAML package column needs a checkout of [EV Load Balancer](https://github.com/straybiker/HA-load-balancer) next to this repository, as `../EV_Loadbalancer`. Without it, that column is empty.
 
+## Releases
+
+1. Set the same version in `custom_components/ev_charge_control/manifest.json` and `pyproject.toml` (SemVer). `tests/test_manifest.py` checks that they match.
+2. Rebuild and commit the test report.
+3. Publish a GitHub release with the tag `v<version>`, for example `v0.3.0`. HACS offers releases as versions; the Release workflow fails when the tag does not match the manifest.
+
 ## Pull requests
 
 - Branch from `main`.

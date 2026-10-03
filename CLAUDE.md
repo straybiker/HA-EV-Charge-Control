@@ -55,6 +55,7 @@ ruff format --check .
 
 - Test report: after a change to behaviour or tests, rebuild `docs/test-report.md` and `.html` with `python scripts/report/collect.py` (Docker) or `collect.py --ci` (the finished CI run of the pushed HEAD), then `python scripts/report/build.py`, and commit them with the change. Use the Windows venv's python.
 - Keep development notes out of the repository: no dated decisions, commit hashes or conversation history in docs. The decision record states the decision and the reason only.
+- Releases: bump the version in `manifest.json` and `pyproject.toml` together; tag `v<version>`. See CONTRIBUTING.md.
 - Translations: `strings.json` and `translations/en.json` must stay identical; `translations/nl.json` must have the same keys. `tests/test_translations.py` checks both.
 - Run hassfest locally before pushing manifest, strings or icons changes: `docker run --rm -v "<repo>:/github/workspace" ghcr.io/home-assistant/hassfest`.
 - The shell is PowerShell on Windows 11. Test Windows-facing tooling in `pwsh`, not in Git Bash.

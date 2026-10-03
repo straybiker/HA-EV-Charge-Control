@@ -65,4 +65,5 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - **HACS action** checks the repository: description, topics, issues, `hacs.json` and the brand icon.
 - Translations: custom integrations ship the full text in `strings.json` and `translations/*.json`; `[%key:…%]` references only work in core. Selector option keys must match `[a-z0-9-_]+`.
 - Home Assistant 2026.3 is the first release on Python 3.14 and the minimum version (`hacs.json`). The tests run against the version that `pytest-homeassistant-custom-component` pins in `requirements-dev.txt`.
-- Without a GitHub release, HACS installs the latest commit.
+- Brand images ship in `brand/`: `icon.png` (256 × 256) and `icon@2x.png` (512 × 512), trimmed, transparent background. `tests/test_manifest.py` checks the sizes.
+- HACS offers GitHub releases as versions. The Release workflow checks that the tag equals the manifest version.

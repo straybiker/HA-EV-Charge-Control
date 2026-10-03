@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Tag matches manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # HACS shows the release tag as the version; Home Assistant shows the
+      # manifest version. A release where they differ confuses both.
+      - name: Compare tag and manifest version
+        run: |
+          manifest=$(jq -r .version custom_components/ev_charge_control/manifest.json)
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match manifest version $manifest"
+            exit 1
+          fi

@@ -2,6 +2,8 @@
 
 import json
 import re
+import struct
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -39,6 +41,7 @@ REQUIRED_MANIFEST_KEYS = {
     "requirements",
     "version",
 }
+PNG_SIGNATURE = bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A])
 
 
 def _manifest() -> dict:
@@ -79,5 +82,19 @@ def test_hacs_json_is_valid() -> None:
     assert not hacs.get("content_in_root", False)
 
 
-def test_brand_icon_exists() -> None:
-    assert (INTEGRATION_DIR / "brand" / "icon.png").is_file()
+def test_pyproject_version_matches_manifest() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text("utf-8"))
+    assert pyproject["project"]["version"] == _manifest()["version"]
+
+
+def _png_size(path: Path) -> tuple[int, int]:
+    """Width and height from the PNG header, without an image library."""
+    data = path.read_bytes()[:24]
+    assert data[:8] == PNG_SIGNATURE
+    return struct.unpack(">II", data[16:24])
+
+
+def test_brand_images_have_the_home_assistant_sizes() -> None:
+    brand = INTEGRATION_DIR / "brand"
+    assert _png_size(brand / "icon.png") == (256, 256)
+    assert _png_size(brand / "icon@2x.png") == (512, 512)
