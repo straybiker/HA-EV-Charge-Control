@@ -114,7 +114,9 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 
 ## Decision record
 
-The controller started as a port of the EV Load Balancer YAML package ([straybiker/HA-load-balancer](https://github.com/straybiker/HA-load-balancer), commit `f47eeca`). These decisions, made on 03/10/2026, define where and why it differs. The YAML-faithful version is commit `b44bbaa` in this repository.
+The controller has the same purpose as the [EV Load Balancer](https://github.com/straybiker/HA-load-balancer) YAML package. These decisions record where and why it behaves differently. D items correct the package's behaviour; B items come from the redesign. The [test report](test-report.md) shows both side by side for the golden cases.
+
+A change to the charging behaviour adds or updates a row here.
 
 | ID | Topic | Decision |
 |---|---|---|
@@ -139,13 +141,16 @@ The controller started as a port of the EV Load Balancer YAML package ([straybik
 | B6 | Efficiency learning | Running average, steady samples only, reset on unplug. |
 | B7 | Charger quirks | Current step (0.1 A or 1 A) and "widen small decreases" are charger options. |
 | B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and connection changes. Power sensor updates do not trigger a run. |
-| B9 | Parameter sources | Each parameter of the YAML user config lives where the user chose: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the runtime settings are device entities. |
+| B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the runtime settings are device entities. |
 | B10 | Power limit | Effective limit = max(base, peak factor × monthly peak) with "Follow monthly peak" on. The monthly peak is an existing sensor; the integration does not compute it. |
 | B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
 | B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
 | B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |
 
-### Decided for charger control (not built yet)
+## Planned: charger control
 
-- A write the charger does not confirm is retried on the next run. After 3 failures in a row, a repair issue is raised and the decision becomes "charger not responding".
-- What the charger gets when "Control charger" is switched off is a setup option.
+Not built yet. Until then nothing is written to the charger.
+
+- A **Control charger** switch turns writing on and off.
+- A write that the charger does not confirm is retried at the next run. After 3 failures in a row, a repair issue is raised and the decision becomes "charger not responding".
+- A setup option sets what the charger gets when Control charger is switched off.

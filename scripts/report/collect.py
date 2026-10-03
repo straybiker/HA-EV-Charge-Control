@@ -152,10 +152,12 @@ def ci_results() -> tuple[dict, dict]:
         "--jq",
         '.check_runs[] | select(.name == "hassfest") | .conclusion',
     )
-    ok = conclusion == "success"
+    # Push and pull-request events each run hassfest: one line per run.
+    conclusions = set(conclusion.split())
+    ok = conclusions == {"success"}
     hassfest = {
         "invalid": 0 if ok else None,
-        "errors": [] if ok else [f"hassfest: {conclusion or 'not run'}"],
+        "errors": [] if ok else [f"hassfest: {', '.join(conclusions) or 'not run'}"],
     }
     return hassfest, {"kind": "ci", "label": "GitHub Actions", "url": done[0]["url"]}
 
@@ -295,7 +297,19 @@ def main() -> None:
             "homeassistant": ha_version.group(1) if ha_version else "?",
             "branch": run("git", "branch", "--show-current"),
             "base_commit": run("git", "rev-parse", "--short", "HEAD"),
-            "dirty": bool(run("git", "status", "--porcelain")),
+            # Only changes that can alter a result; docs and the report scripts cannot.
+            "dirty": bool(
+                run(
+                    "git",
+                    "status",
+                    "--porcelain",
+                    "--",
+                    "custom_components",
+                    "tests",
+                    "requirements-dev.txt",
+                    "pyproject.toml",
+                )
+            ),
             "source": source,
         },
         "counts": dict(Counter(t["outcome"] for t in tests)),

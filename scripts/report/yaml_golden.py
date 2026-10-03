@@ -64,7 +64,7 @@ def _bool(value, default=False):
     return bool(value)
 
 
-class _Oracle:
+class _Package:
     """The package's variable chain, compiled once."""
 
     def __init__(self) -> None:
@@ -103,7 +103,7 @@ class _Oracle:
         return ctx
 
 
-_ORACLE: _Oracle | None = None
+_PACKAGE: _Package | None = None
 
 
 def yaml_result(
@@ -123,8 +123,8 @@ def yaml_result(
     The engine's "solar when EMS blocks" is the YAML's pv_prioritized. The
     YAML has no bridge in Solar mode, so the engine's bridge has no input here.
     """
-    global _ORACLE
-    _ORACLE = _ORACLE or _Oracle()
+    global _PACKAGE
+    _PACKAGE = _PACKAGE or _Package()
     db = {
         "sensor.ev_load_balancer_house": str(int(house_w)),
         "sensor.ev_load_balancer": {
@@ -167,5 +167,5 @@ def yaml_result(
         _CURRENT_OUTPUT: "0.0",
         "timer.ev_load_balancer_phase_switching_timer": "idle",
     }
-    ctx = _ORACLE.render(db)
+    ctx = _PACKAGE.render(db)
     return int(ctx["adjusted_phase_selection"]), float(ctx["adjusted_current_limit"])
