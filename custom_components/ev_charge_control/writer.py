@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -102,8 +103,7 @@ class ChargerWriter:
         if not control or setpoint is None or self.busy:
             return
         self._retry = False
-        by_charger = m.connection == ConnectionState.CONNECTED
-        self._start(self._write(setpoint, by_charger))
+        self._start(self._write(setpoint, _charger_can_confirm(m)))
 
     def release(self, m: Measurements) -> None:
         """Control charger was switched off: hand over the charger once."""
@@ -153,7 +153,7 @@ class ChargerWriter:
     async def _write(self, sp: Setpoint, by_charger: bool) -> None:
         try:
             confirmed = await self._sequence(sp, by_charger)
-        except HomeAssistantError as err:
+        except (HomeAssistantError, vol.Invalid) as err:
             LOGGER.warning("Writing to the charger failed: %s", err)
             confirmed = False
         self._record(confirmed)
@@ -162,7 +162,7 @@ class ChargerWriter:
         """Write once without confirmation; control is off from now on."""
         try:
             await self._sequence(sp, by_charger=False)
-        except HomeAssistantError as err:
+        except (HomeAssistantError, vol.Invalid) as err:
             LOGGER.warning("Handing the charger over failed: %s", err)
 
     async def _sequence(self, sp: Setpoint, by_charger: bool) -> bool:
@@ -189,8 +189,8 @@ class ChargerWriter:
                 return False
         return True
 
-    # Confirmation: by the charger's own sensors while a car is connected;
-    # without a car they may not follow, so the control entities count.
+    # Confirmation: by the charger's own sensors when they can tell (see
+    # _charger_can_confirm); otherwise the control entities count.
 
     def _current_is(
         self, current_a: float, phase: Phase, by_charger: bool
@@ -283,6 +283,20 @@ class ChargerWriter:
         finally:
             unsub_state()
             unsub_timer()
+
+
+def _charger_can_confirm(m: Measurements) -> bool:
+    """Whether the charger's own sensors can confirm a write.
+
+    Without a car they may not follow. With the applied current or active
+    phases unavailable (the fail-safe case) they cannot, and waiting for them
+    would blame the charger for a sensor fault.
+    """
+    return (
+        m.connection == ConnectionState.CONNECTED
+        and m.applied_current_a is not None
+        and m.active_phases is not None
+    )
 
 
 def _same(value: float | None, target: float) -> bool:

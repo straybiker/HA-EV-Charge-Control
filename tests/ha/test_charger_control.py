@@ -147,6 +147,23 @@ async def test_unconfirmed_writes_raise_a_repair_issue_until_the_charger_follows
     assert hass.states.get(DECISION).state == "charging"
 
 
+async def test_fail_safe_writes_are_confirmed_by_the_control_entities(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """A dead applied-current sensor is a sensor fault, not a charger fault."""
+    _on_three_phases(hass)
+    hass.states.async_set(CURRENT_LIMIT, "10")
+    hass.states.async_set(APPLIED_CURRENT, "unavailable")
+    _start_in(hass, "fast")
+    await setup(hass, entry)
+    charger = FakeCharger(hass, follows=False)
+    await _switch(hass, True)
+    await _settle(hass)
+    assert hass.states.get(DECISION).state == "failsafe"
+    assert charger.calls == [("phase", "1 Phase"), ("current", 7.0)]
+    assert entry.runtime_data.coordinator.writer.failures == 0
+
+
 async def test_switching_control_off_hands_over_the_fallback(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:

@@ -28,6 +28,8 @@ def init_entity(
     entity: Entity, entry: ConfigEntry, description: EntityDescription
 ) -> None:
     entity.entity_description = description
+    # Settings write their own state; outputs follow the coordinator.
+    entity._attr_should_poll = False
     entity._attr_has_entity_name = True
     entity._attr_translation_key = description.translation_key or description.key
     entity._attr_unique_id = f"{entry.entry_id}_{description.key}"

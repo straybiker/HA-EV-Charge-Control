@@ -92,7 +92,7 @@ What the controller writes, before the charger control below applies it.
 
 - **Control charger** (a switch on the device, off on a new device) turns writing on. While it is off, nothing is written and the decision sensors show what would be written (shadow mode).
 - Writes go to the charger's current-limit number and phase select, in this order: 0 A (only before a 1→3 switch), phase, current.
-- **Confirmation.** With a car connected, a write counts as confirmed when the charger follows: the applied current comes within the power update threshold of the written value (never stricter than half a current step) within 30 s, and the active phases match within 60 s. Without a car the charger's sensors may not follow, so the current-limit number and the phase select must show the written value. After the 0 A step the sequence goes on after at most 30 s, confirmed or not.
+- **Confirmation.** With a car connected, a write counts as confirmed when the charger follows: the applied current comes within the power update threshold of the written value (never stricter than half a current step) within 30 s, and the active phases match within 60 s. Without a car the charger's sensors may not follow, and with the applied current or active phases unavailable (fail-safe) they cannot: then the current-limit number and the phase select must show the written value, so a sensor fault is not reported as a charger fault. After the 0 A step the sequence goes on after at most 30 s, confirmed or not.
 - **One write at a time.** A write sequence runs in the background. Runs that come while it waits for the charger write nothing.
 - **Retry.** A write that is not confirmed is written again at the next run, also when the write filter sees nothing new.
 - **Not responding.** After 3 unconfirmed writes in a row, a repair issue is raised and the decision becomes `charger_not_responding`. The controller keeps retrying at each run. The first confirmed write closes the issue. A restart or switching Control charger off also closes it.
@@ -162,6 +162,6 @@ A change to the charging behaviour adds or updates a row here.
 | B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
 | B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |
 | B14 | Control charger | A device switch, off on a new device: a new controller starts in shadow mode until the user switches it on. |
-| B15 | Confirmation | The charger must follow: applied current within 30 s, active phases within 60 s, as in the YAML package. Without a car, the control entities confirm. |
+| B15 | Confirmation | The charger must follow: applied current within 30 s, active phases within 60 s, as in the YAML package. Without a car, or with those sensors unavailable, the control entities confirm. |
 | B16 | Not responding | Retry at each run; after 3 unconfirmed writes in a row a repair issue and decision `charger_not_responding`; the first confirmed write clears both. |
 | B17 | Control switched off | Hand the charger over once. Setup option: fallback current and phases (default), leave as it is, or stop (0 A). |

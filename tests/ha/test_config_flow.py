@@ -143,6 +143,8 @@ async def test_options_flow_edits_and_clears(
             result["flow_id"], data
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    # The options change reloads the entry; let that finish inside the test.
+    await hass.async_block_till_done()
     assert entry.options["fallback_current_a"] == 8
     assert entry.options["recalc_interval_s"] == 30
     assert "price_entity" not in entry.options  # cleared optional field
