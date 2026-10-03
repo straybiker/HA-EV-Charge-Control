@@ -59,7 +59,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 
 1. In HACS, open the menu and select **Custom repositories**.
 2. Add `https://github.com/straybiker/HA-EV-Charge-Control` with the type **Integration**.
-3. Install **EV Charge Control** and restart Home Assistant.
+3. Install **EV Charge Control** and restart Home Assistant. To get pre-releases (versions such as `0.3.0-beta.1`), turn on **Show beta versions** for the repository in HACS.
 
 **Manual**
 

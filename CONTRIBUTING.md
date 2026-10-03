@@ -74,6 +74,8 @@ The YAML package column needs a checkout of [EV Load Balancer](https://github.co
 2. Rebuild and commit the test report.
 3. Publish a GitHub release with the tag `v<version>`, for example `v0.3.0`. HACS offers releases as versions; the Release workflow fails when the tag does not match the manifest.
 
+For a test version, use a SemVer pre-release version such as `0.3.0-beta.1` and mark the GitHub release as a pre-release. HACS offers it only to users who turn on **Show beta versions** for the repository.
+
 ## Pull requests
 
 - Branch from `main`.
