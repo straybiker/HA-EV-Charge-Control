@@ -113,9 +113,13 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
 | Decision | Effective power limit | The limit in use: the power limit entity × the peak factor. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
-| Decision | Grid allowed, Emergency charging, Target reached | Yes/no details of the decision. |
+| Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
+| Decision | Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
-| Diagnostic | Charger efficiency, Solar surplus, Grid share, Phase hold until | More detail. |
+| Diagnostic | Solar surplus | The house export now (W), also without a car. |
+| Diagnostic | Grid share | The part of the target power that comes from the grid; 0 W while the controller does not charge. |
+| Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging. Starts again at 100 % after a restart. |
+| Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
 
 Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting, the connection or the phase changes.
 

@@ -58,8 +58,14 @@ class Controller:
         self._observe_phase(settings, m, car_aware, now)
         self._learn_efficiency(m)
         out = self._decide(settings, m, car_aware, now)
+        # Whether the grid may be used depends only on price and EMS, so it
+        # is known also when nothing is charging.
+        grid_allowed = out.grid_allowed
+        if grid_allowed is None:
+            grid_allowed = grid_gate_open(settings, m)
         return replace(
             out,
+            grid_allowed=grid_allowed,
             efficiency=self._efficiency,
             phase_hold_until=_active(self._phase_hold_until, now),
             grace_until=_active(self._grace_until, now),

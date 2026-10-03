@@ -399,6 +399,16 @@ def test_off_writes_zero_and_keeps_the_phase():
     assert out.setpoint is not None and not out.setpoint.write_phase
 
 
+def test_grid_allowed_is_known_without_charging():
+    assert step(M.OFF, 500).grid_allowed is True
+    high_price = {"price": 0.50}
+    assert (
+        step(M.OFF, 500, m=high_price, s={"max_cost_rate": 0.30}).grid_allowed is False
+    )
+    unplugged = {"connection": ConnectionState.DISCONNECTED}
+    assert step(M.LIMITED, 500, m=unplugged).grid_allowed is True
+
+
 def test_insufficient_power_keeps_the_phase():
     out = step(M.SOLAR, 500, m={"commanded_phase": Phase.THREE})
     assert out.reason == Reason.INSUFFICIENT_POWER and result(out) == (3, 0.0)

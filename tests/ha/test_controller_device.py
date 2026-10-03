@@ -159,6 +159,28 @@ async def test_unplug_runs_at_once(
     assert hass.states.get(DECISION).state == "not_connected"
 
 
+async def test_status_sensors_without_charging(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """Mode Off: the export, the grid gate and a zero grid share are known."""
+    hass.states.async_set(HOUSE_POWER, "-2000", W)
+    await setup(hass, entry)
+    assert hass.states.get("sensor.test_charger_solar_surplus").state == "2000"
+    assert hass.states.get("sensor.test_charger_grid_share").state == "0"
+    assert hass.states.get("binary_sensor.test_charger_grid_allowed").state == "on"
+
+
+async def test_grid_share_is_the_grid_part_of_the_target(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    hass.states.async_set(HOUSE_POWER, "-1000", W)
+    await setup(hass, entry)
+    await _select(hass, "fast")
+    target = float(hass.states.get("sensor.test_charger_target_power").state)
+    grid = float(hass.states.get("sensor.test_charger_grid_share").state)
+    assert grid == pytest.approx(target - 1000, abs=1)
+
+
 async def test_kw_sensors_are_converted(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(HOUSE_POWER, "0.5", {"unit_of_measurement": "kW"})
     await setup(hass, make_entry(hass))

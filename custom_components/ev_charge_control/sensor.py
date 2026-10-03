@@ -34,8 +34,17 @@ class OutputSensorDescription(SensorEntityDescription):
     value_fn: Callable[[Snapshot], Any]
 
 
-def _budget(field: str) -> Callable[[Snapshot], Any]:
-    return lambda s: round(getattr(s.output.budget, field)) if s.output.budget else None
+def _solar_surplus(s: Snapshot) -> int | None:
+    return None if s.solar_surplus_w is None else round(s.solar_surplus_w)
+
+
+def _grid_share(s: Snapshot) -> int | None:
+    """The part of the target power that comes from the grid; 0 when idle."""
+    if not s.output.current_a or s.output.power_w is None:
+        return 0
+    if s.solar_surplus_w is None:
+        return None
+    return round(max(s.output.power_w - s.solar_surplus_w, 0.0))
 
 
 def _energy(key: str, field: str) -> OutputSensorDescription:
@@ -91,7 +100,7 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_budget("solar_w"),
+        value_fn=_solar_surplus,
     ),
     OutputSensorDescription(
         key="grid_share",
@@ -99,7 +108,7 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_budget("grid_w"),
+        value_fn=_grid_share,
     ),
     OutputSensorDescription(
         key="phase_hold_until",

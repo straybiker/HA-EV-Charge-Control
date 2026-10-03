@@ -120,7 +120,7 @@
         "data_description": {
           "price_entity": "De afnameprijs per kWh. Boven Maximale laadkost gebruikt de auto het net niet.",
           "price_attribute": "Laat leeg om de sensorstatus te gebruiken. Vul in als de prijs een attribuut is, bijvoorbeeld rate_import.",
-          "ems_entity": "Een vermogenssensor van je EMS: het netbudget voor de auto in W, of aan/uit. 0 W blokkeert het net."
+          "ems_entity": "Een vermogenssensor van je EMS. 0 W blokkeert het net. Hoe de waarde gebruikt wordt, stel je in op het apparaat: EMS-sturing zet ze aan, EMS als aan/uit kiest tussen een wattbudget (uit: de auto neemt hoogstens zoveel van het net) en aan/uit (aan: elke waarde boven 0 W laat het net toe)."
         }
       },
       "tuning": {
@@ -265,7 +265,7 @@
         "data_description": {
           "price_entity": "De afnameprijs per kWh. Boven Maximale laadkost gebruikt de auto het net niet.",
           "price_attribute": "Laat leeg om de sensorstatus te gebruiken. Vul in als de prijs een attribuut is, bijvoorbeeld rate_import.",
-          "ems_entity": "Een vermogenssensor van je EMS: het netbudget voor de auto in W, of aan/uit. 0 W blokkeert het net."
+          "ems_entity": "Een vermogenssensor van je EMS. 0 W blokkeert het net. Hoe de waarde gebruikt wordt, stel je in op het apparaat: EMS-sturing zet ze aan, EMS als aan/uit kiest tussen een wattbudget (uit: de auto neemt hoogstens zoveel van het net) en aan/uit (aan: elke waarde boven 0 W laat het net toe)."
         }
       },
       "tuning": {

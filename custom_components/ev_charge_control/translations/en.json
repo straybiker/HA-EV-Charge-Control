@@ -120,7 +120,7 @@
         "data_description": {
           "price_entity": "The import price per kWh. Above Max charging cost, the car does not use the grid.",
           "price_attribute": "Leave empty to use the sensor state. Fill in when the price is an attribute, for example rate_import.",
-          "ems_entity": "A power sensor of your EMS: the grid budget for the car in W, or on/off. 0 W blocks the grid."
+          "ems_entity": "A power sensor of your EMS. 0 W blocks the grid. How the value is used is set on the device: EMS control turns it on, EMS as on/off chooses between a watt budget (off: the car takes at most this much from the grid) and on/off (on: any value above 0 W allows the grid)."
         }
       },
       "tuning": {
@@ -265,7 +265,7 @@
         "data_description": {
           "price_entity": "The import price per kWh. Above Max charging cost, the car does not use the grid.",
           "price_attribute": "Leave empty to use the sensor state. Fill in when the price is an attribute, for example rate_import.",
-          "ems_entity": "A power sensor of your EMS: the grid budget for the car in W, or on/off. 0 W blocks the grid."
+          "ems_entity": "A power sensor of your EMS. 0 W blocks the grid. How the value is used is set on the device: EMS control turns it on, EMS as on/off chooses between a watt budget (off: the car takes at most this much from the grid) and on/off (on: any value above 0 W allows the grid)."
         }
       },
       "tuning": {
