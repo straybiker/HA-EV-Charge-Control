@@ -160,9 +160,6 @@ cython_debug/
 #.idea/
 /.vs
 
-# Local test configuration (contains real device IPs)
-simulator/local_config.py
-
 # Secrets and local Claude settings (this repo is public)
 .env
 .env.*

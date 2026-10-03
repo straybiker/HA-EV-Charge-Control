@@ -10,22 +10,26 @@
           "applied_current_entity": "Toegepaste stroomlimiet",
           "active_phases_entity": "Actieve fasen",
           "connection_entity": "Verbindingsstatus",
-          "max_current_a": "Maximale stroom",
+          "max_current_entity": "Maximale stroom",
           "min_current_a": "Minimale stroom",
           "fallback_current_a": "Terugvalstroom",
+          "fallback_phase": "Terugvalfasen",
           "voltage_v": "Spanning",
           "current_step_a": "Stroomstap",
           "widen_small_decreases": "Kleine verlagingen vergroten",
-          "failsafe_keeps_phase": "Fase behouden bij sensorfout"
+          "failsafe_keeps_phase": "Fase behouden bij sensorfout",
+          "charger_energy_entity": "Energiemeter laadpaal"
         },
         "data_description": {
           "charger_power_entity": "Vermogen dat de laadpaal nu verbruikt.",
           "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
           "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
           "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
-          "max_current_a": "De hardwarewaarde van de laadpaal of kabel. Gebruik geen sensor die met de belasting verandert.",
+          "max_current_entity": "De maximale stroom van de laadpaal, bv. het ingestelde of installatiemaximum. Tot ze een waarde meldt, is de terugvalstroom het maximum; nooit boven 32 A.",
           "min_current_a": "Meestal 6 A.",
           "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
+          "fallback_phase": "Aantal fasen na een sensorfout en wanneer de auto uitgeplugd is.",
+          "charger_energy_entity": "Optioneel. De eigen energiemeter van de laadpaal in kWh. Zonder meter wordt de geladen energie uit het laadvermogen berekend.",
           "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
           "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
           "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
@@ -51,10 +55,14 @@
         "title": "Huishouden",
         "description": "Het vermogen van het huis zonder de laadpaal.",
         "data": {
-          "house_power_entity": "Huisvermogen zonder laadpaal"
+          "house_power_entity": "Huisvermogen zonder laadpaal",
+          "solar_power_entity": "Zonnevermogen",
+          "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best."
+          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
+          "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat."
         }
       },
       "car": {
@@ -79,6 +87,22 @@
           "price_entity": "Afnameprijs in je munt per kWh.",
           "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
           "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
+        }
+      },
+      "tuning": {
+        "title": "Afstelling",
+        "description": "Vaste waarden die zelden een wijziging nodig hebben.",
+        "data": {
+          "power_update_threshold_w": "Drempel vermogensaanpassing",
+          "phase_switch_delay_min": "Vertraging faseschakeling",
+          "recalc_interval_s": "Herberekeningsinterval",
+          "peak_factor_pct": "Piekfactor"
+        },
+        "data_description": {
+          "power_update_threshold_w": "Een verhoging wordt enkel geschreven als ze minstens zoveel vermogen toevoegt. Verlagingen worden altijd geschreven.",
+          "phase_switch_delay_min": "Wacht na een overgang naar 1 fase zo lang voor je terug naar 3 fasen gaat.",
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
+          "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
         }
       }
     },
@@ -105,9 +129,11 @@
           "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
           "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
           "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
-          "max_current_a": "De hardwarewaarde van de laadpaal of kabel. Gebruik geen sensor die met de belasting verandert.",
+          "max_current_entity": "De maximale stroom van de laadpaal, bv. het ingestelde of installatiemaximum. Tot ze een waarde meldt, is de terugvalstroom het maximum; nooit boven 32 A.",
           "min_current_a": "Meestal 6 A.",
           "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
+          "fallback_phase": "Aantal fasen na een sensorfout en wanneer de auto uitgeplugd is.",
+          "charger_energy_entity": "Optioneel. De eigen energiemeter van de laadpaal in kWh. Zonder meter wordt de geladen energie uit het laadvermogen berekend.",
           "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
           "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
           "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
@@ -117,13 +143,15 @@
           "applied_current_entity": "Toegepaste stroomlimiet",
           "active_phases_entity": "Actieve fasen",
           "connection_entity": "Verbindingsstatus",
-          "max_current_a": "Maximale stroom",
+          "max_current_entity": "Maximale stroom",
           "min_current_a": "Minimale stroom",
           "fallback_current_a": "Terugvalstroom",
+          "fallback_phase": "Terugvalfasen",
           "voltage_v": "Spanning",
           "current_step_a": "Stroomstap",
           "widen_small_decreases": "Kleine verlagingen vergroten",
-          "failsafe_keeps_phase": "Fase behouden bij sensorfout"
+          "failsafe_keeps_phase": "Fase behouden bij sensorfout",
+          "charger_energy_entity": "Energiemeter laadpaal"
         }
       },
       "controls": {
@@ -146,10 +174,14 @@
         "title": "Huishouden",
         "description": "Het vermogen van het huis zonder de laadpaal.",
         "data": {
-          "house_power_entity": "Huisvermogen zonder laadpaal"
+          "house_power_entity": "Huisvermogen zonder laadpaal",
+          "solar_power_entity": "Zonnevermogen",
+          "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best."
+          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
+          "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat."
         }
       },
       "car": {
@@ -175,6 +207,22 @@
           "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
           "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
         }
+      },
+      "tuning": {
+        "title": "Afstelling",
+        "description": "Vaste waarden die zelden een wijziging nodig hebben.",
+        "data": {
+          "power_update_threshold_w": "Drempel vermogensaanpassing",
+          "phase_switch_delay_min": "Vertraging faseschakeling",
+          "recalc_interval_s": "Herberekeningsinterval",
+          "peak_factor_pct": "Piekfactor"
+        },
+        "data_description": {
+          "power_update_threshold_w": "Een verhoging wordt enkel geschreven als ze minstens zoveel vermogen toevoegt. Verlagingen worden altijd geschreven.",
+          "phase_switch_delay_min": "Wacht na een overgang naar 1 fase zo lang voor je terug naar 3 fasen gaat.",
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
+          "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
+        }
       }
     },
     "error": {
@@ -196,6 +244,12 @@
         "0_1": "0,1 A",
         "1": "1 A"
       }
+    },
+    "fallback_phase": {
+      "options": {
+        "1": "1 fase",
+        "3": "3 fasen"
+      }
     }
   },
   "entity": {
@@ -215,7 +269,7 @@
     },
     "number": {
       "power_limit": {
-        "name": "Vermogenslimiet"
+        "name": "Basisvermogenslimiet"
       },
       "max_charging_cost": {
         "name": "Maximale laadkost"
@@ -231,15 +285,6 @@
       },
       "solar_bridge": {
         "name": "Zonnebrug"
-      },
-      "power_update_threshold": {
-        "name": "Drempel vermogensaanpassing"
-      },
-      "phase_switch_delay": {
-        "name": "Vertraging faseschakeling"
-      },
-      "recalc_interval": {
-        "name": "Herberekeningsinterval"
       }
     },
     "switch": {
@@ -257,6 +302,9 @@
       },
       "ems_as_onoff": {
         "name": "EMS als aan/uit"
+      },
+      "follow_monthly_peak": {
+        "name": "Maandpiek volgen"
       }
     },
     "binary_sensor": {
@@ -291,6 +339,18 @@
       },
       "phase_hold_until": {
         "name": "Fase vastgehouden tot"
+      },
+      "effective_power_limit": {
+        "name": "Effectieve vermogenslimiet"
+      },
+      "charged_energy": {
+        "name": "Geladen energie"
+      },
+      "charged_from_grid": {
+        "name": "Geladen van het net"
+      },
+      "charged_from_solar": {
+        "name": "Geladen van de zon"
       },
       "decision": {
         "name": "Beslissing",

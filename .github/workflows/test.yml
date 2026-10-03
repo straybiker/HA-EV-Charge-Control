@@ -36,7 +36,15 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --junitxml=junit.xml
+
+      # scripts/report/collect.py --ci builds the test report from this file.
+      - name: Keep the test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit
+          path: junit.xml
 
   ruff:
     name: ruff

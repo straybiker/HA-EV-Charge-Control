@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.const import (
@@ -16,10 +17,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util.unit_conversion import PowerConverter
+from homeassistant.util.unit_conversion import EnergyConverter, PowerConverter
 
 from .const import (
     CONF_ACTIVE_PHASES,
@@ -33,23 +35,37 @@ from .const import (
     CONF_CURRENT_LIMIT,
     CONF_CURRENT_STEP,
     CONF_EMS,
+    CONF_ENERGY_METER,
     CONF_FAILSAFE_KEEP_PHASE,
     CONF_FALLBACK_CURRENT,
+    CONF_FALLBACK_PHASE,
     CONF_HOUSE_POWER,
     CONF_MAX_CURRENT,
+    CONF_MAX_CURRENT_ENTITY,
     CONF_MIN_CURRENT,
+    CONF_MONTHLY_PEAK,
+    CONF_PEAK_FACTOR,
     CONF_PHASE_OPTION_1,
     CONF_PHASE_OPTION_3,
     CONF_PHASE_SELECT,
+    CONF_PHASE_SWITCH_DELAY,
+    CONF_POWER_UPDATE_THRESHOLD,
     CONF_PRICE,
     CONF_PRICE_ATTRIBUTE,
+    CONF_RECALC_INTERVAL,
+    CONF_SOLAR_POWER,
     CONF_VOLTAGE,
     CONF_WIDEN_DECREASES,
     CURRENT_STEPS,
     DEFAULT_CURRENT_STEP,
     DEFAULT_FALLBACK_CURRENT,
+    DEFAULT_FALLBACK_PHASE,
     DEFAULT_MAX_CURRENT,
     DEFAULT_MIN_CURRENT,
+    DEFAULT_PEAK_FACTOR_PCT,
+    DEFAULT_PHASE_SWITCH_DELAY_MIN,
+    DEFAULT_POWER_UPDATE_THRESHOLD_W,
+    DEFAULT_RECALC_INTERVAL_S,
     DEFAULT_VOLTAGE,
 )
 from .engine import (
@@ -67,6 +83,7 @@ _DIGIT = re.compile(r"\d")
 
 def charger_spec(options: Mapping[str, Any]) -> ChargerSpec:
     return ChargerSpec(
+        # With a max current entity the runtime fills this in at each run.
         max_current_a=float(options.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)),
         min_current_a=float(options.get(CONF_MIN_CURRENT, DEFAULT_MIN_CURRENT)),
         fallback_current_a=float(
@@ -78,7 +95,44 @@ def charger_spec(options: Mapping[str, Any]) -> ChargerSpec:
         ),
         widen_small_decreases=bool(options.get(CONF_WIDEN_DECREASES, False)),
         failsafe_keeps_phase=bool(options.get(CONF_FAILSAFE_KEEP_PHASE, False)),
+        fallback_phase=Phase(
+            int(options.get(CONF_FALLBACK_PHASE, DEFAULT_FALLBACK_PHASE))
+        ),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class Tuning:
+    """Fixed values from the setup's Tuning step."""
+
+    power_update_threshold_w: float
+    phase_hold_s: float
+    recalc_interval_s: float
+    peak_factor: float
+
+
+def tuning(options: Mapping[str, Any]) -> Tuning:
+    return Tuning(
+        power_update_threshold_w=float(
+            options.get(CONF_POWER_UPDATE_THRESHOLD, DEFAULT_POWER_UPDATE_THRESHOLD_W)
+        ),
+        phase_hold_s=60
+        * float(options.get(CONF_PHASE_SWITCH_DELAY, DEFAULT_PHASE_SWITCH_DELAY_MIN)),
+        recalc_interval_s=float(
+            options.get(CONF_RECALC_INTERVAL, DEFAULT_RECALC_INTERVAL_S)
+        ),
+        peak_factor=float(options.get(CONF_PEAK_FACTOR, DEFAULT_PEAK_FACTOR_PCT)) / 100,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class Extras:
+    """Values read each run that are not controller measurements."""
+
+    max_current_a: float | None = None
+    monthly_peak_w: float | None = None
+    meter_kwh: float | None = None
+    solar_power_w: float | None = None
 
 
 def car_spec(options: Mapping[str, Any]) -> CarSpec | None:
@@ -100,6 +154,25 @@ class InputReader:
         self._hass = hass
         self._options = dict(options)
         self.last: Measurements | None = None
+        self.last_extras: Extras | None = None
+
+    @property
+    def has_max_current_entity(self) -> bool:
+        return bool(self._options.get(CONF_MAX_CURRENT_ENTITY))
+
+    @property
+    def has_monthly_peak(self) -> bool:
+        return bool(self._options.get(CONF_MONTHLY_PEAK))
+
+    def read_extras(self) -> Extras:
+        o = self._options
+        self.last_extras = Extras(
+            max_current_a=self._number(o.get(CONF_MAX_CURRENT_ENTITY)),
+            monthly_peak_w=self._power(o.get(CONF_MONTHLY_PEAK)),
+            meter_kwh=self._energy(o.get(CONF_ENERGY_METER)),
+            solar_power_w=self._power(o.get(CONF_SOLAR_POWER)),
+        )
+        return self.last_extras
 
     @property
     def event_entities(self) -> list[str]:
@@ -161,6 +234,21 @@ class InputReader:
         unit = state.attributes.get("unit_of_measurement")
         if unit and unit != UnitOfPower.WATT and unit in PowerConverter.VALID_UNITS:
             return PowerConverter.convert(value, unit, UnitOfPower.WATT)
+        return value
+
+    def _energy(self, entity_id: str | None) -> float | None:
+        """An energy meter in kWh (Wh and MWh are converted)."""
+        state = self._state(entity_id)
+        value = self._number(entity_id)
+        if state is None or value is None:
+            return None
+        unit = state.attributes.get("unit_of_measurement")
+        if (
+            unit
+            and unit != UnitOfEnergy.KILO_WATT_HOUR
+            and unit in EnergyConverter.VALID_UNITS
+        ):
+            return EnergyConverter.convert(value, unit, UnitOfEnergy.KILO_WATT_HOUR)
         return value
 
     def _connection(self, entity_id: str) -> ConnectionState:

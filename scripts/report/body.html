@@ -27,7 +27,7 @@
     <header>
       <span class="eyebrow">Golden cases</span>
       <h2>Golden cases: the original 13 and Comfort</h2>
-      <p class="muted">Same inputs as the YAML package's own test, at two power limits: 6 kW (a realistic household on the capacity tariff) and the test's original 10 kW. 16 A charger at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data. The engine rounds the current to the nearest 0.1 A when there is headroom and rounds down when rounding up would exceed the power limit (decision D16); the YAML package always rounds to the nearest step and can end up to 35 W above the limit. The charger power is split into solar used and grid import; the meter column shows the house plus the charger, to check it against the 10 kW limit.</p>
+      <p class="muted">Same inputs as the YAML package's own test, at two power limits: 6 kW (a realistic household on the capacity tariff) and the test's original 10 kW. 16 A charger at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data. The engine rounds the current to the nearest 0.1 A when there is headroom and rounds down when rounding up would exceed the power limit (decision D16); the YAML package always rounds to the nearest step and can end up to 35 W above the limit. The charger power is split into solar used and grid import; the meter column shows the house plus the charger, to check it against the power limit.</p>
     </header>
     <div class="filters">
       <div class="seg" role="group" aria-label="Case set" id="set-filter"></div>
@@ -90,7 +90,10 @@ $("#meta").innerHTML = [
   `Branch <b class="mono">${esc(env.branch)}</b>`,
   `Base <b class="mono">${esc(env.base_commit)}</b>${env.dirty ? ` <span class="dirty">+ uncommitted changes</span>` : ""}`,
   `Home Assistant <b>${esc(env.homeassistant)}</b>`,
-  `Python <b>3.14</b>`,
+  `Python <b>${esc(env.python)}</b>`,
+  env.source.url
+    ? `Results <a href="${esc(env.source.url)}">${esc(env.source.label)}</a>`
+    : `Results <b>${esc(env.source.label)}</b>`,
 ].map((x) => `<span>${x}</span>`).join("");
 
 /* verdict */
@@ -225,7 +228,8 @@ renderDecisions();
 /* tests */
 const FILE_LABEL = {
   test_controller: "Controller rules", test_properties: "Properties (hypothesis)", test_policy: "Mode policy",
-  test_setpoint: "Current and write filter", test_config_flow: "Setup and options flow",
+  test_setpoint: "Current and write filter", test_limit: "Power limit", test_energy: "Energy metering",
+  test_config_flow: "Setup and options flow",
   test_controller_device: "Device, triggers and shadow mode", test_translations: "Translations",
   test_specs: "Options to specs", test_manifest: "Repository metadata",
 };

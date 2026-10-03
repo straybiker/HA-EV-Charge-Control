@@ -23,13 +23,17 @@ CONF_CHARGER_POWER = "charger_power_entity"
 CONF_APPLIED_CURRENT = "applied_current_entity"
 CONF_ACTIVE_PHASES = "active_phases_entity"
 CONF_CONNECTION = "connection_entity"
+# Fixed maximum: entries made before the maximum came from an entity.
 CONF_MAX_CURRENT = "max_current_a"
+CONF_MAX_CURRENT_ENTITY = "max_current_entity"
 CONF_MIN_CURRENT = "min_current_a"
 CONF_FALLBACK_CURRENT = "fallback_current_a"
 CONF_VOLTAGE = "voltage_v"
 CONF_CURRENT_STEP = "current_step_a"
 CONF_WIDEN_DECREASES = "widen_small_decreases"
 CONF_FAILSAFE_KEEP_PHASE = "failsafe_keeps_phase"
+CONF_FALLBACK_PHASE = "fallback_phase"
+CONF_ENERGY_METER = "charger_energy_entity"
 
 # Config flow: charger controls
 CONF_CURRENT_LIMIT = "current_limit_entity"
@@ -40,6 +44,7 @@ CONF_PHASE_OPTION_3 = "phase_option_3"
 # Config flow: household
 CONF_HOUSE_POWER = "house_power_entity"
 CONF_SOLAR_POWER = "solar_power_entity"
+CONF_MONTHLY_PEAK = "monthly_peak_entity"
 
 # Config flow: car
 CONF_CAR_SOC = "car_soc_entity"
@@ -52,14 +57,28 @@ CONF_PRICE = "price_entity"
 CONF_PRICE_ATTRIBUTE = "price_attribute"
 CONF_EMS = "ems_entity"
 
+# Config flow: tuning
+CONF_POWER_UPDATE_THRESHOLD = "power_update_threshold_w"
+CONF_PHASE_SWITCH_DELAY = "phase_switch_delay_min"
+CONF_RECALC_INTERVAL = "recalc_interval_s"
+CONF_PEAK_FACTOR = "peak_factor_pct"
+
 DEFAULT_NAME = "EV charger controller"
 DEFAULT_MAX_CURRENT = 16
 DEFAULT_MIN_CURRENT = 6
 DEFAULT_FALLBACK_CURRENT = 7
 DEFAULT_VOLTAGE = 230
+PHASES = ["1", "3"]
+DEFAULT_FALLBACK_PHASE = "1"
+# A charger reporting a higher maximum is ignored above this.
+HARDWARE_MAX_CURRENT = 32
 # Current step options: translation keys may not contain a dot.
 CURRENT_STEPS = {"0_1": 0.1, "1": 1.0}
 DEFAULT_CURRENT_STEP = "0_1"
 
-# Runtime: how often the controller runs. Power sensors do not trigger runs.
+# Tuning defaults, as in the EV Load Balancer package.
+DEFAULT_POWER_UPDATE_THRESHOLD_W = 230
+DEFAULT_PHASE_SWITCH_DELAY_MIN = 5
+# How often the controller runs. Power sensors do not trigger runs.
 DEFAULT_RECALC_INTERVAL_S = 10
+DEFAULT_PEAK_FACTOR_PCT = 90

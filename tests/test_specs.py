@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
-from custom_components.ev_charge_control.engine import CarSpec, ChargerSpec
-from custom_components.ev_charge_control.inputs import car_spec, charger_spec
+from custom_components.ev_charge_control.engine import CarSpec, ChargerSpec, Phase
+from custom_components.ev_charge_control.inputs import (
+    Tuning,
+    car_spec,
+    charger_spec,
+    tuning,
+)
 
 
 def test_charger_spec_from_options():
@@ -16,6 +21,7 @@ def test_charger_spec_from_options():
             "current_step_a": "1",
             "widen_small_decreases": True,
             "failsafe_keeps_phase": True,
+            "fallback_phase": "3",
         }
     )
     assert spec == ChargerSpec(
@@ -26,6 +32,7 @@ def test_charger_spec_from_options():
         current_step_a=1.0,
         widen_small_decreases=True,
         failsafe_keeps_phase=True,
+        fallback_phase=Phase.THREE,
     )
 
 
@@ -47,3 +54,24 @@ def test_car_capacity_in_wh():
         }
     )
     assert spec == CarSpec(max_current_a=16, min_current_a=6, battery_capacity_wh=74000)
+
+
+def test_tuning_defaults_match_the_yaml_package():
+    assert tuning({}) == Tuning(
+        power_update_threshold_w=230,
+        phase_hold_s=300,
+        recalc_interval_s=10,
+        peak_factor=0.9,
+    )
+
+
+def test_tuning_from_options():
+    t = tuning(
+        {
+            "power_update_threshold_w": 460,
+            "phase_switch_delay_min": 2,
+            "recalc_interval_s": 30,
+            "peak_factor_pct": 80,
+        }
+    )
+    assert t == Tuning(460, 120, 30, 0.8)

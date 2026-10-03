@@ -12,7 +12,7 @@ from homeassistant.helpers.start import async_at_started
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EvChargeCoordinator
 from .engine import Controller
-from .inputs import InputReader, car_spec, charger_spec
+from .inputs import InputReader, car_spec, charger_spec, tuning
 from .settings import SettingsStore
 from .writer import ShadowWriter
 
@@ -38,7 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> 
         Controller(charger_spec(entry.options), car_spec(entry.options)),
         InputReader(hass, entry.options),
         ShadowWriter(),
+        tuning(entry.options),
     )
+    await coordinator.async_load_energy()
     entry.runtime_data = EvChargeRuntime(coordinator, store)
 
     # The setting entities restore their values while the platforms load, so
@@ -49,4 +51,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> bool:
+    await entry.runtime_data.coordinator.async_save_energy()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> None:
+    """Delete the saved energy totals with the entry."""
+    store = EvChargeCoordinator.energy_store(hass, entry)
+    await store.async_remove()

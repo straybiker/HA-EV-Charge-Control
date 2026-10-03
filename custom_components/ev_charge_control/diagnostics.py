@@ -19,12 +19,16 @@ async def async_get_config_entry_diagnostics(
     coordinator = runtime.coordinator
     last = coordinator.reader.last
     setpoint = coordinator.writer.last_setpoint
+    extras = coordinator.reader.last_extras
+    snapshot = coordinator.data
     return {
         "options": async_redact_data(dict(entry.options), {CONF_NAME}),
-        "settings": asdict(runtime.store.snapshot()),
-        "recalc_interval_s": runtime.store.recalc_interval_s,
+        "settings": asdict(runtime.store.snapshot()) | runtime.store.extras(),
+        "tuning": asdict(coordinator.tuning),
         "measurements": asdict(last) if last else None,
-        "output": asdict(coordinator.data) if coordinator.data else None,
+        "extras": asdict(extras) if extras else None,
+        "snapshot": asdict(snapshot) if snapshot else None,
+        "energy": coordinator.energy.state(),
         "intended_setpoint": asdict(setpoint) if setpoint else None,
         "last_update_success": coordinator.last_update_success,
     }

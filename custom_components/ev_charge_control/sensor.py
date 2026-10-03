@@ -16,6 +16,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -23,18 +24,30 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EvChargeConfigEntry
-from .coordinator import EvChargeCoordinator
-from .engine import Output, Reason
+from .coordinator import EvChargeCoordinator, Snapshot
+from .engine import Reason
 from .entity import init_entity
 
 
 @dataclass(frozen=True, kw_only=True)
 class OutputSensorDescription(SensorEntityDescription):
-    value_fn: Callable[[Output], Any]
+    value_fn: Callable[[Snapshot], Any]
 
 
-def _budget(field: str) -> Callable[[Output], Any]:
-    return lambda o: round(getattr(o.budget, field)) if o.budget else None
+def _budget(field: str) -> Callable[[Snapshot], Any]:
+    return lambda s: round(getattr(s.output.budget, field)) if s.output.budget else None
+
+
+def _energy(key: str, field: str) -> OutputSensorDescription:
+    """Total charged energy; usable in the Energy dashboard and by an EMS."""
+    return OutputSensorDescription(
+        key=key,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        value_fn=lambda s: round(getattr(s.energy, field), 4),
+    )
 
 
 SENSORS: tuple[OutputSensorDescription, ...] = (
@@ -44,31 +57,33 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda o: o.current_a,
+        value_fn=lambda s: s.output.current_a,
     ),
     OutputSensorDescription(
         key="target_phases",
-        value_fn=lambda o: int(o.phase) if o.phase is not None else None,
+        value_fn=lambda s: int(s.output.phase) if s.output.phase is not None else None,
     ),
     OutputSensorDescription(
         key="target_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda o: round(o.power_w) if o.power_w is not None else None,
+        value_fn=lambda s: (
+            round(s.output.power_w) if s.output.power_w is not None else None
+        ),
     ),
     OutputSensorDescription(
         key="decision",
         device_class=SensorDeviceClass.ENUM,
         options=[r.value for r in Reason],
-        value_fn=lambda o: o.reason.value,
+        value_fn=lambda s: s.output.reason.value,
     ),
     OutputSensorDescription(
         key="charger_efficiency",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda o: round(o.efficiency * 100, 1),
+        value_fn=lambda s: round(s.output.efficiency * 100, 1),
     ),
     OutputSensorDescription(
         key="solar_surplus",
@@ -90,8 +105,18 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         key="phase_hold_until",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda o: o.phase_hold_until,
+        value_fn=lambda s: s.output.phase_hold_until,
     ),
+    OutputSensorDescription(
+        key="effective_power_limit",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda s: round(s.power_limit_w),
+    ),
+    _energy("charged_energy", "charged_kwh"),
+    _energy("charged_from_grid", "from_grid_kwh"),
+    _energy("charged_from_solar", "from_solar_kwh"),
 )
 
 

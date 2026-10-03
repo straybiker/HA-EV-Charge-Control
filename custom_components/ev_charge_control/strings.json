@@ -10,22 +10,26 @@
           "applied_current_entity": "Applied current limit",
           "active_phases_entity": "Active phases",
           "connection_entity": "Connection state",
-          "max_current_a": "Max current",
+          "max_current_entity": "Max current",
           "min_current_a": "Min current",
           "fallback_current_a": "Fallback current",
+          "fallback_phase": "Fallback phases",
           "voltage_v": "Voltage",
           "current_step_a": "Current step",
           "widen_small_decreases": "Widen small decreases",
-          "failsafe_keeps_phase": "Keep the phase on a sensor fault"
+          "failsafe_keeps_phase": "Keep the phase on a sensor fault",
+          "charger_energy_entity": "Charger energy meter"
         },
         "data_description": {
           "charger_power_entity": "Power the charger draws now.",
           "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
           "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
           "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
-          "max_current_a": "The hardware rating of the charger or its cable. Do not use a sensor that changes with the load.",
+          "max_current_entity": "The charger's maximum current, e.g. its configured or installation maximum. Until it reports a value the fallback current is the maximum; never above 32 A.",
           "min_current_a": "Usually 6 A.",
           "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
+          "fallback_phase": "Phase count after a sensor fault and when the car is unplugged.",
+          "charger_energy_entity": "Optional. The charger's own energy meter in kWh. Without it, charged energy is integrated from charger power.",
           "current_step_a": "The smallest current change the charger accepts.",
           "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
           "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
@@ -51,10 +55,14 @@
         "title": "Household",
         "description": "The house power without the charger.",
         "data": {
-          "house_power_entity": "House power without the charger"
+          "house_power_entity": "House power without the charger",
+          "solar_power_entity": "Solar power",
+          "monthly_peak_entity": "Monthly peak"
         },
         "data_description": {
-          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best."
+          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
+          "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on."
         }
       },
       "car": {
@@ -79,6 +87,22 @@
           "price_entity": "Import price in your currency per kWh.",
           "price_attribute": "Leave empty to use the sensor state.",
           "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
+        }
+      },
+      "tuning": {
+        "title": "Tuning",
+        "description": "Fixed values that rarely need a change.",
+        "data": {
+          "power_update_threshold_w": "Power update threshold",
+          "phase_switch_delay_min": "Phase switch delay",
+          "recalc_interval_s": "Recalculation interval",
+          "peak_factor_pct": "Peak factor"
+        },
+        "data_description": {
+          "power_update_threshold_w": "An increase is written only when it adds at least this much power. Decreases are always written.",
+          "phase_switch_delay_min": "After a drop to 1 phase, wait this long before going back to 3 phases.",
+          "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
+          "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
         }
       }
     },
@@ -105,9 +129,11 @@
           "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
           "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
           "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
-          "max_current_a": "The hardware rating of the charger or its cable. Do not use a sensor that changes with the load.",
+          "max_current_entity": "The charger's maximum current, e.g. its configured or installation maximum. Until it reports a value the fallback current is the maximum; never above 32 A.",
           "min_current_a": "Usually 6 A.",
           "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
+          "fallback_phase": "Phase count after a sensor fault and when the car is unplugged.",
+          "charger_energy_entity": "Optional. The charger's own energy meter in kWh. Without it, charged energy is integrated from charger power.",
           "current_step_a": "The smallest current change the charger accepts.",
           "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
           "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
@@ -117,13 +143,15 @@
           "applied_current_entity": "Applied current limit",
           "active_phases_entity": "Active phases",
           "connection_entity": "Connection state",
-          "max_current_a": "Max current",
+          "max_current_entity": "Max current",
           "min_current_a": "Min current",
           "fallback_current_a": "Fallback current",
+          "fallback_phase": "Fallback phases",
           "voltage_v": "Voltage",
           "current_step_a": "Current step",
           "widen_small_decreases": "Widen small decreases",
-          "failsafe_keeps_phase": "Keep the phase on a sensor fault"
+          "failsafe_keeps_phase": "Keep the phase on a sensor fault",
+          "charger_energy_entity": "Charger energy meter"
         }
       },
       "controls": {
@@ -146,10 +174,14 @@
         "title": "Household",
         "description": "The house power without the charger.",
         "data": {
-          "house_power_entity": "House power without the charger"
+          "house_power_entity": "House power without the charger",
+          "solar_power_entity": "Solar power",
+          "monthly_peak_entity": "Monthly peak"
         },
         "data_description": {
-          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best."
+          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
+          "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on."
         }
       },
       "car": {
@@ -175,6 +207,22 @@
           "price_attribute": "Leave empty to use the sensor state.",
           "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
         }
+      },
+      "tuning": {
+        "title": "Tuning",
+        "description": "Fixed values that rarely need a change.",
+        "data": {
+          "power_update_threshold_w": "Power update threshold",
+          "phase_switch_delay_min": "Phase switch delay",
+          "recalc_interval_s": "Recalculation interval",
+          "peak_factor_pct": "Peak factor"
+        },
+        "data_description": {
+          "power_update_threshold_w": "An increase is written only when it adds at least this much power. Decreases are always written.",
+          "phase_switch_delay_min": "After a drop to 1 phase, wait this long before going back to 3 phases.",
+          "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
+          "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
+        }
       }
     },
     "error": {
@@ -196,6 +244,12 @@
         "0_1": "0.1 A",
         "1": "1 A"
       }
+    },
+    "fallback_phase": {
+      "options": {
+        "1": "1 phase",
+        "3": "3 phases"
+      }
     }
   },
   "entity": {
@@ -215,7 +269,7 @@
     },
     "number": {
       "power_limit": {
-        "name": "Power limit"
+        "name": "Base power limit"
       },
       "max_charging_cost": {
         "name": "Max charging cost"
@@ -231,15 +285,6 @@
       },
       "solar_bridge": {
         "name": "Solar bridge"
-      },
-      "power_update_threshold": {
-        "name": "Power update threshold"
-      },
-      "phase_switch_delay": {
-        "name": "Phase switch delay"
-      },
-      "recalc_interval": {
-        "name": "Recalculation interval"
       }
     },
     "switch": {
@@ -257,6 +302,9 @@
       },
       "ems_as_onoff": {
         "name": "EMS as on/off"
+      },
+      "follow_monthly_peak": {
+        "name": "Follow monthly peak"
       }
     },
     "binary_sensor": {
@@ -291,6 +339,18 @@
       },
       "phase_hold_until": {
         "name": "Phase hold until"
+      },
+      "effective_power_limit": {
+        "name": "Effective power limit"
+      },
+      "charged_energy": {
+        "name": "Charged energy"
+      },
+      "charged_from_grid": {
+        "name": "Charged from grid"
+      },
+      "charged_from_solar": {
+        "name": "Charged from solar"
       },
       "decision": {
         "name": "Decision",
