@@ -39,7 +39,6 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - **Writing.** The coordinator gives every output to the writer. A write sequence runs as a background task of the entry, so a slow charger never delays a run; it waits for state changes with a timeout instead of polling. While it runs, later runs write nothing. The rules are in [behaviour.md](behaviour.md#charger-control).
 - **Repair issue.** `charger_not_responding_<entry_id>`, not fixable. Deleted on the first confirmed write, when Control charger is switched off, at setup (it describes the charger before the restart) and when the entry is removed.
 - **Energy.** `EnergyCounter` totals are saved with `homeassistant.helpers.storage.Store`, at most every 60 s and on unload.
-- **Old entries.** An entry made before an option existed uses that option's default. An entry with a fixed maximum current keeps it.
 
 ## Entities
 

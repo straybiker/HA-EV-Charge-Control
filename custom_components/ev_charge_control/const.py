@@ -23,8 +23,6 @@ CONF_CHARGER_POWER = "charger_power_entity"
 CONF_APPLIED_CURRENT = "applied_current_entity"
 CONF_ACTIVE_PHASES = "active_phases_entity"
 CONF_CONNECTION = "connection_entity"
-# Fixed maximum: entries made before the maximum came from an entity.
-CONF_MAX_CURRENT = "max_current_a"
 CONF_MAX_CURRENT_ENTITY = "max_current_entity"
 CONF_MIN_CURRENT = "min_current_a"
 CONF_FALLBACK_CURRENT = "fallback_current_a"

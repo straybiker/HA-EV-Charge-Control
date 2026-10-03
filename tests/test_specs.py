@@ -14,7 +14,6 @@ from custom_components.ev_charge_control.inputs import (
 def test_charger_spec_from_options():
     spec = charger_spec(
         {
-            "max_current_a": 32,
             "min_current_a": 6,
             "fallback_current_a": 8,
             "voltage_v": 230,
@@ -25,7 +24,6 @@ def test_charger_spec_from_options():
         }
     )
     assert spec == ChargerSpec(
-        max_current_a=32,
         min_current_a=6,
         fallback_current_a=8,
         voltage_v=230,

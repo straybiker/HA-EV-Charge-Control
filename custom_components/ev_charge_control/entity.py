@@ -21,9 +21,6 @@ def device_info(entry: ConfigEntry) -> DeviceInfo:
         name=entry.title,
         manufacturer="EV Charge Control",
         model="Charge controller",
-        # Explicit None: devices registered as a service by earlier versions
-        # become regular devices; leaving the key out would keep the old type.
-        entry_type=None,
     )
 
 

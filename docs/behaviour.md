@@ -55,7 +55,6 @@ Each run applies the first rule that matches.
 
 - Read every run from the max current entity picked in setup.
 - Unavailable: the last known value. No value since start: the fallback current is the maximum. Never above 32 A.
-- Entries made before this option keep their fixed maximum.
 
 ## Phases
 

@@ -40,7 +40,6 @@ from .const import (
     CONF_FALLBACK_CURRENT,
     CONF_FALLBACK_PHASE,
     CONF_HOUSE_POWER,
-    CONF_MAX_CURRENT,
     CONF_MAX_CURRENT_ENTITY,
     CONF_MIN_CURRENT,
     CONF_MONTHLY_PEAK,
@@ -83,8 +82,6 @@ _DIGIT = re.compile(r"\d")
 
 def charger_spec(options: Mapping[str, Any]) -> ChargerSpec:
     return ChargerSpec(
-        # With a max current entity the runtime fills this in at each run.
-        max_current_a=float(options.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)),
         min_current_a=float(options.get(CONF_MIN_CURRENT, DEFAULT_MIN_CURRENT)),
         fallback_current_a=float(
             options.get(CONF_FALLBACK_CURRENT, DEFAULT_FALLBACK_CURRENT)
@@ -157,17 +154,13 @@ class InputReader:
         self.last_extras: Extras | None = None
 
     @property
-    def has_max_current_entity(self) -> bool:
-        return bool(self._options.get(CONF_MAX_CURRENT_ENTITY))
-
-    @property
     def has_monthly_peak(self) -> bool:
         return bool(self._options.get(CONF_MONTHLY_PEAK))
 
     def read_extras(self) -> Extras:
         o = self._options
         self.last_extras = Extras(
-            max_current_a=self._number(o.get(CONF_MAX_CURRENT_ENTITY)),
+            max_current_a=self._number(o[CONF_MAX_CURRENT_ENTITY]),
             monthly_peak_w=self._power(o.get(CONF_MONTHLY_PEAK)),
             meter_kwh=self._energy(o.get(CONF_ENERGY_METER)),
             solar_power_w=self._power(o.get(CONF_SOLAR_POWER)),

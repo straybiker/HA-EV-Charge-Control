@@ -148,19 +148,3 @@ async def test_options_flow_edits_and_clears(
     assert entry.options["fallback_current_a"] == 8
     assert entry.options["recalc_interval_s"] == 30
     assert "price_entity" not in entry.options  # cleared optional field
-
-
-async def test_old_entry_without_new_keys_still_loads(
-    hass: HomeAssistant, sources
-) -> None:
-    """An entry made before the tuning step and the max current entity."""
-    old = {
-        k: v
-        for k, v in OPTIONS.items()
-        if k not in TUNING_STEP and k not in ("max_current_entity", "fallback_phase")
-    } | {"max_current_a": 16}
-    entry = MockConfigEntry(domain=DOMAIN, title="Test charger", options=old)
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.test_charger_decision") is not None

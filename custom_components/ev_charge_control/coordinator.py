@@ -84,7 +84,6 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self.tuning = tuning
         self.energy = EnergyCounter()
         self._energy_store = self.energy_store(hass, entry)
-        self._configured_max_a = controller.charger.max_current_a
         self._last_max_a: float | None = None
         self._cancel_timer: CALLBACK_TYPE | None = None
         self._control_was: bool | None = None
@@ -155,13 +154,10 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
     def _max_current(self, extras: Extras) -> float:
         """The charger maximum for this run.
 
-        From the max current entity when set: its value, else the last value
-        seen, else the fallback current (the safe choice until the charger
-        reports). Never above the hardware limit. Without an entity: the
-        value from the setup.
+        From the max current entity: its value, else the last value seen,
+        else the fallback current (the safe choice until the charger
+        reports). Never above the hardware limit.
         """
-        if not self.reader.has_max_current_entity:
-            return self._configured_max_a
         if extras.max_current_a is not None and extras.max_current_a > 0:
             self._last_max_a = min(extras.max_current_a, HARDWARE_MAX_CURRENT)
         if self._last_max_a is not None:
