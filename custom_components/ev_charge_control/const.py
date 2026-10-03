@@ -19,6 +19,9 @@ PLATFORMS = [
 
 # Config flow: charger
 CONF_NAME = "name"
+# Device settings imported from the EV Load Balancer package; used only when a
+# setting entity is created, before it has a state to restore.
+CONF_INITIAL_SETTINGS = "initial_settings"
 CONF_CHARGER_POWER = "charger_power_entity"
 CONF_APPLIED_CURRENT = "applied_current_entity"
 CONF_ACTIVE_PHASES = "active_phases_entity"

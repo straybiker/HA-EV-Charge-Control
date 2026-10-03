@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.start import async_at_started
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_INITIAL_SETTINGS, DOMAIN, PLATFORMS
 from .coordinator import EvChargeCoordinator
 from .engine import Controller
 from .inputs import InputReader, car_spec, charger_spec, tuning
@@ -31,7 +31,7 @@ type EvChargeConfigEntry = ConfigEntry[EvChargeRuntime]
 
 async def async_setup_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> bool:
     """Set up one charger controller."""
-    store = SettingsStore()
+    store = SettingsStore(entry.options.get(CONF_INITIAL_SETTINGS))
     spec = charger_spec(entry.options)
     reader = InputReader(hass, entry.options)
     tune = tuning(entry.options)

@@ -24,10 +24,15 @@ class SettingsStore:
     hear about changes made by the user, not about restores at start-up.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, initial: dict[str, Any] | None = None) -> None:
         self._settings = Settings()
+        self._initial = dict(initial or {})
         self._extra: dict[str, Any] = dict(_EXTRA_DEFAULTS)
         self._listeners: list[SettingsListener] = []
+
+    def initial(self, entity_key: str, default: Any) -> Any:
+        """The first value of a setting entity: imported, else its default."""
+        return self._initial.get(entity_key, default)
 
     def snapshot(self) -> Settings:
         return self._settings

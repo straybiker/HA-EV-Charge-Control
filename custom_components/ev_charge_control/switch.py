@@ -70,7 +70,12 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
     ) -> None:
         init_entity(self, entry, description)
         self._store = store
-        self._attr_is_on = description.default
+        # Control charger is never imported: a new device starts in shadow mode.
+        self._attr_is_on = (
+            description.default
+            if description.key == CONTROL_CHARGER
+            else bool(store.initial(description.key, description.default))
+        )
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()

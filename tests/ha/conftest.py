@@ -20,24 +20,26 @@ HOUSE_POWER = "sensor.test_house_power"
 MONTHLY_PEAK = "sensor.test_monthly_peak"
 CAR_SOC = "sensor.test_car_soc"
 
-CHARGER_STEP = {
-    "name": "Test charger",
+NAME_STEP = {"name": "Test charger"}
+OUTPUTS_STEP = {
+    "current_limit_entity": CURRENT_LIMIT,
+    "phase_select_entity": PHASE_SELECT,
+}
+INPUTS_STEP = {
+    "connection_entity": MODE3,
     "charger_power_entity": CHARGER_POWER,
     "applied_current_entity": APPLIED_CURRENT,
     "active_phases_entity": ACTIVE_PHASES,
-    "connection_entity": MODE3,
     "max_current_entity": MAX_CURRENT,
+}
+LIMITS_STEP = {
     "min_current_a": 6,
-    "fallback_current_a": 7,
-    "fallback_phase": "1",
     "voltage_v": 230,
     "current_step_a": "0_1",
     "widen_small_decreases": True,
+    "fallback_current_a": 7,
+    "fallback_phase": "1",
     "failsafe_keeps_phase": False,
-}
-CONTROLS_STEP = {
-    "current_limit_entity": CURRENT_LIMIT,
-    "phase_select_entity": PHASE_SELECT,
 }
 PHASES_STEP = {"phase_option_1": "1 Phase", "phase_option_3": "3 Phases"}
 HOUSEHOLD_STEP = {"house_power_entity": HOUSE_POWER}
@@ -49,9 +51,11 @@ TUNING_STEP = {
 }
 
 OPTIONS = (
-    CHARGER_STEP
-    | CONTROLS_STEP
+    NAME_STEP
+    | OUTPUTS_STEP
     | PHASES_STEP
+    | INPUTS_STEP
+    | LIMITS_STEP
     | HOUSEHOLD_STEP
     | {"car_max_current_a": 16, "car_min_current_a": 6}
     | TUNING_STEP

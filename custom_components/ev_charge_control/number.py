@@ -122,6 +122,9 @@ class SettingNumber(RestoreNumber):
         await super().async_added_to_hass()
         d = self.entity_description
         value = d.default
+        initial = self._store.initial(d.key, d.default)
+        if d.native_min_value <= initial <= d.native_max_value:
+            value = initial
         last = await self.async_get_last_number_data()
         if (
             last is not None

@@ -69,17 +69,19 @@ Then go to **Settings → Devices & services → Add integration → EV Charge C
 
 ## Configuration
 
-The setup has seven steps. To change them later, select **Configure** on the integration page.
+Each step says whether it asks for what the controller **writes** (outputs), what it **reads** (inputs) or fixed values. To change the setup later, select **Configure** on the integration page; it shows the same steps, without the name.
 
-| Step | What you enter |
-|---|---|
-| 1. Charger | Entities: charger power, applied current, active phases, connection state, maximum current. Values: minimum current (6 A), fallback current (7 A), fallback phases (1), voltage (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), keep the phase on a sensor fault (off). Optional: the charger's energy meter. |
-| 2. Charger controls | The current-limit `number` and the phase `select`. Each can belong to one controller only, so two controllers never write the same output. What the charger gets when you switch Control charger off (fallback current and phases). |
-| 3. Phase options | The option of the phase select for 1 phase and for 3 phases. |
-| 4. Household | House power without the charger. Optional: solar power, monthly peak. |
-| 5. Car | Optional: battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
-| 6. Price and EMS | Optional: price sensor (or one of its attributes) and EMS signal. Without a price, the price check is skipped. |
-| 7. Tuning | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s), peak factor (90 %). |
+| Step | Kind | What you enter |
+|---|---|---|
+| New charge controller | | The device name. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
+| Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`) of your charger. |
+| Phase options | | The option of the phase setting for 1 phase and for 3 phases. |
+| Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
+| Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
+| House | Reads | House power without the charger. Optional: solar power, monthly peak (sensor or number). |
+| Car (optional) | Reads | Battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
+| Price and EMS (optional) | Reads | Price sensor (or one of its attributes), EMS signal. Without a price, the price check is skipped. |
+| Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s), peak factor (90 %). |
 
 **More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power, the monthly peak and the price can be shared.
 
@@ -121,7 +123,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 
 The controller then writes to the charger's current-limit number and phase select. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
 
-When you switch **Control charger** off, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in step 2 can change this to *Leave as it is* or *Stop charging (0 A)*.
+When you switch **Control charger** off, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in Charger limits and safety can change this to *Leave as it is* or *Stop charging (0 A)*.
 
 ### Charge modes
 

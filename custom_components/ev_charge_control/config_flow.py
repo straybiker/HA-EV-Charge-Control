@@ -1,4 +1,4 @@
-"""Config and options flow: map the charger, house, car and price entities."""
+"""Config and options flow: charger outputs, then the inputs and fixed values."""
 
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ from .const import (
     CONF_FALLBACK_CURRENT,
     CONF_FALLBACK_PHASE,
     CONF_HOUSE_POWER,
+    CONF_INITIAL_SETTINGS,
     CONF_MAX_CURRENT_ENTITY,
     CONF_MIN_CURRENT,
     CONF_MONTHLY_PEAK,
@@ -70,6 +71,7 @@ from .const import (
     PHASES,
 )
 from .engine import ConnectionState, connection_from_mode3
+from .yaml_import import async_import, package_present
 
 
 def _entity(
@@ -106,42 +108,74 @@ def _choice(options: list[str], key: str) -> selector.SelectSelector:
     )
 
 
-def _charger_schema(with_name: bool) -> vol.Schema:
-    fields: dict[Any, Any] = {}
-    if with_name:
-        fields[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = selector.TextSelector()
-    fields |= {
+IMPORT_YAML = "import_yaml"
+
+
+def _offer_import(handler: SchemaCommonFlowHandler) -> bool:
+    """Only for the first controller on a system that runs the YAML package."""
+    hass = _hass(handler)
+    return package_present(hass) and not hass.config_entries.async_entries(DOMAIN)
+
+
+async def _name_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    fields: dict[Any, Any] = {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector()
+    }
+    if _offer_import(handler):
+        fields[vol.Required(IMPORT_YAML, default=True)] = selector.BooleanSelector()
+    return vol.Schema(fields)
+
+
+async def _validate_name(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """With the import on, prefill the next steps and keep the settings."""
+    if not user_input.pop(IMPORT_YAML, False):
+        return user_input
+    options, settings = await async_import(_hass(handler))
+    return {**options, CONF_INITIAL_SETTINGS: settings, **user_input}
+
+
+# Outputs: the two entities the controller writes.
+OUTPUTS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CURRENT_LIMIT): _entity("number"),
+        vol.Required(CONF_PHASE_SELECT): _entity("select"),
+    }
+)
+
+# Inputs: what the charger reports. The controller only reads them.
+INPUTS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONNECTION): _entity(["sensor", "binary_sensor"]),
         vol.Required(CONF_CHARGER_POWER): _entity("sensor", SensorDeviceClass.POWER),
         vol.Required(CONF_APPLIED_CURRENT): _entity(
             "sensor", SensorDeviceClass.CURRENT
         ),
         vol.Required(CONF_ACTIVE_PHASES): _entity("sensor"),
-        vol.Required(CONF_CONNECTION): _entity(["sensor", "binary_sensor"]),
         vol.Required(CONF_MAX_CURRENT_ENTITY): _entity(
             ["sensor", "number", "input_number"]
         ),
+        vol.Optional(CONF_ENERGY_METER): _entity("sensor", SensorDeviceClass.ENERGY),
+    }
+)
+
+# Fixed values of the charger, and what it gets when something goes wrong.
+LIMITS_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_MIN_CURRENT, default=DEFAULT_MIN_CURRENT): _amps(),
-        vol.Required(CONF_FALLBACK_CURRENT, default=DEFAULT_FALLBACK_CURRENT): _amps(),
-        vol.Required(CONF_FALLBACK_PHASE, default=DEFAULT_FALLBACK_PHASE): _choice(
-            PHASES, "fallback_phase"
-        ),
         vol.Required(CONF_VOLTAGE, default=DEFAULT_VOLTAGE): _number(100, 400, 1, "V"),
         vol.Required(CONF_CURRENT_STEP, default=DEFAULT_CURRENT_STEP): _choice(
             list(CURRENT_STEPS), "current_step"
         ),
         vol.Required(CONF_WIDEN_DECREASES, default=False): selector.BooleanSelector(),
+        vol.Required(CONF_FALLBACK_CURRENT, default=DEFAULT_FALLBACK_CURRENT): _amps(),
+        vol.Required(CONF_FALLBACK_PHASE, default=DEFAULT_FALLBACK_PHASE): _choice(
+            PHASES, "fallback_phase"
+        ),
         vol.Required(
             CONF_FAILSAFE_KEEP_PHASE, default=False
         ): selector.BooleanSelector(),
-        vol.Optional(CONF_ENERGY_METER): _entity("sensor", SensorDeviceClass.ENERGY),
-    }
-    return vol.Schema(fields)
-
-
-CONTROLS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CURRENT_LIMIT): _entity("number"),
-        vol.Required(CONF_PHASE_SELECT): _entity("select"),
         vol.Required(CONF_CONTROL_OFF, default=DEFAULT_CONTROL_OFF): _choice(
             CONTROL_OFF_ACTIONS, "control_off_action"
         ),
@@ -220,31 +254,7 @@ def _own_entry_id(handler: SchemaCommonFlowHandler) -> str | None:
     return None
 
 
-async def _validate_charger(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    # The maximum comes from an entity; check against its value when it has one.
-    max_current = _numeric_state(handler, user_input[CONF_MAX_CURRENT_ENTITY])
-    ceiling = min(max_current or HARDWARE_MAX_CURRENT, HARDWARE_MAX_CURRENT)
-    if user_input[CONF_MIN_CURRENT] > ceiling:
-        raise SchemaFlowError("min_above_max")
-    if not (
-        user_input[CONF_MIN_CURRENT] <= user_input[CONF_FALLBACK_CURRENT] <= ceiling
-    ):
-        raise SchemaFlowError("fallback_out_of_range")
-    connection = user_input[CONF_CONNECTION]
-    if connection.startswith("sensor."):
-        state = _hass(handler).states.get(connection)
-        if (
-            state is not None
-            and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and connection_from_mode3(state.state) == ConnectionState.UNKNOWN
-        ):
-            raise SchemaFlowError("connection_not_mode3")
-    return user_input
-
-
-async def _validate_controls(
+async def _validate_outputs(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     hass = _hass(handler)
@@ -265,6 +275,37 @@ async def _validate_controls(
         for e in others
     ):
         raise SchemaFlowError("phase_entity_in_use")
+    return user_input
+
+
+async def _validate_inputs(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    connection = user_input[CONF_CONNECTION]
+    if connection.startswith("sensor."):
+        state = _hass(handler).states.get(connection)
+        if (
+            state is not None
+            and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and connection_from_mode3(state.state) == ConnectionState.UNKNOWN
+        ):
+            raise SchemaFlowError("connection_not_mode3")
+    return user_input
+
+
+async def _validate_limits(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    # The maximum comes from the inputs step; check against its value when it
+    # has one.
+    max_current = _numeric_state(handler, handler.options[CONF_MAX_CURRENT_ENTITY])
+    ceiling = min(max_current or HARDWARE_MAX_CURRENT, HARDWARE_MAX_CURRENT)
+    if user_input[CONF_MIN_CURRENT] > ceiling:
+        raise SchemaFlowError("min_above_max")
+    if not (
+        user_input[CONF_MIN_CURRENT] <= user_input[CONF_FALLBACK_CURRENT] <= ceiling
+    ):
+        raise SchemaFlowError("fallback_out_of_range")
     return user_input
 
 
@@ -361,18 +402,24 @@ async def _shared_placeholders(handler: SchemaCommonFlowHandler) -> dict[str, st
     return {"shared": "\n".join(_shared_inputs(handler))}
 
 
-def _steps(first: str, with_name: bool) -> dict[str, SchemaFlowFormStep]:
+def _steps(outputs_step: str) -> dict[str, SchemaFlowFormStep]:
+    """Outputs first, then inputs, fixed values, house, car, price and tuning.
+
+    The options flow starts at the outputs ("init"); a new controller first
+    gets a name ("user").
+    """
     return {
-        first: SchemaFlowFormStep(
-            _charger_schema(with_name),
-            validate_user_input=_validate_charger,
-            next_step="controls",
-        ),
-        "controls": SchemaFlowFormStep(
-            CONTROLS_SCHEMA, validate_user_input=_validate_controls, next_step="phases"
+        outputs_step: SchemaFlowFormStep(
+            OUTPUTS_SCHEMA, validate_user_input=_validate_outputs, next_step="phases"
         ),
         "phases": SchemaFlowFormStep(
-            _phases_schema, validate_user_input=_validate_phases, next_step="household"
+            _phases_schema, validate_user_input=_validate_phases, next_step="inputs"
+        ),
+        "inputs": SchemaFlowFormStep(
+            INPUTS_SCHEMA, validate_user_input=_validate_inputs, next_step="limits"
+        ),
+        "limits": SchemaFlowFormStep(
+            LIMITS_SCHEMA, validate_user_input=_validate_limits, next_step="household"
         ),
         "household": SchemaFlowFormStep(HOUSEHOLD_SCHEMA, next_step="car"),
         "car": SchemaFlowFormStep(
@@ -391,8 +438,13 @@ def _steps(first: str, with_name: bool) -> dict[str, SchemaFlowFormStep]:
     }
 
 
-CONFIG_FLOW = _steps("user", with_name=True)
-OPTIONS_FLOW = _steps("init", with_name=False)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(
+        _name_schema, validate_user_input=_validate_name, next_step="outputs"
+    ),
+    **_steps("outputs"),
+}
+OPTIONS_FLOW = _steps("init")
 
 
 class EvChargeControlConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):

@@ -36,7 +36,9 @@ class ChargeModeSelect(SelectEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
-        option = ChargeMode.OFF.value
+        option = self._store.initial(MODE.key, ChargeMode.OFF.value)
+        if option not in self.options:
+            option = ChargeMode.OFF.value
         if last is not None and last.state in self.options:
             option = last.state
         self._attr_current_option = option

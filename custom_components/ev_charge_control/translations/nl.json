@@ -2,111 +2,139 @@
   "config": {
     "step": {
       "user": {
-        "title": "Laadpaal",
-        "description": "Wat de laadpaal meldt. Kies de entiteiten van de eigen integratie van je laadpaal.",
+        "title": "Nieuwe laadregelaar",
+        "description": "Een laadregelaar stelt de laadstroom en het aantal fasen van één laadpaal in. Hij beslist op basis van het huisverbruik, het zonne-overschot, de vermogenslimiet, de elektriciteitsprijs, het EMS-signaal en het batterijniveau.\n\nHij gebruikt entiteiten die al bestaan: hij **leest** sensoren en **schrijft** naar twee entiteiten van de integratie van je laadpaal. Een nieuwe regelaar start in schaduwmodus: hij toont zijn beslissingen maar schrijft niets tot je **Laadpaal aansturen** op zijn apparaat aanzet.\n\nDe volgende stappen vragen:\n1. **Uitgangen laadpaal**: wat de regelaar instelt.\n2. **Ingangen laadpaal**: wat de laadpaal meldt.\n3. **Grenzen en veiligheid laadpaal**: vaste waarden.\n4. **Huis**: huisverbruik en capaciteitstarief.\n5. **Auto** (optioneel): het batterijniveau.\n6. **Prijs en EMS** (optioneel).\n7. **Fijnregeling**: waarden die zelden moeten veranderen.",
         "data": {
           "name": "Naam",
-          "charger_power_entity": "Vermogen laadpaal",
-          "applied_current_entity": "Toegepaste stroomlimiet",
-          "active_phases_entity": "Actieve fasen",
-          "connection_entity": "Verbindingsstatus",
-          "max_current_entity": "Maximale stroom",
-          "min_current_a": "Minimale stroom",
-          "fallback_current_a": "Terugvalstroom",
-          "fallback_phase": "Terugvalfasen",
-          "voltage_v": "Spanning",
-          "current_step_a": "Stroomstap",
-          "widen_small_decreases": "Kleine verlagingen vergroten",
-          "failsafe_keeps_phase": "Fase behouden bij sensorfout",
-          "charger_energy_entity": "Energiemeter laadpaal"
+          "import_yaml": "Importeren uit EV Load Balancer"
         },
         "data_description": {
-          "charger_power_entity": "Vermogen dat de laadpaal nu verbruikt.",
-          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
-          "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
-          "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
-          "max_current_entity": "De maximale stroom van de laadpaal, bv. het ingestelde of installatiemaximum. Tot ze een waarde meldt, is de terugvalstroom het maximum; nooit boven 32 A.",
-          "min_current_a": "Meestal 6 A.",
-          "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
-          "fallback_phase": "Aantal fasen na een sensorfout en wanneer de auto uitgeplugd is.",
-          "charger_energy_entity": "Optioneel. De eigen energiemeter van de laadpaal in kWh. Zonder meter wordt de geladen energie uit het laadvermogen berekend.",
-          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
-          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
-          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
+          "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat.",
+          "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan."
         }
       },
-      "controls": {
-        "title": "Bediening laadpaal",
-        "description": "Waar de regelaar zijn instelwaarden schrijft zolang Laadpaal aansturen aan staat.",
+      "outputs": {
+        "title": "Uitgangen laadpaal: wat de regelaar instelt",
+        "description": "De twee entiteiten van de integratie van je laadpaal waarnaar deze regelaar schrijft. Er wordt niets geschreven zolang Laadpaal aansturen uit staat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
-          "current_limit_entity": "Stroomlimiet",
-          "phase_select_entity": "Fase-instelling",
-          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+          "current_limit_entity": "Laadstroomlimiet",
+          "phase_select_entity": "Fase-instelling"
         },
         "data_description": {
-          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst, bijvoorbeeld de maximale stroomlimiet van de laadpaal.",
+          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen."
         }
       },
       "phases": {
         "title": "Fase-opties",
-        "description": "Welke optie van de fase-instelling 1 fase betekent en welke 3 fasen.",
+        "description": "Welke optie van de fase-instelling 1 fase betekent, en welke 3 fasen.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
         }
       },
-      "household": {
-        "title": "Huishouden",
-        "description": "Het vermogen van het huis zonder de laadpaal.",
+      "inputs": {
+        "title": "Ingangen laadpaal: wat de laadpaal meldt",
+        "description": "Sensoren van de integratie van je laadpaal. De regelaar leest ze alleen.",
         "data": {
-          "house_power_entity": "Huisvermogen zonder laadpaal",
+          "connection_entity": "Verbindingsstatus",
+          "charger_power_entity": "Laadvermogen",
+          "applied_current_entity": "Toegepaste stroomlimiet",
+          "active_phases_entity": "Actieve fasen",
+          "max_current_entity": "Maximale stroom",
+          "charger_energy_entity": "Energiemeter"
+        },
+        "data_description": {
+          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is.",
+          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt.",
+          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling.",
+          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A.",
+          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Zonder meter wordt de energie berekend uit het laadvermogen."
+        }
+      },
+      "limits": {
+        "title": "Grenzen en veiligheid laadpaal",
+        "description": "Vaste waarden van je laadpaal, en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
+        "data": {
+          "min_current_a": "Minimale stroom",
+          "voltage_v": "Spanning per fase",
+          "current_step_a": "Stroomstap",
+          "widen_small_decreases": "Kleine verlagingen vergroten",
+          "fallback_current_a": "Terugvalstroom",
+          "fallback_phase": "Terugvalfasen",
+          "failsafe_keeps_phase": "Fasen behouden bij een sensorfout",
+          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+        },
+        "data_description": {
+          "min_current_a": "De laagste stroom waarbij een auto laadt, meestal 6 A. Daaronder stopt de regelaar het laden.",
+          "voltage_v": "De nominale spanning van één fase, meestal 230 V.",
+          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
+          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: ze negeren sommige verlagingen van 0,1 A.",
+          "fallback_current_a": "De veilige stroom na een sensorfout, en de startstroom nadat de auto is losgekoppeld.",
+          "fallback_phase": "Het veilige aantal fasen na een sensorfout, en nadat de auto is losgekoppeld.",
+          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar de terugvalfasen, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fasen blijven zoals ze zijn.",
+          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
+        }
+      },
+      "household": {
+        "title": "Huis",
+        "description": "Het vermogen van het huis, en de piek van je capaciteitstarief.",
+        "data": {
+          "house_power_entity": "Huisverbruik zonder laadpaal",
           "solar_power_entity": "Zonnevermogen",
           "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
-          "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat. Een sensor of een getal-entiteit (W of kW)."
+          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW. Negatief bij injectie. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
+          "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
         }
       },
       "car": {
-        "title": "Auto",
-        "description": "Optioneel. Zonder batterijniveau doen de SOC-doelen niets.",
+        "title": "Auto (optioneel)",
+        "description": "Met het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
         "data": {
           "car_soc_entity": "Batterijniveau",
           "battery_capacity_kwh": "Batterijcapaciteit",
           "car_max_current_a": "Maximale stroom auto",
           "car_min_current_a": "Minimale stroom auto"
+        },
+        "data_description": {
+          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %.",
+          "battery_capacity_kwh": "Nodig bij een batterijniveau.",
+          "car_max_current_a": "De hoogste stroom per fase die de auto aanvaardt.",
+          "car_min_current_a": "De laagste stroom per fase die de auto aanvaardt."
         }
       },
       "price": {
-        "title": "Prijs en EMS",
-        "description": "Optioneel. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "title": "Prijs en EMS (optioneel)",
+        "description": "Ingangen die laden van het net toelaten of beperken. Zonder prijs wordt de prijscontrole overgeslagen.",
         "data": {
           "price_entity": "Elektriciteitsprijs",
           "price_attribute": "Prijsattribuut",
           "ems_entity": "EMS-signaal"
         },
         "data_description": {
-          "price_entity": "Afnameprijs in je munt per kWh.",
-          "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
-          "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
+          "price_entity": "De afnameprijs per kWh. Boven Maximale laadkost gebruikt de auto het net niet.",
+          "price_attribute": "Laat leeg om de sensorstatus te gebruiken. Vul in als de prijs een attribuut is, bijvoorbeeld rate_import.",
+          "ems_entity": "Een vermogenssensor van je EMS: het netbudget voor de auto in W, of aan/uit. 0 W blokkeert het net."
         }
       },
       "tuning": {
-        "title": "Afstelling",
-        "description": "Vaste waarden die zelden een wijziging nodig hebben.",
+        "title": "Fijnregeling",
+        "description": "Waarden die zelden moeten veranderen.",
         "data": {
-          "power_update_threshold_w": "Drempel vermogensaanpassing",
+          "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",
           "recalc_interval_s": "Herberekeningsinterval",
           "peak_factor_pct": "Piekfactor"
         },
         "data_description": {
-          "power_update_threshold_w": "Een verhoging wordt enkel geschreven als ze minstens zoveel vermogen toevoegt. Verlagingen worden altijd geschreven.",
-          "phase_switch_delay_min": "Wacht na een overgang naar 1 fase zo lang voor je terug naar 3 fasen gaat.",
-          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
-          "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
+          "power_update_threshold_w": "Een verhoging wordt pas geschreven als ze minstens zoveel vermogen toevoegt, zodat schommelingen van de zon geen schrijfopdrachten geven. Verlagingen worden altijd geschreven.",
+          "phase_switch_delay_min": "Na een wissel naar 1 fase zo lang wachten voor terug naar 3 fasen.",
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening.",
+          "peak_factor_pct": "Met Maandpiek volgen aan kan de vermogenslimiet stijgen tot dit deel van de maandpiek."
         }
       },
       "shared": {
@@ -131,110 +159,127 @@
   "options": {
     "step": {
       "init": {
-        "title": "Laadpaal",
-        "description": "Wat de laadpaal meldt. Kies de entiteiten van de eigen integratie van je laadpaal.",
-        "data_description": {
-          "charger_power_entity": "Vermogen dat de laadpaal nu verbruikt.",
-          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, niet de gemeten stroom van de auto.",
-          "active_phases_entity": "Toont 1 of 3, of dezelfde teksten als de fase-instelling.",
-          "connection_entity": "Een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan is zolang een auto verbonden is.",
-          "max_current_entity": "De maximale stroom van de laadpaal, bv. het ingestelde of installatiemaximum. Tot ze een waarde meldt, is de terugvalstroom het maximum; nooit boven 32 A.",
-          "min_current_a": "Meestal 6 A.",
-          "fallback_current_a": "Gebruikt na een sensorfout en wanneer de auto uitgeplugd is.",
-          "fallback_phase": "Aantal fasen na een sensorfout en wanneer de auto uitgeplugd is.",
-          "charger_energy_entity": "Optioneel. De eigen energiemeter van de laadpaal in kWh. Zonder meter wordt de geladen energie uit het laadvermogen berekend.",
-          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
-          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: die negeren sommige verlagingen van 0,1 A.",
-          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar 1 fase, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fase blijft zoals ze is."
-        },
+        "title": "Uitgangen laadpaal: wat de regelaar instelt",
+        "description": "De twee entiteiten van de integratie van je laadpaal waarnaar deze regelaar schrijft. Er wordt niets geschreven zolang Laadpaal aansturen uit staat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
-          "charger_power_entity": "Vermogen laadpaal",
-          "applied_current_entity": "Toegepaste stroomlimiet",
-          "active_phases_entity": "Actieve fasen",
-          "connection_entity": "Verbindingsstatus",
-          "max_current_entity": "Maximale stroom",
-          "min_current_a": "Minimale stroom",
-          "fallback_current_a": "Terugvalstroom",
-          "fallback_phase": "Terugvalfasen",
-          "voltage_v": "Spanning",
-          "current_step_a": "Stroomstap",
-          "widen_small_decreases": "Kleine verlagingen vergroten",
-          "failsafe_keeps_phase": "Fase behouden bij sensorfout",
-          "charger_energy_entity": "Energiemeter laadpaal"
-        }
-      },
-      "controls": {
-        "title": "Bediening laadpaal",
-        "description": "Waar de regelaar zijn instelwaarden schrijft zolang Laadpaal aansturen aan staat.",
-        "data": {
-          "current_limit_entity": "Stroomlimiet",
-          "phase_select_entity": "Fase-instelling",
-          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+          "current_limit_entity": "Laadstroomlimiet",
+          "phase_select_entity": "Fase-instelling"
         },
         "data_description": {
-          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
+          "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst, bijvoorbeeld de maximale stroomlimiet van de laadpaal.",
+          "phase_select_entity": "Een keuze-entiteit die de laadpaal schakelt tussen 1 en 3 fasen."
         }
       },
       "phases": {
         "title": "Fase-opties",
-        "description": "Welke optie van de fase-instelling 1 fase betekent en welke 3 fasen.",
+        "description": "Welke optie van de fase-instelling 1 fase betekent, en welke 3 fasen.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
           "phase_option_3": "Optie voor 3 fasen"
         }
       },
-      "household": {
-        "title": "Huishouden",
-        "description": "Het vermogen van het huis zonder de laadpaal.",
+      "inputs": {
+        "title": "Ingangen laadpaal: wat de laadpaal meldt",
+        "description": "Sensoren van de integratie van je laadpaal. De regelaar leest ze alleen.",
         "data": {
-          "house_power_entity": "Huisvermogen zonder laadpaal",
+          "connection_entity": "Verbindingsstatus",
+          "charger_power_entity": "Laadvermogen",
+          "applied_current_entity": "Toegepaste stroomlimiet",
+          "active_phases_entity": "Actieve fasen",
+          "max_current_entity": "Maximale stroom",
+          "charger_energy_entity": "Energiemeter"
+        },
+        "data_description": {
+          "connection_entity": "Toont of een auto verbonden is: een Mode 3-sensor (A, B1–D2, E, F), of een binaire sensor die aan staat zolang een auto verbonden is.",
+          "charger_power_entity": "Het vermogen dat de laadpaal nu levert, in W of kW.",
+          "applied_current_entity": "De stroomlimiet die de laadpaal nu toepast, in A. Niet de stroom die de auto trekt.",
+          "active_phases_entity": "Het aantal fasen dat de laadpaal nu gebruikt: 1 of 3, of dezelfde teksten als de fase-instelling.",
+          "max_current_entity": "De hoogste stroom die de laadpaal toelaat, bijvoorbeeld het installatiemaximum. Zolang ze geen waarde heeft, is de terugvalstroom het maximum. Nooit boven 32 A.",
+          "charger_energy_entity": "Optioneel. De energiemeter van de laadpaal in kWh, voor de geladen-energiesensoren. Zonder meter wordt de energie berekend uit het laadvermogen."
+        }
+      },
+      "limits": {
+        "title": "Grenzen en veiligheid laadpaal",
+        "description": "Vaste waarden van je laadpaal, en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
+        "data": {
+          "min_current_a": "Minimale stroom",
+          "voltage_v": "Spanning per fase",
+          "current_step_a": "Stroomstap",
+          "widen_small_decreases": "Kleine verlagingen vergroten",
+          "fallback_current_a": "Terugvalstroom",
+          "fallback_phase": "Terugvalfasen",
+          "failsafe_keeps_phase": "Fasen behouden bij een sensorfout",
+          "control_off_action": "Bij uitschakelen van Laadpaal aansturen"
+        },
+        "data_description": {
+          "min_current_a": "De laagste stroom waarbij een auto laadt, meestal 6 A. Daaronder stopt de regelaar het laden.",
+          "voltage_v": "De nominale spanning van één fase, meestal 230 V.",
+          "current_step_a": "De kleinste stroomwijziging die de laadpaal aanvaardt.",
+          "widen_small_decreases": "Zet aan voor Alfen-laadpalen: ze negeren sommige verlagingen van 0,1 A.",
+          "fallback_current_a": "De veilige stroom na een sensorfout, en de startstroom nadat de auto is losgekoppeld.",
+          "fallback_phase": "Het veilige aantal fasen na een sensorfout, en nadat de auto is losgekoppeld.",
+          "failsafe_keeps_phase": "Uit (aanbevolen): een sensorfout schakelt naar de terugvalfasen, zodat een laadpaal die niet meer reageert niet op een ongewenste fase blijft. Aan: de fasen blijven zoals ze zijn.",
+          "control_off_action": "Wat de laadpaal eenmalig krijgt als je Laadpaal aansturen uitschakelt."
+        }
+      },
+      "household": {
+        "title": "Huis",
+        "description": "Het vermogen van het huis, en de piek van je capaciteitstarief.",
+        "data": {
+          "house_power_entity": "Huisverbruik zonder laadpaal",
           "solar_power_entity": "Zonnevermogen",
           "monthly_peak_entity": "Maandpiek"
         },
         "data_description": {
-          "house_power_entity": "Negatief bij injectie. Mag de laadpaal niet bevatten. Een afgevlakte sensor werkt het best.",
-          "solar_power_entity": "Optioneel. Enkel getoond in de diagnose; de regelaar gebruikt de injectie in het huisvermogen.",
-          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief). De vermogenslimiet volgt het wanneer Maandpiek volgen aan staat. Een sensor of een getal-entiteit (W of kW)."
+          "house_power_entity": "Het netvermogen van het huis zonder de laadpaal, in W of kW. Negatief bij injectie. Een sensor die over ongeveer 15 s is uitgevlakt, werkt het best.",
+          "solar_power_entity": "Optioneel. Alleen in de diagnose getoond: de regelaar vindt het zonne-overschot in het huisverbruik.",
+          "monthly_peak_entity": "Optioneel. Het hoogste kwartiergemiddelde van deze maand (capaciteitstarief), als sensor of getal-entiteit in W of kW. Met Maandpiek volgen aan stijgt de vermogenslimiet tot de piekfactor van deze waarde."
         }
       },
       "car": {
-        "title": "Auto",
-        "description": "Optioneel. Zonder batterijniveau doen de SOC-doelen niets.",
+        "title": "Auto (optioneel)",
+        "description": "Met het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
         "data": {
           "car_soc_entity": "Batterijniveau",
           "battery_capacity_kwh": "Batterijcapaciteit",
           "car_max_current_a": "Maximale stroom auto",
           "car_min_current_a": "Minimale stroom auto"
+        },
+        "data_description": {
+          "car_soc_entity": "Een sensor met het batterijniveau van de auto in %.",
+          "battery_capacity_kwh": "Nodig bij een batterijniveau.",
+          "car_max_current_a": "De hoogste stroom per fase die de auto aanvaardt.",
+          "car_min_current_a": "De laagste stroom per fase die de auto aanvaardt."
         }
       },
       "price": {
-        "title": "Prijs en EMS",
-        "description": "Optioneel. Zonder prijs wordt de prijscontrole overgeslagen.",
+        "title": "Prijs en EMS (optioneel)",
+        "description": "Ingangen die laden van het net toelaten of beperken. Zonder prijs wordt de prijscontrole overgeslagen.",
         "data": {
           "price_entity": "Elektriciteitsprijs",
           "price_attribute": "Prijsattribuut",
           "ems_entity": "EMS-signaal"
         },
         "data_description": {
-          "price_entity": "Afnameprijs in je munt per kWh.",
-          "price_attribute": "Laat leeg om de sensorstatus te gebruiken.",
-          "ems_entity": "Netbudget in watt, of aan/uit. 0 W blokkeert het net."
+          "price_entity": "De afnameprijs per kWh. Boven Maximale laadkost gebruikt de auto het net niet.",
+          "price_attribute": "Laat leeg om de sensorstatus te gebruiken. Vul in als de prijs een attribuut is, bijvoorbeeld rate_import.",
+          "ems_entity": "Een vermogenssensor van je EMS: het netbudget voor de auto in W, of aan/uit. 0 W blokkeert het net."
         }
       },
       "tuning": {
-        "title": "Afstelling",
-        "description": "Vaste waarden die zelden een wijziging nodig hebben.",
+        "title": "Fijnregeling",
+        "description": "Waarden die zelden moeten veranderen.",
         "data": {
-          "power_update_threshold_w": "Drempel vermogensaanpassing",
+          "power_update_threshold_w": "Drempel vermogensupdate",
           "phase_switch_delay_min": "Vertraging faseschakeling",
           "recalc_interval_s": "Herberekeningsinterval",
           "peak_factor_pct": "Piekfactor"
         },
         "data_description": {
-          "power_update_threshold_w": "Een verhoging wordt enkel geschreven als ze minstens zoveel vermogen toevoegt. Verlagingen worden altijd geschreven.",
-          "phase_switch_delay_min": "Wacht na een overgang naar 1 fase zo lang voor je terug naar 3 fasen gaat.",
-          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase laten hem meteen rekenen.",
-          "peak_factor_pct": "Met Maandpiek volgen aan mag de vermogenslimiet stijgen tot dit deel van de maandpiek."
+          "power_update_threshold_w": "Een verhoging wordt pas geschreven als ze minstens zoveel vermogen toevoegt, zodat schommelingen van de zon geen schrijfopdrachten geven. Verlagingen worden altijd geschreven.",
+          "phase_switch_delay_min": "Na een wissel naar 1 fase zo lang wachten voor terug naar 3 fasen.",
+          "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening.",
+          "peak_factor_pct": "Met Maandpiek volgen aan kan de vermogenslimiet stijgen tot dit deel van de maandpiek."
         }
       },
       "shared": {

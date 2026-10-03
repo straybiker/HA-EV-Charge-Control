@@ -20,7 +20,8 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 | Module | Job |
 |---|---|
 | `__init__.py` | Sets up an entry: builds the controller, loads the energy totals, loads the platforms, starts the coordinator after Home Assistant has started. Saves the totals on unload and deletes them when the entry is removed. |
-| `config_flow.py` | The 7-step setup and the options flow (`SchemaConfigFlowHandler`). All values go into `entry.options`; an options change reloads the entry. |
+| `config_flow.py` | The setup and options flow (`SchemaConfigFlowHandler`): outputs, phase options, inputs, fixed values, house, car, price and EMS, tuning, and a warning for inputs shared with another controller. All values go into `entry.options`; an options change reloads the entry. |
+| `yaml_import.py` | Reads the EV Load Balancer package for the first setup: values and outputs from its template sensors' attributes, input entities from its user-config file. The device settings it finds become `initial_settings` in the options, used only when a setting entity is created. |
 | `inputs.py` | Turns options into `ChargerSpec`, `CarSpec` and `Tuning`. `InputReader` reads the source entities into `Measurements` and `Extras` and converts units (kW → W, Wh → kWh). |
 | `settings.py` | `SettingsStore`: the values of the setting entities, with listeners. Gives the engine a `Settings` snapshot. |
 | `coordinator.py` | `EvChargeCoordinator`: runs the controller, applies the effective power limit and the tuning values, counts energy and publishes a `Snapshot`. |

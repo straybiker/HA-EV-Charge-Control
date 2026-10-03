@@ -1,4 +1,4 @@
-"""The 7-step setup flow and the options flow."""
+"""The setup flow and the options flow."""
 
 from __future__ import annotations
 
@@ -12,12 +12,15 @@ from custom_components.ev_charge_control.const import DOMAIN
 from .conftest import (
     CAR_SOC,
     CHARGER_POWER,
-    CHARGER_STEP,
-    CONTROLS_STEP,
+    CURRENT_LIMIT,
     HOUSE_POWER,
     HOUSEHOLD_STEP,
+    INPUTS_STEP,
+    LIMITS_STEP,
     MODE3,
+    NAME_STEP,
     OPTIONS,
+    OUTPUTS_STEP,
     PHASE_SELECT,
     PHASES_STEP,
     TUNING_STEP,
@@ -34,9 +37,11 @@ async def _to_step(hass: HomeAssistant, step: str):
     """Walk the flow with valid input up to the given step."""
     result = await _start(hass)
     for step_id, data in (
-        ("user", CHARGER_STEP),
-        ("controls", CONTROLS_STEP),
+        ("user", NAME_STEP),
+        ("outputs", OUTPUTS_STEP),
         ("phases", PHASES_STEP),
+        ("inputs", INPUTS_STEP),
+        ("limits", LIMITS_STEP),
         ("household", HOUSEHOLD_STEP),
         ("car", {}),
         ("price", {}),
@@ -56,10 +61,10 @@ async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
     assert result["title"] == "Test charger"
     assert result["data"] == {}
     options = result["options"]
-    assert options["current_limit_entity"] == CONTROLS_STEP["current_limit_entity"]
+    assert options["current_limit_entity"] == OUTPUTS_STEP["current_limit_entity"]
     assert options["phase_option_3"] == "3 Phases"
     assert "price_entity" not in options
-    assert options["max_current_entity"] == CHARGER_STEP["max_current_entity"]
+    assert options["max_current_entity"] == INPUTS_STEP["max_current_entity"]
     assert options["control_off_action"] == "fallback"
     # Tuning defaults, as in the EV Load Balancer package.
     assert {k: options[k] for k in TUNING_STEP} == TUNING_STEP
@@ -81,35 +86,35 @@ async def _error(hass: HomeAssistant, step: str, data: dict) -> str:
 
 async def test_min_above_max(hass: HomeAssistant, sources) -> None:
     # The max current entity reports 16 A.
-    data = CHARGER_STEP | {"min_current_a": 20}
-    assert await _error(hass, "user", data) == "min_above_max"
+    data = LIMITS_STEP | {"min_current_a": 20}
+    assert await _error(hass, "limits", data) == "min_above_max"
 
 
 async def test_fallback_out_of_range(hass: HomeAssistant, sources) -> None:
-    data = CHARGER_STEP | {"fallback_current_a": 32}
-    assert await _error(hass, "user", data) == "fallback_out_of_range"
+    data = LIMITS_STEP | {"fallback_current_a": 32}
+    assert await _error(hass, "limits", data) == "fallback_out_of_range"
 
 
 async def test_connection_must_be_mode3(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(MODE3, "charging")
-    assert await _error(hass, "user", CHARGER_STEP) == "connection_not_mode3"
+    assert await _error(hass, "inputs", INPUTS_STEP) == "connection_not_mode3"
 
 
 async def test_phase_select_needs_options(hass: HomeAssistant, sources) -> None:
     hass.states.async_set(PHASE_SELECT, "x", {"options": []})
-    assert await _error(hass, "controls", CONTROLS_STEP) == "phase_select_unavailable"
+    assert await _error(hass, "outputs", OUTPUTS_STEP) == "phase_select_unavailable"
 
 
 async def test_one_entry_per_charger(hass: HomeAssistant, sources) -> None:
     MockConfigEntry(domain=DOMAIN, options=OPTIONS).add_to_hass(hass)
-    assert await _error(hass, "controls", CONTROLS_STEP) == "current_entity_in_use"
+    assert await _error(hass, "outputs", OUTPUTS_STEP) == "current_entity_in_use"
 
 
 async def test_phase_setting_is_not_shared(hass: HomeAssistant, sources) -> None:
     """A two-socket charger: own current limits, one phase setting."""
     other = OPTIONS | {"current_limit_entity": "number.test_socket_2_limit"}
     MockConfigEntry(domain=DOMAIN, options=other).add_to_hass(hass)
-    assert await _error(hass, "controls", CONTROLS_STEP) == "phase_entity_in_use"
+    assert await _error(hass, "outputs", OUTPUTS_STEP) == "phase_entity_in_use"
 
 
 async def test_phase_options_must_differ(hass: HomeAssistant, sources) -> None:
@@ -143,11 +148,10 @@ async def test_options_flow_edits_and_clears(
     )
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["step_id"] == "init"
-    charger = {k: v for k, v in CHARGER_STEP.items() if k != "name"} | {
-        "fallback_current_a": 8
-    }
+    limits = LIMITS_STEP | {"fallback_current_a": 8}
     tuning = TUNING_STEP | {"recalc_interval_s": 30}
-    for data in (charger, CONTROLS_STEP, PHASES_STEP, HOUSEHOLD_STEP, {}, {}, tuning):
+    steps = (OUTPUTS_STEP, PHASES_STEP, INPUTS_STEP, limits, HOUSEHOLD_STEP, {}, {})
+    for data in (*steps, tuning):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], data
         )
@@ -176,3 +180,76 @@ async def test_shared_inputs_give_a_warning_step(hass: HomeAssistant, sources) -
     # A warning only: submitting continues.
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _package(hass: HomeAssistant) -> None:
+    """The EV Load Balancer package's template sensors, as Home Assistant has them."""
+    hass.states.async_set(
+        "sensor.ev_load_balancer_charger",
+        "Test charger",
+        {
+            "current_output": CURRENT_LIMIT,
+            "phases_output": PHASE_SELECT,
+            "phase_1_state": "1 Phase",
+            "phase_3_state": "3 Phases",
+            "min_current": 6,
+            "default_current": 8,
+            "default_phases": 1,
+            "nominal_voltage": 230,
+        },
+    )
+    hass.states.async_set(
+        "sensor.ev_load_balancer",
+        "Limited",
+        {"power_limit": 6000, "car_aware": True, "pv_prioritized": False},
+    )
+
+
+def _suggested(result, key: str):
+    marker = next(k for k in result["data_schema"].schema if k == key)
+    return (marker.description or {}).get("suggested_value")
+
+
+async def test_first_controller_can_import_the_package(
+    hass: HomeAssistant, sources
+) -> None:
+    _package(hass)
+    result = await _start(hass)
+    assert "import_yaml" in result["data_schema"].schema
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NAME_STEP | {"import_yaml": True}
+    )
+    assert result["step_id"] == "outputs"
+    assert _suggested(result, "current_limit_entity") == CURRENT_LIMIT
+    for data in (OUTPUTS_STEP, PHASES_STEP, INPUTS_STEP):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["step_id"] == "limits"
+    assert _suggested(result, "fallback_current_a") == 8
+    for data in (LIMITS_STEP | {"fallback_current_a": 8}, HOUSEHOLD_STEP, {}, {}, {}):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    assert entry.options["initial_settings"]["charge_mode"] == "limited"
+    assert "import_yaml" not in entry.options
+    await hass.async_block_till_done()
+    assert hass.states.get("select.test_charger_charge_mode").state == "limited"
+    assert hass.states.get("number.test_charger_base_power_limit").state == "6000.0"
+    assert hass.states.get("switch.test_charger_car_aware").state == "on"
+    # Imported or not, a new device starts in shadow mode.
+    assert hass.states.get("switch.test_charger_control_charger").state == "off"
+
+
+async def test_no_import_offer_for_a_second_controller(
+    hass: HomeAssistant, sources
+) -> None:
+    _package(hass)
+    MockConfigEntry(domain=DOMAIN, options=OPTIONS).add_to_hass(hass)
+    result = await _start(hass)
+    assert "import_yaml" not in result["data_schema"].schema
+
+
+async def test_no_import_offer_without_the_package(
+    hass: HomeAssistant, sources
+) -> None:
+    result = await _start(hass)
+    assert "import_yaml" not in result["data_schema"].schema

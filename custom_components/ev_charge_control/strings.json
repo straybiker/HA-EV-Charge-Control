@@ -2,100 +2,128 @@
   "config": {
     "step": {
       "user": {
-        "title": "Charger",
-        "description": "What the charger reports. Pick the entities of your charger's own integration.",
+        "title": "New charge controller",
+        "description": "A charge controller sets the charging current and the number of phases of one charger. It decides from the house power, solar surplus, power limit, electricity price, EMS signal and battery level.\n\nIt uses entities that already exist: it **reads** sensors and **writes** two entities of your charger's own integration. A new controller starts in shadow mode: it shows its decisions but writes nothing until you switch on **Control charger** on its device.\n\nThe next steps ask for:\n1. **Charger outputs**: what the controller sets.\n2. **Charger inputs**: what the charger reports.\n3. **Charger limits and safety**: fixed values.\n4. **House**: house power and the capacity tariff.\n5. **Car** (optional): the battery level.\n6. **Price and EMS** (optional).\n7. **Tuning**: values that rarely need a change.",
         "data": {
           "name": "Name",
-          "charger_power_entity": "Charger power",
-          "applied_current_entity": "Applied current limit",
-          "active_phases_entity": "Active phases",
-          "connection_entity": "Connection state",
-          "max_current_entity": "Max current",
-          "min_current_a": "Min current",
-          "fallback_current_a": "Fallback current",
-          "fallback_phase": "Fallback phases",
-          "voltage_v": "Voltage",
-          "current_step_a": "Current step",
-          "widen_small_decreases": "Widen small decreases",
-          "failsafe_keeps_phase": "Keep the phase on a sensor fault",
-          "charger_energy_entity": "Charger energy meter"
+          "import_yaml": "Import from EV Load Balancer"
         },
         "data_description": {
-          "charger_power_entity": "Power the charger draws now.",
-          "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
-          "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
-          "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
-          "max_current_entity": "The charger's maximum current, e.g. its configured or installation maximum. Until it reports a value the fallback current is the maximum; never above 32 A.",
-          "min_current_a": "Usually 6 A.",
-          "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
-          "fallback_phase": "Phase count after a sensor fault and when the car is unplugged.",
-          "charger_energy_entity": "Optional. The charger's own energy meter in kWh. Without it, charged energy is integrated from charger power.",
-          "current_step_a": "The smallest current change the charger accepts.",
-          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
-          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
+          "name": "The name of the controller device, for example where the charger is.",
+          "import_yaml": "The EV Load Balancer YAML package is installed. On: the next steps are prefilled with its entities and values, and the new device starts with its settings. Control charger stays off. You check every step before saving."
         }
       },
-      "controls": {
-        "title": "Charger controls",
-        "description": "Where the controller writes its setpoints while Control charger is on.",
+      "outputs": {
+        "title": "Charger outputs: what the controller sets",
+        "description": "The two entities of your charger's integration that this controller writes to. Nothing is written while Control charger is off. Another charge controller cannot use the same entities.",
         "data": {
-          "current_limit_entity": "Current limit",
-          "phase_select_entity": "Phase setting",
-          "control_off_action": "When Control charger is switched off"
+          "current_limit_entity": "Charging current limit",
+          "phase_select_entity": "Phase setting"
         },
         "data_description": {
-          "control_off_action": "What the charger gets once when you switch Control charger off."
+          "current_limit_entity": "A number entity in A that limits the charging current, for example the charger's maximum current limit.",
+          "phase_select_entity": "A select entity that switches the charger between 1 and 3 phases."
         }
       },
       "phases": {
         "title": "Phase options",
-        "description": "Which option of the phase setting means 1 phase and which means 3 phases.",
+        "description": "Which option of the phase setting means 1 phase, and which means 3 phases.",
         "data": {
           "phase_option_1": "Option for 1 phase",
           "phase_option_3": "Option for 3 phases"
         }
       },
+      "inputs": {
+        "title": "Charger inputs: what the charger reports",
+        "description": "Sensors of your charger's integration. The controller only reads them.",
+        "data": {
+          "connection_entity": "Connection state",
+          "charger_power_entity": "Charging power",
+          "applied_current_entity": "Applied current limit",
+          "active_phases_entity": "Active phases",
+          "max_current_entity": "Maximum current",
+          "charger_energy_entity": "Energy meter"
+        },
+        "data_description": {
+          "connection_entity": "Shows whether a car is connected: a Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
+          "charger_power_entity": "The power the charger delivers now, in W or kW.",
+          "applied_current_entity": "The current limit the charger applies now, in A. Not the current the car draws.",
+          "active_phases_entity": "The number of phases the charger uses now: 1 or 3, or the same texts as the phase setting.",
+          "max_current_entity": "The highest current the charger allows, for example its installation maximum. Until it has a value, the fallback current is the maximum. Never above 32 A.",
+          "charger_energy_entity": "Optional. The charger's energy meter in kWh, for the charged-energy sensors. Without it, the energy is calculated from the charging power."
+        }
+      },
+      "limits": {
+        "title": "Charger limits and safety",
+        "description": "Fixed values of your charger, and what it gets when something goes wrong. The defaults fit most chargers.",
+        "data": {
+          "min_current_a": "Minimum current",
+          "voltage_v": "Voltage per phase",
+          "current_step_a": "Current step",
+          "widen_small_decreases": "Widen small decreases",
+          "fallback_current_a": "Fallback current",
+          "fallback_phase": "Fallback phases",
+          "failsafe_keeps_phase": "Keep the phases on a sensor fault",
+          "control_off_action": "When Control charger is switched off"
+        },
+        "data_description": {
+          "min_current_a": "The lowest current at which a car charges, usually 6 A. Below it, the controller stops charging.",
+          "voltage_v": "The nominal voltage of one phase, usually 230 V.",
+          "current_step_a": "The smallest current change the charger accepts.",
+          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some decreases of 0.1 A.",
+          "fallback_current_a": "The safe current after a sensor fault, and the start current after the car is unplugged.",
+          "fallback_phase": "The safe number of phases after a sensor fault, and after the car is unplugged.",
+          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to the fallback phases, so a charger that stops responding is not left on an unintended phase. On: the phases stay as they are.",
+          "control_off_action": "What the charger gets once when you switch Control charger off."
+        }
+      },
       "household": {
-        "title": "Household",
-        "description": "The house power without the charger.",
+        "title": "House",
+        "description": "The power of the house, and the peak of your capacity tariff.",
         "data": {
           "house_power_entity": "House power without the charger",
           "solar_power_entity": "Solar power",
           "monthly_peak_entity": "Monthly peak"
         },
         "data_description": {
-          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
-          "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on. A sensor or a number entity (W or kW)."
+          "house_power_entity": "The grid power of the house without the charger, in W or kW. Negative while exporting. A sensor smoothed over about 15 s works best.",
+          "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff), as a sensor or number entity in W or kW. With Follow monthly peak on, the power limit rises to the peak factor of this value."
         }
       },
       "car": {
-        "title": "Car",
-        "description": "Optional. Without a battery level the SOC targets do nothing.",
+        "title": "Car (optional)",
+        "description": "With the battery level, the controller stops at a target, charges urgently below an emergency level, and switches Comfort mode to solar. Leave the fields empty without car data.",
         "data": {
           "car_soc_entity": "Battery level",
           "battery_capacity_kwh": "Battery capacity",
-          "car_max_current_a": "Car max current",
-          "car_min_current_a": "Car min current"
+          "car_max_current_a": "Car maximum current",
+          "car_min_current_a": "Car minimum current"
+        },
+        "data_description": {
+          "car_soc_entity": "A sensor with the car's battery level in %.",
+          "battery_capacity_kwh": "Necessary with a battery level.",
+          "car_max_current_a": "The highest current per phase that the car accepts.",
+          "car_min_current_a": "The lowest current per phase that the car accepts."
         }
       },
       "price": {
-        "title": "Price and EMS",
-        "description": "Optional. Without a price the price check is skipped.",
+        "title": "Price and EMS (optional)",
+        "description": "Inputs that allow or limit charging from the grid. Without a price, the price check is skipped.",
         "data": {
           "price_entity": "Electricity price",
           "price_attribute": "Price attribute",
           "ems_entity": "EMS signal"
         },
         "data_description": {
-          "price_entity": "Import price in your currency per kWh.",
-          "price_attribute": "Leave empty to use the sensor state.",
-          "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
+          "price_entity": "The import price per kWh. Above Max charging cost, the car does not use the grid.",
+          "price_attribute": "Leave empty to use the sensor state. Fill in when the price is an attribute, for example rate_import.",
+          "ems_entity": "A power sensor of your EMS: the grid budget for the car in W, or on/off. 0 W blocks the grid."
         }
       },
       "tuning": {
         "title": "Tuning",
-        "description": "Fixed values that rarely need a change.",
+        "description": "Values that rarely need a change.",
         "data": {
           "power_update_threshold_w": "Power update threshold",
           "phase_switch_delay_min": "Phase switch delay",
@@ -103,10 +131,10 @@
           "peak_factor_pct": "Peak factor"
         },
         "data_description": {
-          "power_update_threshold_w": "An increase is written only when it adds at least this much power. Decreases are always written.",
-          "phase_switch_delay_min": "After a drop to 1 phase, wait this long before going back to 3 phases.",
-          "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
-          "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
+          "power_update_threshold_w": "An increase is written only when it adds at least this much power, so solar ripple causes no writes. Decreases are always written.",
+          "phase_switch_delay_min": "After a change to 1 phase, wait this long before going back to 3 phases.",
+          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once.",
+          "peak_factor_pct": "With Follow monthly peak on, the power limit can rise to this share of the monthly peak."
         }
       },
       "shared": {
@@ -131,99 +159,116 @@
   "options": {
     "step": {
       "init": {
-        "title": "Charger",
-        "description": "What the charger reports. Pick the entities of your charger's own integration.",
-        "data_description": {
-          "charger_power_entity": "Power the charger draws now.",
-          "applied_current_entity": "The current limit the charger applies now, not the car's measured current.",
-          "active_phases_entity": "Shows 1 or 3, or the same texts as the phase setting.",
-          "connection_entity": "A Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
-          "max_current_entity": "The charger's maximum current, e.g. its configured or installation maximum. Until it reports a value the fallback current is the maximum; never above 32 A.",
-          "min_current_a": "Usually 6 A.",
-          "fallback_current_a": "Used after a sensor fault and when the car is unplugged.",
-          "fallback_phase": "Phase count after a sensor fault and when the car is unplugged.",
-          "charger_energy_entity": "Optional. The charger's own energy meter in kWh. Without it, charged energy is integrated from charger power.",
-          "current_step_a": "The smallest current change the charger accepts.",
-          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some 0.1 A decreases.",
-          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to 1 phase, so a charger that stops responding is not left on an unintended phase. On: the phase stays as it is."
-        },
+        "title": "Charger outputs: what the controller sets",
+        "description": "The two entities of your charger's integration that this controller writes to. Nothing is written while Control charger is off. Another charge controller cannot use the same entities.",
         "data": {
-          "charger_power_entity": "Charger power",
-          "applied_current_entity": "Applied current limit",
-          "active_phases_entity": "Active phases",
-          "connection_entity": "Connection state",
-          "max_current_entity": "Max current",
-          "min_current_a": "Min current",
-          "fallback_current_a": "Fallback current",
-          "fallback_phase": "Fallback phases",
-          "voltage_v": "Voltage",
-          "current_step_a": "Current step",
-          "widen_small_decreases": "Widen small decreases",
-          "failsafe_keeps_phase": "Keep the phase on a sensor fault",
-          "charger_energy_entity": "Charger energy meter"
-        }
-      },
-      "controls": {
-        "title": "Charger controls",
-        "description": "Where the controller writes its setpoints while Control charger is on.",
-        "data": {
-          "current_limit_entity": "Current limit",
-          "phase_select_entity": "Phase setting",
-          "control_off_action": "When Control charger is switched off"
+          "current_limit_entity": "Charging current limit",
+          "phase_select_entity": "Phase setting"
         },
         "data_description": {
-          "control_off_action": "What the charger gets once when you switch Control charger off."
+          "current_limit_entity": "A number entity in A that limits the charging current, for example the charger's maximum current limit.",
+          "phase_select_entity": "A select entity that switches the charger between 1 and 3 phases."
         }
       },
       "phases": {
         "title": "Phase options",
-        "description": "Which option of the phase setting means 1 phase and which means 3 phases.",
+        "description": "Which option of the phase setting means 1 phase, and which means 3 phases.",
         "data": {
           "phase_option_1": "Option for 1 phase",
           "phase_option_3": "Option for 3 phases"
         }
       },
+      "inputs": {
+        "title": "Charger inputs: what the charger reports",
+        "description": "Sensors of your charger's integration. The controller only reads them.",
+        "data": {
+          "connection_entity": "Connection state",
+          "charger_power_entity": "Charging power",
+          "applied_current_entity": "Applied current limit",
+          "active_phases_entity": "Active phases",
+          "max_current_entity": "Maximum current",
+          "charger_energy_entity": "Energy meter"
+        },
+        "data_description": {
+          "connection_entity": "Shows whether a car is connected: a Mode 3 sensor (A, B1–D2, E, F), or a binary sensor that is on while a car is connected.",
+          "charger_power_entity": "The power the charger delivers now, in W or kW.",
+          "applied_current_entity": "The current limit the charger applies now, in A. Not the current the car draws.",
+          "active_phases_entity": "The number of phases the charger uses now: 1 or 3, or the same texts as the phase setting.",
+          "max_current_entity": "The highest current the charger allows, for example its installation maximum. Until it has a value, the fallback current is the maximum. Never above 32 A.",
+          "charger_energy_entity": "Optional. The charger's energy meter in kWh, for the charged-energy sensors. Without it, the energy is calculated from the charging power."
+        }
+      },
+      "limits": {
+        "title": "Charger limits and safety",
+        "description": "Fixed values of your charger, and what it gets when something goes wrong. The defaults fit most chargers.",
+        "data": {
+          "min_current_a": "Minimum current",
+          "voltage_v": "Voltage per phase",
+          "current_step_a": "Current step",
+          "widen_small_decreases": "Widen small decreases",
+          "fallback_current_a": "Fallback current",
+          "fallback_phase": "Fallback phases",
+          "failsafe_keeps_phase": "Keep the phases on a sensor fault",
+          "control_off_action": "When Control charger is switched off"
+        },
+        "data_description": {
+          "min_current_a": "The lowest current at which a car charges, usually 6 A. Below it, the controller stops charging.",
+          "voltage_v": "The nominal voltage of one phase, usually 230 V.",
+          "current_step_a": "The smallest current change the charger accepts.",
+          "widen_small_decreases": "Turn on for Alfen chargers: they ignore some decreases of 0.1 A.",
+          "fallback_current_a": "The safe current after a sensor fault, and the start current after the car is unplugged.",
+          "fallback_phase": "The safe number of phases after a sensor fault, and after the car is unplugged.",
+          "failsafe_keeps_phase": "Off (recommended): a sensor fault switches to the fallback phases, so a charger that stops responding is not left on an unintended phase. On: the phases stay as they are.",
+          "control_off_action": "What the charger gets once when you switch Control charger off."
+        }
+      },
       "household": {
-        "title": "Household",
-        "description": "The house power without the charger.",
+        "title": "House",
+        "description": "The power of the house, and the peak of your capacity tariff.",
         "data": {
           "house_power_entity": "House power without the charger",
           "solar_power_entity": "Solar power",
           "monthly_peak_entity": "Monthly peak"
         },
         "data_description": {
-          "house_power_entity": "Negative while exporting. It must not include the charger. A smoothed sensor works best.",
-          "solar_power_entity": "Optional. Shown in diagnostics only; the controller uses the export in house power.",
-          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff). The power limit follows it when Follow monthly peak is on. A sensor or a number entity (W or kW)."
+          "house_power_entity": "The grid power of the house without the charger, in W or kW. Negative while exporting. A sensor smoothed over about 15 s works best.",
+          "solar_power_entity": "Optional. Shown in the diagnostics only: the controller finds the solar surplus in the house power.",
+          "monthly_peak_entity": "Optional. The highest quarter-hour average power of this month (capacity tariff), as a sensor or number entity in W or kW. With Follow monthly peak on, the power limit rises to the peak factor of this value."
         }
       },
       "car": {
-        "title": "Car",
-        "description": "Optional. Without a battery level the SOC targets do nothing.",
+        "title": "Car (optional)",
+        "description": "With the battery level, the controller stops at a target, charges urgently below an emergency level, and switches Comfort mode to solar. Leave the fields empty without car data.",
         "data": {
           "car_soc_entity": "Battery level",
           "battery_capacity_kwh": "Battery capacity",
-          "car_max_current_a": "Car max current",
-          "car_min_current_a": "Car min current"
+          "car_max_current_a": "Car maximum current",
+          "car_min_current_a": "Car minimum current"
+        },
+        "data_description": {
+          "car_soc_entity": "A sensor with the car's battery level in %.",
+          "battery_capacity_kwh": "Necessary with a battery level.",
+          "car_max_current_a": "The highest current per phase that the car accepts.",
+          "car_min_current_a": "The lowest current per phase that the car accepts."
         }
       },
       "price": {
-        "title": "Price and EMS",
-        "description": "Optional. Without a price the price check is skipped.",
+        "title": "Price and EMS (optional)",
+        "description": "Inputs that allow or limit charging from the grid. Without a price, the price check is skipped.",
         "data": {
           "price_entity": "Electricity price",
           "price_attribute": "Price attribute",
           "ems_entity": "EMS signal"
         },
         "data_description": {
-          "price_entity": "Import price in your currency per kWh.",
-          "price_attribute": "Leave empty to use the sensor state.",
-          "ems_entity": "Grid budget in watts, or on/off. 0 W blocks the grid."
+          "price_entity": "The import price per kWh. Above Max charging cost, the car does not use the grid.",
+          "price_attribute": "Leave empty to use the sensor state. Fill in when the price is an attribute, for example rate_import.",
+          "ems_entity": "A power sensor of your EMS: the grid budget for the car in W, or on/off. 0 W blocks the grid."
         }
       },
       "tuning": {
         "title": "Tuning",
-        "description": "Fixed values that rarely need a change.",
+        "description": "Values that rarely need a change.",
         "data": {
           "power_update_threshold_w": "Power update threshold",
           "phase_switch_delay_min": "Phase switch delay",
@@ -231,10 +276,10 @@
           "peak_factor_pct": "Peak factor"
         },
         "data_description": {
-          "power_update_threshold_w": "An increase is written only when it adds at least this much power. Decreases are always written.",
-          "phase_switch_delay_min": "After a drop to 1 phase, wait this long before going back to 3 phases.",
-          "recalc_interval_s": "How often the controller runs. Mode, setting, connection and phase changes run it at once.",
-          "peak_factor_pct": "With Follow monthly peak on, the power limit may rise to this share of the monthly peak."
+          "power_update_threshold_w": "An increase is written only when it adds at least this much power, so solar ripple causes no writes. Decreases are always written.",
+          "phase_switch_delay_min": "After a change to 1 phase, wait this long before going back to 3 phases.",
+          "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once.",
+          "peak_factor_pct": "With Follow monthly peak on, the power limit can rise to this share of the monthly peak."
         }
       },
       "shared": {
