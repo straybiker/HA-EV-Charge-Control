@@ -41,3 +41,4 @@ out = controller.step(settings, measurements, now)
 - `tests/engine/test_controller.py`: one rule per test, including the 13 original golden cases and 10 Comfort cases, each at a 10 kW and a 6 kW power limit.
 - `tests/engine/test_policy.py`, `test_setpoint.py`: the table, rounding and the write filter.
 - `tests/engine/test_properties.py`: invariants checked with `hypothesis` on random inputs: the current is 0 or within range and a whole step; power never exceeds the headroom; Minimum modes never exceed the minimum; more sun never gives less power in Solar mode; EMS at 0 W imports at most half a step from the grid.
+- `docs/test-report.html`: the latest run of all tests with the golden cases next to the YAML package. Rebuilt by `scripts/report/`.

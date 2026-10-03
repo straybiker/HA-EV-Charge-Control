@@ -53,6 +53,7 @@ ruff check .
 ruff format --check .
 ```
 
+- Test report: after a change to behaviour or tests, rebuild `docs/test-report.html` with `python scripts/report/collect.py` then `python scripts/report/build.py`, and commit it with the change. Use the Windows venv's python; collect.py needs Docker.
 - Translations: `strings.json` and `translations/en.json` must stay identical; `translations/nl.json` must have the same keys. `tests/test_translations.py` checks both.
 - Run hassfest locally before pushing manifest, strings or icons changes: `docker run --rm -v "<repo>:/github/workspace" ghcr.io/home-assistant/hassfest`.
 - The shell is PowerShell on Windows 11. Test Windows-facing tooling in `pwsh`, not in Git Bash.

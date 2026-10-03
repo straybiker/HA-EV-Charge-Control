@@ -1,0 +1,272 @@
+<header class="top wrap">
+  <span class="eyebrow">EV Charge Control · charge controller</span>
+  <h1>Test report</h1>
+  <p class="muted">The full pytest run in Linux (engine, property, translation and Home Assistant tests), hassfest, the 13 original load-balancer cases against the new engine, and the behaviour decisions behind every difference.</p>
+  <div class="meta" id="meta"></div>
+</header>
+
+<nav class="sections" aria-label="Report sections">
+  <div class="wrap">
+    <a href="#verdict">Verdict</a>
+    <a href="#golden">Golden cases</a>
+    <a href="#decisions">Decision record</a>
+    <a href="#tests">All tests</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="verdict">
+    <header>
+      <span class="eyebrow">Verdict</span>
+      <h2 id="verdict-title"></h2>
+    </header>
+    <div class="verdict" id="verdict-panels"></div>
+  </section>
+
+  <section id="golden">
+    <header>
+      <span class="eyebrow">Golden cases</span>
+      <h2>Golden cases: the original 13 and Comfort</h2>
+      <p class="muted">Same inputs as the YAML package's own test, at two power limits: 6 kW (a realistic household on the capacity tariff) and the test's original 10 kW. 16 A charger at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data. The engine rounds the current to the nearest 0.1 A when there is headroom and rounds down when rounding up would exceed the power limit (decision D16); the YAML package always rounds to the nearest step and can end up to 35 W above the limit. The charger power is split into solar used and grid import; the meter column shows the house plus the charger, to check it against the 10 kW limit.</p>
+    </header>
+    <div class="filters">
+      <div class="seg" role="group" aria-label="Case set" id="set-filter"></div>
+      <div class="seg" role="group" aria-label="Power limit" id="limit-filter"></div>
+    </div>
+    <div class="scroll"><table id="golden-table"></table></div>
+  </section>
+
+  <section id="decisions">
+    <header>
+      <span class="eyebrow">Decision record</span>
+      <h2>Why the controller behaves as it does</h2>
+      <p class="muted">From <code>docs/behaviour.md</code>. D-items came from reviewing the YAML package's behaviour; B-items came from redesigning it.</p>
+    </header>
+    <div class="filters">
+      <div class="seg" role="group" aria-label="Filter decisions" id="decision-filter"></div>
+    </div>
+    <div class="scroll"><table id="decision-table"></table></div>
+  </section>
+
+  <section id="tests">
+    <header>
+      <span class="eyebrow">All tests</span>
+      <h2 id="tests-title"></h2>
+    </header>
+    <div class="filters">
+      <div class="seg" role="group" aria-label="Filter by area" id="test-filter"></div>
+      <input type="search" id="test-search" placeholder="Search test names" aria-label="Search test names">
+    </div>
+    <div id="test-groups" class="defects"></div>
+  </section>
+</main>
+
+<footer class="wrap" id="footer"></footer>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const VOLT = 230;
+const MODE = { off: "Off", min_1p: "1-Phase Minimum", min_3p: "3-Phases Minimum", limited: "Limited", fast: "Fast", solar: "Solar", comfort: "Comfort" };
+
+function setpoint([phase, amps]) {
+  if (!amps) return `<span class="setpoint off">0 A · stopped</span>`;
+  const kw = (amps * VOLT * phase / 1000).toFixed(2);
+  return `<span class="setpoint">${phase} × ${amps.toFixed(1)} A</span> <span class="note num">${kw} kW</span>`;
+}
+function house(w) {
+  if (w < 0) return `<span class="num">export ${(-w / 1000).toFixed(1)} kW</span>`;
+  return `<span class="num">import ${(w / 1000).toFixed(1)} kW</span>`;
+}
+const pill = (o) => `<span class="pill p-${o}">${o}</span>`;
+const human = (n) => n.replace(/^test_/, "").replace(/_/g, " ").replace(/\bems\b/g, "EMS").replace(/\bsoc\b/g, "SOC").replace(/\b3p\b/g, "3-phase").replace(/\b1p\b/g, "1-phase");
+
+/* meta */
+const env = DATA.env;
+$("#meta").innerHTML = [
+  `Run <b class="num">${esc(DATA.generated)}</b>`,
+  `Branch <b class="mono">${esc(env.branch)}</b>`,
+  `Base <b class="mono">${esc(env.base_commit)}</b>${env.dirty ? ` <span class="dirty">+ uncommitted changes</span>` : ""}`,
+  `Home Assistant <b>${esc(env.homeassistant)}</b>`,
+  `Python <b>3.14</b>`,
+].map((x) => `<span>${x}</span>`).join("");
+
+/* verdict */
+const c = DATA.counts;
+const total = DATA.tests.length;
+const failed = (c.failed || 0) + (c.error || 0);
+const allGolden = Object.values(DATA.golden).flatMap((set) => Object.values(set).flat());
+const gPass = allGolden.filter((g) => g.pass).length;
+const gSame = allGolden.filter((g) => g.yaml && g.engine[0] === g.yaml[0] && g.engine[1] === g.yaml[1]).length;
+const hf = DATA.hassfest;
+$("#verdict-title").textContent = failed === 0 && hf.invalid === 0
+  ? "All tests pass and hassfest finds no errors."
+  : `${failed} failing tests, ${hf.invalid ?? "?"} hassfest errors.`;
+const gc = DATA.group_counts;
+const pct = (n, d) => `${(100 * n / d).toFixed(1)}%`;
+$("#verdict-panels").innerHTML = `
+  <div class="panel">
+    <span class="eyebrow">pytest · Linux</span>
+    <div class="figure"><span class="big">${c.passed || 0}</span><span class="unit">of ${total} passed</span></div>
+    <div class="split" aria-hidden="true">
+      <span style="width:${pct(gc.engine, total)};background:var(--accent)"></span>
+      <span style="width:${pct(gc.ha, total)};background:var(--fixed)"></span>
+      <span style="width:${pct(gc.repo, total)};background:var(--pass)"></span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>${gc.engine} engine</span>
+      <span><i style="background:var(--fixed)"></i>${gc.ha} Home Assistant</span>
+      <span><i style="background:var(--pass)"></i>${gc.repo} repository</span>
+    </div>
+  </div>
+  <div class="panel">
+    <span class="eyebrow">hassfest</span>
+    <div class="figure"><span class="big">${hf.invalid === 0 ? "Valid" : "Invalid"}</span></div>
+    <p class="muted" style="font-size:.9rem">${hf.invalid === 0 ? "Manifest, translations, icons and config flow pass Home Assistant's own validator." : hf.errors.map(esc).join("<br>")}</p>
+  </div>
+  <div class="panel">
+    <span class="eyebrow">Golden cases</span>
+    <div class="figure"><span class="big">${gPass}</span><span class="unit">of ${allGolden.length} as specified</span></div>
+    <p class="muted" style="font-size:.9rem">13 original and 10 Comfort cases, each at 6 kW and 10 kW. ${gSame} of ${allGolden.length} identical to the YAML package; the decision record explains the rest.</p>
+  </div>
+  <div class="panel">
+    <span class="eyebrow">Decision record</span>
+    <div class="figure"><span class="big">${DATA.decisions.length}</span><span class="unit">decisions</span></div>
+    <div class="legend">
+      <span><span class="pill s-accepted">review</span> ${DATA.decisions.filter((d) => d.id.startsWith("D")).length}</span>
+      <span><span class="pill s-fixed">redesign</span> ${DATA.decisions.filter((d) => d.id.startsWith("B")).length}</span>
+    </div>
+  </div>`;
+
+/* golden */
+function settingsChips(g) {
+  const chips = [];
+  if (g.soc !== null && g.soc !== undefined) chips.push(g.settings.includes("car_aware") ? `SOC ${g.soc} %` : `SOC ${g.soc} %, car aware off`);
+  if (g.bridge_w) chips.push(`bridge ${g.bridge_w} W`);
+  if (g.settings.includes("ems_control")) chips.push(`EMS ${g.ems_signal_w ? g.ems_signal_w.toLocaleString("nl-BE") + " W budget" : "0 W"}`);
+  if (g.settings.includes("solar_when_ems_blocks")) chips.push("solar when EMS blocks");
+  return chips.length ? chips.map((x) => `<span class="chip">${x}</span>`).join("") : `<span class="note">defaults</span>`;
+}
+const kw = (w) => `${(w / 1000).toFixed(2)} kW`;
+function meter(g) {
+  const over = g.net_w > g.power_limit_w;
+  const text = g.net_w > 0 ? `import ${kw(g.net_w)}` : g.net_w < 0 ? `export ${kw(-g.net_w)}` : "0 kW";
+  const note = !over ? `within the ${kw(g.power_limit_w)} limit`
+    : g.charger_w === 0 ? `the house alone is above the ${kw(g.power_limit_w)} limit; the car is stopped`
+    : `${kw(g.net_w - g.power_limit_w)} above the ${kw(g.power_limit_w)} limit`;
+  return `<span class="num${over ? " delta" : ""}">${text}</span><div class="note">${note}</div>`;
+}
+function renderGolden() {
+$("#golden-table").innerHTML = `
+  <thead><tr><th>Case</th><th>Mode</th><th>House</th><th>Settings</th><th>YAML package</th><th>Engine</th><th class="r">Solar used</th><th class="r">Grid import</th><th>Meter after charging</th><th>Result</th></tr></thead>
+  <tbody>${DATA.golden[goldenSet][goldenLimit].map((g) => {
+    const same = !g.yaml || (g.engine[0] === g.yaml[0] && g.engine[1] === g.yaml[1]);
+    return `<tr>
+      <td>${esc(g.name)}</td>
+      <td>${esc(MODE[g.mode] || g.mode)}</td>
+      <td>${house(g.household_w)}</td>
+      <td>${settingsChips(g)}</td>
+      <td>${g.yaml ? setpoint(g.yaml) : '<span class="note">–</span>'}</td>
+      <td>${setpoint(g.engine)}${same ? "" : `<div class="note">${esc(g.why)}</div>`}</td>
+      <td class="r num">${g.solar_used_w ? kw(g.solar_used_w) : "–"}</td>
+      <td class="r num">${g.grid_import_w ? kw(g.grid_import_w) : "–"}</td>
+      <td>${meter(g)}</td>
+      <td>${pill(g.pass ? "passed" : "failed")}</td>
+    </tr>`;
+  }).join("")}</tbody>`;
+}
+let goldenLimit = "6000";
+let goldenSet = "original";
+$("#set-filter").innerHTML = [["original", "Original 13"], ["comfort", "Comfort"]]
+  .map(([k, label]) => `<button type="button" data-f="${k}" aria-pressed="${k === goldenSet}">${label}</button>`).join("");
+$("#set-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  goldenSet = b.dataset.f;
+  for (const x of $("#set-filter").children) x.setAttribute("aria-pressed", String(x === b));
+  renderGolden();
+});
+$("#limit-filter").innerHTML = [["6000", "6 kW limit"], ["10000", "10 kW limit"]]
+  .map(([k, label]) => `<button type="button" data-f="${k}" aria-pressed="${k === goldenLimit}">${label}</button>`).join("");
+$("#limit-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  goldenLimit = b.dataset.f;
+  for (const x of $("#limit-filter").children) x.setAttribute("aria-pressed", String(x === b));
+  renderGolden();
+});
+renderGolden();
+
+/* decisions */
+let decisionFilter = "all";
+const DF = [["all", "All"], ["D", "Review (D)"], ["B", "Redesign (B)"]];
+$("#decision-filter").innerHTML = DF.map(([k, label]) => {
+  const n = k === "all" ? DATA.decisions.length : DATA.decisions.filter((d) => d.id.startsWith(k)).length;
+  return `<button type="button" data-f="${k}" aria-pressed="${k === "all"}">${label} <span class="num">${n}</span></button>`;
+}).join("");
+function renderDecisions() {
+  const rows = DATA.decisions.filter((d) => decisionFilter === "all" || d.id.startsWith(decisionFilter));
+  $("#decision-table").innerHTML = `
+    <thead><tr><th>ID</th><th>Topic</th><th>Decision</th></tr></thead>
+    <tbody>${rows.map((d) => `<tr>
+      <td><span class="pill ${d.id.startsWith("D") ? "s-accepted" : "s-fixed"}">${esc(d.id)}</span></td>
+      <td>${esc(d.topic)}</td>
+      <td>${esc(d.decision).replace(/`([^`]+)`/g, "<code>$1</code>")}</td>
+    </tr>`).join("")}</tbody>`;
+}
+$("#decision-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  decisionFilter = b.dataset.f;
+  for (const x of $("#decision-filter").children) x.setAttribute("aria-pressed", String(x === b));
+  renderDecisions();
+});
+renderDecisions();
+
+/* tests */
+const FILE_LABEL = {
+  test_controller: "Controller rules", test_properties: "Properties (hypothesis)", test_policy: "Mode policy",
+  test_setpoint: "Current and write filter", test_config_flow: "Setup and options flow",
+  test_controller_device: "Device, triggers and shadow mode", test_translations: "Translations",
+  test_specs: "Options to specs", test_manifest: "Repository metadata",
+};
+const GROUPS = [["all", "All"], ["engine", "Engine"], ["ha", "Home Assistant"], ["repo", "Repository"]];
+let testFilter = "all", query = "";
+$("#tests-title").textContent = `${total} tests in ${new Set(DATA.tests.map((t) => t.file)).size} files`;
+$("#test-filter").innerHTML = GROUPS.map(([k, label]) => {
+  const n = k === "all" ? total : DATA.tests.filter((t) => t.group === k).length;
+  return `<button type="button" data-f="${k}" aria-pressed="${k === "all"}">${label} <span class="num">${n}</span></button>`;
+}).join("");
+function renderTests() {
+  const q = query.trim().toLowerCase();
+  const order = Object.keys(FILE_LABEL);
+  const files = [...new Set(DATA.tests.map((t) => t.file))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const html = files.map((f) => {
+    const rows = DATA.tests.filter((t) => t.file === f
+      && (testFilter === "all" || t.group === testFilter)
+      && (!q || (t.name + " " + t.params).toLowerCase().includes(q)));
+    if (!rows.length) return "";
+    return `<div class="group">
+      <h3>${FILE_LABEL[f] || f} <span class="note mono">${f}.py</span> <span class="note">${rows.length}</span></h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Test</th><th>Case</th><th>Result</th></tr></thead>
+        <tbody>${rows.map((t) => `<tr>
+          <td class="tname">${esc(human(t.name))}</td>
+          <td class="params">${esc(t.params) || "–"}</td>
+          <td>${pill(t.outcome)}${t.outcome === "failed" ? `<div class="note">${esc(t.message)}</div>` : ""}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </div>`;
+  }).join("");
+  $("#test-groups").innerHTML = html || `<div class="empty">No tests match.</div>`;
+}
+$("#test-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  testFilter = b.dataset.f;
+  for (const x of $("#test-filter").children) x.setAttribute("aria-pressed", String(x === b));
+  renderTests();
+});
+$("#test-search").addEventListener("input", (e) => { query = e.target.value; renderTests(); });
+renderTests();
+
+$("#footer").innerHTML = `pytest summary: <span class="mono">${esc(DATA.summary_line)}</span>. The full suite runs in Docker because the Home Assistant test harness needs Linux.`;
+</script>
