@@ -78,6 +78,9 @@ _ENTITY = re.compile(r"\b((?:sensor|binary_sensor|number|input_number)\.[a-z0-9_
 _STATE_ATTR = re.compile(
     r"state_attr\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"]([^'\"]+)['\"]"
 )
+_DEFINES_CHARGER = re.compile(
+    r"^\s*(?:-\s+)?unique_id:\s*['\"]?ev_load_balancer_charger['\"]?\s*$", re.MULTILINE
+)
 _KEY = re.compile(r"^(\s*)(?:-\s+)?([a-z_0-9]+):(.*)$")
 
 # Package charge mode -> integration charge mode.
@@ -259,12 +262,14 @@ def _find_user_config(config_dir: str) -> str | None:
     """
     root = Path(config_dir)
     candidates = [*root.glob("*.yaml"), *root.glob("packages/**/*.yaml")]
-    for path in candidates:
+    for path in sorted(candidates):
         try:
             text = path.read_text("utf-8")
         except OSError, UnicodeDecodeError:
             continue
-        if _BLOCKS["charger"] in text and "current_output" in text:
+        # The package's logic file reads the same sensor; only the file that
+        # defines it holds the input entities.
+        if _DEFINES_CHARGER.search(text):
             return text
     return None
 

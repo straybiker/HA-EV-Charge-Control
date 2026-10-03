@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from custom_components.ev_charge_control.yaml_import import (
+    _find_user_config,
     initial_settings,
     input_options,
     parse_package,
@@ -150,3 +151,23 @@ def test_package_solar_mode_was_pure_solar():
 
 def test_control_charger_is_never_imported():
     assert "control_charger" not in initial_settings("Fast", BALANCER | {"x": 1})
+
+
+def test_finds_the_file_that_defines_the_sensors(tmp_path):
+    """The logic file reads the charger sensor too; it must not be picked."""
+    packages = tmp_path / "packages"
+    packages.mkdir()
+    (packages / "a_logic.yaml").write_text(
+        "variables:\n"
+        "  out: \"{{ state_attr('sensor.ev_load_balancer_charger', "
+        "'current_output') }}\"\n",
+        "utf-8",
+    )
+    (packages / "b_user_config.yaml").write_text(USER_CONFIG, "utf-8")
+    text = _find_user_config(str(tmp_path))
+    assert text is not None
+    assert input_options(text)["charger_power_entity"] == "sensor.test_power"
+
+
+def test_no_user_config_file(tmp_path):
+    assert _find_user_config(str(tmp_path)) is None
