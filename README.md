@@ -53,6 +53,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
 - **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
 - Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
+- For the optional [dashboard](#the-dashboard): nothing extra. It uses only built-in cards and works on every supported Home Assistant version. From Home Assistant 2026.6, the lines of its power graph get their own colours. It needs the Dashboards integration, which Home Assistant loads by default.
 
 ## Installation
 

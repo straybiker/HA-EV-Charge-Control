@@ -18,6 +18,7 @@ from homeassistant.components import frontend
 from homeassistant.components.lovelace import dashboard as lovelace
 from homeassistant.components.lovelace.const import LOVELACE_DATA, ConfigNotFound
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
@@ -56,6 +57,9 @@ GRID_BLUE = "#4c8dff"
 SOLAR_AMBER = "#f5a524"
 HOUSE_PINK = "#e58bbd"
 LIMIT_GREY = "#c9d3e0"
+# History graphs take a color per entity from 2026.6; older versions get
+# their default colors, so the dashboard works on every supported version.
+_GRAPH_COLORS = (MAJOR_VERSION, MINOR_VERSION) >= (2026, 6)
 
 # Mode 3 (IEC 61851) states, for chargers that report them.
 _MODE3_LABELS = (
@@ -174,6 +178,12 @@ def _tile(entity: str, name: str, columns: int | str = 6, **extra: Any) -> dict:
         "grid_options": {"columns": columns},
         **extra,
     }
+
+
+def _graph_entity(series: dict) -> dict:
+    return (
+        series if _GRAPH_COLORS else {k: v for k, v in series.items() if k != "color"}
+    )
 
 
 def _heading(text: str, icon: str) -> dict:
@@ -339,7 +349,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 {
                     "type": "history-graph",
                     "hours_to_show": 24,
-                    "entities": [s for s in power_series if s],
+                    "entities": [_graph_entity(s) for s in power_series if s],
                     "grid_options": {"columns": "full", "rows": 6},
                 },
                 span=3,
