@@ -262,6 +262,54 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     return text
 
 
+def _control_badges(e: Mapping[str, str]) -> list[dict]:
+    """Control charger, coloured by what the controller does.
+
+    A badge colour cannot follow a template, so one badge per state: grey
+    when off (the default), blue while charging, green at the target, and
+    the default colour when on but idle.
+    """
+    on = {"condition": "state", "entity": e["control_charger"], "state": "on"}
+    active = ["charging", "emergency"]
+
+    def badge(color: str | None, *visibility: dict) -> dict:
+        b: dict[str, Any] = {
+            "type": "entity",
+            "entity": e["control_charger"],
+            "name": "Control charger",
+            "show_name": True,
+            "show_state": True,
+            "tap_action": {"action": "more-info"},
+            "visibility": list(visibility),
+        }
+        if color:
+            b["color"] = color
+        return b
+
+    return [
+        badge(
+            None, {"condition": "state", "entity": e["control_charger"], "state": "off"}
+        ),
+        badge(
+            "blue", on, {"condition": "state", "entity": e["decision"], "state": active}
+        ),
+        badge(
+            "green",
+            on,
+            {"condition": "state", "entity": e["decision"], "state": "target_reached"},
+        ),
+        badge(
+            None,
+            on,
+            {
+                "condition": "state",
+                "entity": e["decision"],
+                "state_not": [*active, "target_reached"],
+            },
+        ),
+    ]
+
+
 def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
     ems = o.get(CONF_EMS)
     price = o.get(CONF_PRICE)
@@ -299,17 +347,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
         "icon": _ICON,
         "type": "sections",
         "max_columns": 3,
-        "badges": [
-            {
-                "type": "entity",
-                "entity": e["control_charger"],
-                "name": "Control charger",
-                "show_name": True,
-                "show_state": True,
-                # No fixed colour: the badge follows the state, grey when off.
-                "tap_action": {"action": "more-info"},
-            }
-        ],
+        "badges": _control_badges(e),
         "sections": [
             _section(
                 _heading("Live", "mdi:lightning-bolt"),
