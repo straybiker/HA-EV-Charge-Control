@@ -6,11 +6,13 @@
         "description": "**Hoe het werkt**\nOm de paar seconden (standaard 10 s) leest de regelaar zijn **ingangen**, beslist hoe snel de auto mag laden, en stelt zijn **uitgangen** in.\n\n- **Ingangen** (alleen gelezen): wat de laadpaal meldt, het huisverbruik, en optioneel het batterijniveau, de elektriciteitsprijs en een EMS-signaal.\n- **Uitgangen** (geschreven): twee entiteiten van de integratie van je laadpaal, de laadstroomlimiet en de fase-instelling.\n\nEen nieuwe regelaar start in **schaduwmodus**: hij toont wat hij zou instellen, maar schrijft niets tot je **Laadpaal aansturen** op zijn apparaat aanzet.\n\n**Stappen**\n1. Uitgangen: wat de regelaar wijzigt\n2. Uitgangen: fase-opties\n3. Ingangen: de laadpaal\n4. Grenzen en veiligheid laadpaal\n5. Ingangen: het huis\n6. Ingangen: de auto (optioneel)\n7. Ingangen: prijs en EMS (optioneel)\n8. Fijnregeling",
         "data": {
           "name": "Naam",
-          "import_yaml": "Importeren uit EV Load Balancer"
+          "import_yaml": "Importeren uit EV Load Balancer",
+          "dashboard": "Dashboard toevoegen"
         },
         "data_description": {
           "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat. Zijn entiteiten krijgen deze naam.",
-          "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan."
+          "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan.",
+          "dashboard": "Voegt een dashboard voor deze regelaar toe aan de zijbalk. Als het YAML-pakket EV Load Balancer geïnstalleerd is, krijgt het een tweede weergave die de regelaar met het pakket vergelijkt. Je kunt het later toevoegen of verwijderen via Configureren."
         }
       },
       "outputs": {
@@ -168,7 +170,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "1/8 Uitgangen: wat de regelaar wijzigt",
+        "title": "1/9 Uitgangen: wat de regelaar wijzigt",
         "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de twee entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
           "current_limit_entity": "Laadstroomlimiet (uitgang)",
@@ -180,7 +182,7 @@
         }
       },
       "phases": {
-        "title": "2/8 Uitgangen: fase-opties",
+        "title": "2/9 Uitgangen: fase-opties",
         "description": "Hoe de fase-instelling 1 fase en 3 fasen aangeeft. Dat hangt af van de integratie van je laadpaal: een keuze heeft eigen optieteksten, een schakelaar staat aan of uit, en een getal heeft een waarde per aantal fasen.",
         "data": {
           "phase_option_1": "Optie voor 1 fase",
@@ -196,7 +198,7 @@
         }
       },
       "inputs": {
-        "title": "3/8 Ingangen: de laadpaal",
+        "title": "3/9 Ingangen: de laadpaal",
         "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nKies de sensoren van de integratie van je laadpaal die haar toestand tonen. De regelaar ziet daarmee of een auto verbonden is en wat de laadpaal nu doet.",
         "data": {
           "connection_entity": "Verbindingsstatus",
@@ -216,7 +218,7 @@
         }
       },
       "limits": {
-        "title": "4/8 Grenzen en veiligheid laadpaal",
+        "title": "4/9 Grenzen en veiligheid laadpaal",
         "description": "Vaste waarden, geen entiteiten. Ze beschrijven je laadpaal en wat ze krijgt als er iets misgaat. De standaardwaarden passen bij de meeste laadpalen.",
         "data": {
           "min_current_a": "Minimale stroom",
@@ -240,7 +242,7 @@
         }
       },
       "household": {
-        "title": "5/8 Ingangen: het huis",
+        "title": "5/9 Ingangen: het huis",
         "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nDe regelaar geeft de auto het vermogen dat het huis onder de vermogenslimiet overlaat. Injectie van zonne-energie telt als extra vermogen. De vermogenslimiet komt uit een entiteit, zodat een helper of je EMS ze bepaalt.",
         "data": {
           "house_power_entity": "Huisverbruik zonder laadpaal",
@@ -256,7 +258,7 @@
         }
       },
       "car": {
-        "title": "6/8 Ingangen: de auto (optioneel)",
+        "title": "6/9 Ingangen: de auto (optioneel)",
         "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nMet het batterijniveau stopt de regelaar bij een doel, laadt hij dringend onder een noodniveau, en schakelt hij de Comfort-modus naar zon. Laat de velden leeg zonder autogegevens.",
         "data": {
           "car_soc_entity": "Batterijniveau",
@@ -272,7 +274,7 @@
         }
       },
       "price": {
-        "title": "7/8 Ingangen: prijs en EMS (optioneel)",
+        "title": "7/9 Ingangen: prijs en EMS (optioneel)",
         "description": "**Ingangen** zijn entiteiten die de regelaar alleen leest. Hij wijzigt ze nooit.\n\nZe laten laden van het net toe of beperken het. Leeg: de prijscontrole wordt overgeslagen en geen EMS beperkt het net.",
         "data": {
           "price_entity": "Elektriciteitsprijs",
@@ -286,7 +288,7 @@
         }
       },
       "tuning": {
-        "title": "8/8 Fijnregeling",
+        "title": "8/9 Fijnregeling",
         "description": "Vaste waarden die zelden moeten veranderen.",
         "data": {
           "power_update_threshold_w": "Drempel vermogensupdate",
@@ -297,6 +299,18 @@
           "power_update_threshold_w": "Een verhoging wordt pas geschreven als ze minstens zoveel vermogen toevoegt, zodat schommelingen van de zon geen schrijfopdrachten geven. Verlagingen worden altijd geschreven.",
           "phase_switch_delay_min": "Na een wissel naar 1 fase zo lang wachten voor terug naar 3 fasen.",
           "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening."
+        }
+      },
+      "dashboard": {
+        "title": "9/9 Dashboard",
+        "description": "Het dashboard van de regelaar in de zijbalk. Je kunt het bewerken zoals elk ander dashboard.",
+        "data": {
+          "dashboard": "Dashboard tonen",
+          "dashboard_rebuild": "Dashboard opnieuw opbouwen"
+        },
+        "data_description": {
+          "dashboard": "Uit verwijdert het dashboard en je wijzigingen eraan.",
+          "dashboard_rebuild": "Bouwt het dashboard opnieuw op uit de huidige instellingen en verwijdert je wijzigingen. Gebruik het na een wijziging van entiteiten in deze stappen, of na een update."
         }
       },
       "shared": {

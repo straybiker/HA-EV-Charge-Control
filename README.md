@@ -31,6 +31,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - **Car aware:** emergency, target and comfort battery levels.
 - **1 and 3 phases:** switches phases, with a hold time that prevents flapping.
 - **Energy:** charged energy, split into grid and solar, for the Energy dashboard or an EMS.
+- **Dashboard:** an optional dashboard in the sidebar, built from your setup, with a shadow comparison view when the YAML package is installed.
 - **Safe by design:** a sensor fault never increases the current. Writes are confirmed, retried and reported as a repair issue when the charger does not follow. Settings survive restarts.
 - **Any charger** whose Home Assistant integration has a current-limit number and a phase setting: a select, a switch or a number.
 
@@ -79,7 +80,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 
 | Step | Kind | What you enter |
 |---|---|---|
-| New charge controller | | The device name. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
+| New charge controller | | The device name, and **Add a dashboard** (on). On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
 | Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. |
 | Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
@@ -88,6 +89,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Car (optional) | Reads | Battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
 | Price and EMS (optional) | Reads | Price sensor (or one of its attributes), EMS signal. Without a price, the price check is skipped. |
 | Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s). |
+| Dashboard (Configure only) | | **Show the dashboard**, and **Rebuild the dashboard**. See [The dashboard](#the-dashboard). |
 
 **More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power, power limit or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power and the price can be shared.
 
@@ -125,6 +127,20 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
 
 Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting, the connection or the phase changes.
+
+### The dashboard
+
+With **Add a dashboard** on, the controller gets a dashboard in the sidebar, named after the device. It uses only built-in cards:
+
+- **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, the settings, and the energy charged today and since setup.
+- **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint next to what the package writes to the charger, for the shadow-mode period.
+
+Edit it like any other dashboard; the edits stay. To add or remove it later, select **Configure** on the integration page and go to the last step, **Dashboard**:
+
+- **Show the dashboard** on adds it; off removes it and your edits.
+- **Rebuild the dashboard** builds it again from the current setup and discards your edits. Use it after you change entities in the setup, or after an update.
+
+The dashboard belongs to the controller: it is not listed under **Settings → Dashboards**, and it is removed with the controller. Home Assistant has no way for an integration to add a regular dashboard.
 
 ### Taking control of the charger
 

@@ -68,6 +68,8 @@ async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
     assert options["control_off_action"] == "fallback"
     # Tuning defaults, as in the EV Load Balancer package.
     assert {k: options[k] for k in TUNING_STEP} == TUNING_STEP
+    # The dashboard is offered on, at the first step.
+    assert options["dashboard"] is True
 
 
 async def test_phase_options_come_from_the_select(hass: HomeAssistant, sources) -> None:
@@ -151,7 +153,7 @@ async def test_options_flow_edits_and_clears(
     limits = LIMITS_STEP | {"fallback_current_a": 8}
     tuning = TUNING_STEP | {"recalc_interval_s": 30}
     steps = (OUTPUTS_STEP, PHASES_STEP, INPUTS_STEP, limits, HOUSEHOLD_STEP, {}, {})
-    for data in (*steps, tuning):
+    for data in (*steps, tuning, {}):  # the last: the dashboard step
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], data
         )

@@ -6,11 +6,13 @@
         "description": "**How it works**\nEvery few seconds (10 s by default) the controller reads its **inputs**, decides how fast the car may charge, and sets its **outputs**.\n\n- **Inputs** (only read): what the charger reports, the house power, and optionally the battery level, the electricity price and an EMS signal.\n- **Outputs** (written): two entities of your charger's own integration, the charging current limit and the phase setting.\n\nA new controller starts in **shadow mode**: it shows what it would set, but writes nothing until you switch on **Control charger** on its device.\n\n**Steps**\n1. Outputs: what the controller changes\n2. Outputs: phase options\n3. Inputs: the charger\n4. Charger limits and safety\n5. Inputs: the house\n6. Inputs: the car (optional)\n7. Inputs: price and EMS (optional)\n8. Tuning",
         "data": {
           "name": "Name",
-          "import_yaml": "Import from EV Load Balancer"
+          "import_yaml": "Import from EV Load Balancer",
+          "dashboard": "Add a dashboard"
         },
         "data_description": {
           "name": "The name of the controller device, for example where the charger is. Its entities are named after it.",
-          "import_yaml": "The EV Load Balancer YAML package is installed. On: the next steps are prefilled with its entities and values, and the new device starts with its settings. Control charger stays off. You check every step before saving."
+          "import_yaml": "The EV Load Balancer YAML package is installed. On: the next steps are prefilled with its entities and values, and the new device starts with its settings. Control charger stays off. You check every step before saving.",
+          "dashboard": "Adds a dashboard for this controller to the sidebar. When the EV Load Balancer YAML package is installed, it gets a second view that compares the controller with the package. You can add or remove it later under Configure."
         }
       },
       "outputs": {
@@ -168,7 +170,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "1/8 Outputs: what the controller changes",
+        "title": "1/9 Outputs: what the controller changes",
         "description": "**Outputs** are entities the controller changes. It writes to them only while **Control charger** is on.\n\nPick the two entities of your charger's own integration that set its charging current and its number of phases. Another charge controller cannot use the same entities.",
         "data": {
           "current_limit_entity": "Charging current limit (output)",
@@ -180,7 +182,7 @@
         }
       },
       "phases": {
-        "title": "2/8 Outputs: phase options",
+        "title": "2/9 Outputs: phase options",
         "description": "How the phase setting says 1 phase and 3 phases. This depends on your charger's integration: a select has its own option texts, a switch is on or off, and a number has a value per phase count.",
         "data": {
           "phase_option_1": "Option for 1 phase",
@@ -196,7 +198,7 @@
         }
       },
       "inputs": {
-        "title": "3/8 Inputs: the charger",
+        "title": "3/9 Inputs: the charger",
         "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nPick the sensors of your charger's own integration that show its state. The controller uses them to see whether a car is connected and what the charger does now.",
         "data": {
           "connection_entity": "Connection state",
@@ -216,7 +218,7 @@
         }
       },
       "limits": {
-        "title": "4/8 Charger limits and safety",
+        "title": "4/9 Charger limits and safety",
         "description": "Fixed values, no entities. They describe your charger and what it gets when something goes wrong. The defaults fit most chargers.",
         "data": {
           "min_current_a": "Minimum current",
@@ -240,7 +242,7 @@
         }
       },
       "household": {
-        "title": "5/8 Inputs: the house",
+        "title": "5/9 Inputs: the house",
         "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThe controller gives the car the power that the house leaves under the power limit. Solar export counts as extra power. The power limit comes from an entity, so a helper or your EMS decides it.",
         "data": {
           "house_power_entity": "House power without the charger",
@@ -256,7 +258,7 @@
         }
       },
       "car": {
-        "title": "6/8 Inputs: the car (optional)",
+        "title": "6/9 Inputs: the car (optional)",
         "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nWith the battery level, the controller stops at a target, charges urgently below an emergency level, and switches Comfort mode to solar. Leave the fields empty without car data.",
         "data": {
           "car_soc_entity": "Battery level",
@@ -272,7 +274,7 @@
         }
       },
       "price": {
-        "title": "7/8 Inputs: price and EMS (optional)",
+        "title": "7/9 Inputs: price and EMS (optional)",
         "description": "**Inputs** are entities the controller only reads. It never changes them.\n\nThey allow or limit charging from the grid. Empty: the price check is skipped and no EMS limits the grid.",
         "data": {
           "price_entity": "Electricity price",
@@ -286,7 +288,7 @@
         }
       },
       "tuning": {
-        "title": "8/8 Tuning",
+        "title": "8/9 Tuning",
         "description": "Fixed values that rarely need a change.",
         "data": {
           "power_update_threshold_w": "Power update threshold",
@@ -297,6 +299,18 @@
           "power_update_threshold_w": "An increase is written only when it adds at least this much power, so solar ripple causes no writes. Decreases are always written.",
           "phase_switch_delay_min": "After a change to 1 phase, wait this long before going back to 3 phases.",
           "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once."
+        }
+      },
+      "dashboard": {
+        "title": "9/9 Dashboard",
+        "description": "The controller's dashboard in the sidebar. You can edit it like any other dashboard.",
+        "data": {
+          "dashboard": "Show the dashboard",
+          "dashboard_rebuild": "Rebuild the dashboard"
+        },
+        "data_description": {
+          "dashboard": "Off removes the dashboard and your edits to it.",
+          "dashboard_rebuild": "Builds the dashboard again from the current setup and discards your edits. Use it after you change entities in these steps, or after an update."
         }
       },
       "shared": {

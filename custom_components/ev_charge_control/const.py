@@ -70,6 +70,10 @@ CONF_PHASE_SWITCH_DELAY = "phase_switch_delay_min"
 CONF_RECALC_INTERVAL = "recalc_interval_s"
 CONF_PEAK_FACTOR = "peak_factor_pct"
 
+# The controller's dashboard in the sidebar.
+CONF_DASHBOARD = "dashboard"
+CONF_DASHBOARD_REBUILD = "dashboard_rebuild"
+
 DEFAULT_NAME = "EV charger controller"
 DEFAULT_MAX_CURRENT = 16
 DEFAULT_MIN_CURRENT = 6

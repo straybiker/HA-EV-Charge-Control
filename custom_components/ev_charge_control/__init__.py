@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.start import async_at_started
 
+from . import dashboard
 from .const import CONF_INITIAL_SETTINGS, DOMAIN, PLATFORMS
 from .coordinator import EvChargeCoordinator
 from .engine import Controller
@@ -53,6 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> 
     # The setting entities restore their values while the platforms load, so
     # the first run uses the user's settings, not the defaults.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # After the platforms: the dashboard refers to their entity IDs.
+    await dashboard.async_setup(hass, entry)
     entry.async_on_unload(async_at_started(hass, coordinator.async_start))
     return True
 
@@ -65,7 +68,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) ->
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: EvChargeConfigEntry) -> None:
-    """Delete the saved energy totals and any repair issue with the entry."""
+    """Delete the saved energy totals, the dashboard and any repair issue."""
     store = EvChargeCoordinator.energy_store(hass, entry)
     await store.async_remove()
+    await dashboard.async_remove(hass, entry)
     ir.async_delete_issue(hass, DOMAIN, issue_id(entry))

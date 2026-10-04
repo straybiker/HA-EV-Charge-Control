@@ -17,6 +17,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
+from . import dashboard
 from .const import (
     CONF_ACTIVE_PHASES,
     CONF_APPLIED_CURRENT,
@@ -29,6 +30,8 @@ from .const import (
     CONF_CONTROL_OFF,
     CONF_CURRENT_LIMIT,
     CONF_CURRENT_STEP,
+    CONF_DASHBOARD,
+    CONF_DASHBOARD_REBUILD,
     CONF_EMS,
     CONF_ENERGY_METER,
     CONF_FAILSAFE_KEEP_PHASE,
@@ -128,6 +131,7 @@ async def _name_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     }
     if _offer_import(handler):
         fields[vol.Required(IMPORT_YAML, default=True)] = selector.BooleanSelector()
+    fields[vol.Required(CONF_DASHBOARD, default=True)] = selector.BooleanSelector()
     return vol.Schema(fields)
 
 
@@ -463,13 +467,38 @@ async def _shared_placeholders(handler: SchemaCommonFlowHandler) -> dict[str, st
     return {"shared": "\n".join(_shared_inputs(handler))}
 
 
-def _steps(outputs_step: str) -> dict[str, SchemaFlowFormStep]:
+DASHBOARD_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DASHBOARD, default=False): selector.BooleanSelector(),
+        vol.Required(CONF_DASHBOARD_REBUILD, default=False): selector.BooleanSelector(),
+    }
+)
+
+
+async def _validate_dashboard(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Rebuild is an action, not a setting: delete the saved dashboard now.
+
+    The reload after the options flow then builds it again.
+    """
+    if user_input.pop(CONF_DASHBOARD_REBUILD, False):
+        entry_id = _own_entry_id(handler)
+        entry = _hass(handler).config_entries.async_get_entry(entry_id or "")
+        if entry is not None:
+            await dashboard.async_remove(_hass(handler), entry)
+    return user_input
+
+
+def _steps(outputs_step: str, *, options: bool) -> dict[str, SchemaFlowFormStep]:
     """Outputs first, then inputs, fixed values, house, car, price and tuning.
 
-    The options flow starts at the outputs ("init"); a new controller first
-    gets a name ("user").
+    The options flow starts at the outputs ("init") and ends with the
+    dashboard; a new controller first gets a name ("user"), where the
+    dashboard is asked too.
     """
-    return {
+    after_tuning = "dashboard" if options else "shared"
+    steps = {
         outputs_step: SchemaFlowFormStep(
             OUTPUTS_SCHEMA, validate_user_input=_validate_outputs, next_step="phases"
         ),
@@ -489,7 +518,7 @@ def _steps(outputs_step: str) -> dict[str, SchemaFlowFormStep]:
         "price": SchemaFlowFormStep(
             PRICE_SCHEMA, validate_user_input=_validate_price, next_step="tuning"
         ),
-        "tuning": SchemaFlowFormStep(TUNING_SCHEMA, next_step="shared"),
+        "tuning": SchemaFlowFormStep(TUNING_SCHEMA, next_step=after_tuning),
         # A warning, not an error: one car can use two chargers, for example.
         "shared": SchemaFlowFormStep(
             _shared_schema,
@@ -497,15 +526,22 @@ def _steps(outputs_step: str) -> dict[str, SchemaFlowFormStep]:
             next_step=None,
         ),
     }
+    if options:
+        steps["dashboard"] = SchemaFlowFormStep(
+            DASHBOARD_SCHEMA,
+            validate_user_input=_validate_dashboard,
+            next_step="shared",
+        )
+    return steps
 
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         _name_schema, validate_user_input=_validate_name, next_step="outputs"
     ),
-    **_steps("outputs"),
+    **_steps("outputs", options=False),
 }
-OPTIONS_FLOW = _steps("init")
+OPTIONS_FLOW = _steps("init", options=True)
 
 
 class EvChargeControlConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):
