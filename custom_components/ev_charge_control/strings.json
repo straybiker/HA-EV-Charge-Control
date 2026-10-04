@@ -7,12 +7,14 @@
         "data": {
           "name": "Name",
           "import_yaml": "Import from EV Load Balancer",
-          "dashboard": "Add a dashboard"
+          "dashboard": "Add a dashboard",
+          "dashboard_title": "Dashboard name"
         },
         "data_description": {
           "name": "The name of the controller device, for example where the charger is. Its entities are named after it.",
           "import_yaml": "The EV Load Balancer YAML package is installed. On: the next steps are prefilled with its entities and values, and the new device starts with its settings. Control charger stays off. You check every step before saving.",
-          "dashboard": "Adds a dashboard for this controller to the sidebar. When the EV Load Balancer YAML package is installed, it gets a second view that compares the controller with the package. You can add or remove it later under Configure."
+          "dashboard": "Adds a dashboard for this controller to the sidebar. When the EV Load Balancer YAML package is installed, it gets a second view that compares the controller with the package. You can add or remove it later under Configure.",
+          "dashboard_title": "The name of the dashboard in the sidebar. With the default name and more than one controller, the other dashboards add their device name."
         }
       },
       "outputs": {
@@ -164,7 +166,11 @@
       "car_min_above_max": "The car min current is higher than the car max current.",
       "attribute_without_price": "Pick a price sensor to use a price attribute.",
       "price_attribute_missing": "The price sensor has no attribute with this name.",
-      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase."
+      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase.",
+      "power_unit_unknown": "A power entity has no unit of measurement, or not a power unit (W or kW). Set the unit on the sensor or helper, so the controller reads the value in the right unit.",
+      "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
+      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
+      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
     }
   },
   "options": {
@@ -306,11 +312,13 @@
         "description": "The controller's dashboard in the sidebar. You can edit it like any other dashboard.",
         "data": {
           "dashboard": "Show the dashboard",
-          "dashboard_rebuild": "Rebuild the dashboard"
+          "dashboard_rebuild": "Rebuild the dashboard",
+          "dashboard_title": "Dashboard name"
         },
         "data_description": {
           "dashboard": "Off removes the dashboard and your edits to it.",
-          "dashboard_rebuild": "Builds the dashboard again from the current setup and discards your edits. Use it after you change entities in these steps, or after an update."
+          "dashboard_rebuild": "Builds the dashboard again from the current setup and discards your edits. Use it after you change entities in these steps, or after an update.",
+          "dashboard_title": "The name in the sidebar. A new name applies after you save; the dashboard content stays."
         }
       },
       "shared": {
@@ -330,7 +338,11 @@
       "car_min_above_max": "The car min current is higher than the car max current.",
       "attribute_without_price": "Pick a price sensor to use a price attribute.",
       "price_attribute_missing": "The price sensor has no attribute with this name.",
-      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase."
+      "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase.",
+      "power_unit_unknown": "A power entity has no unit of measurement, or not a power unit (W or kW). Set the unit on the sensor or helper, so the controller reads the value in the right unit.",
+      "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
+      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
+      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
     }
   },
   "selector": {
@@ -513,6 +525,14 @@
     "charger_not_responding": {
       "title": "{name}: the charger does not respond",
       "description": "The charger did not follow the last 3 writes: its applied current or active phases did not change in time. The controller tries again at each run, and this issue closes when the charger follows again.\n\nCheck that the charger is online and that its integration works. To stop the attempts, switch Control charger off."
+    },
+    "input_renamed": {
+      "title": "{name}: {role} was renamed",
+      "description": "The setup uses **{old}** as {role}, but that entity was renamed to **{new}**. The controller cannot read it and runs in fail-safe until you confirm the new entity.\n\nOpen **Configure** on the integration page, go to the step **{step}** and select **{new}** as {role}. Nothing is changed for you."
+    },
+    "input_missing": {
+      "title": "{name}: {role} does not exist",
+      "description": "The setup uses **{old}** as {role}, but that entity does not exist. The controller cannot read it and runs in fail-safe.\n\nIf the entity was renamed, open **Configure** on the integration page, go to the step **{step}** and select the new entity as {role}. If its integration is not loaded, this issue closes when the entity is back after a reload or restart."
     }
   }
 }

@@ -241,3 +241,46 @@ async def test_phase_switch_is_written_with_turn_on_and_off(
     await _settle(hass)
     # 4500 W headroom: from 1 to 3 phases, so 0 A, switch off, then the current.
     assert charger.calls == [("current", 0.0), ("phase", "off"), ("current", 6.5)]
+
+
+async def test_an_unexpected_error_from_the_charger_counts_as_a_failure(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """Any exception from the charger integration is a failed write, not a crash."""
+    _on_three_phases(hass)
+    _start_in(hass, "fast")
+    await setup(hass, entry)
+
+    async def _broken(call: ServiceCall) -> None:
+        raise RuntimeError("modbus gateway timeout")
+
+    hass.services.async_register("number", "set_value", _broken)
+    await _switch(hass, True)
+    await _settle(hass)
+    assert entry.runtime_data.coordinator.writer.failures == 1
+    for _ in range(4):
+        await _settle(hass, 11)
+        if _issue(hass, entry) is not None:
+            break
+    assert _issue(hass, entry) is not None
+
+
+async def test_control_charger_is_restored_from_the_entry_store(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """Saved at once when it changes; the entity restore state is not used."""
+    _start_in(hass, "off")
+    await setup(hass, entry)
+    FakeCharger(hass)
+    await _switch(hass, True)
+    await _settle(hass)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(CONTROL).state == "on"
+    await _switch(hass, False)
+    await _settle(hass)
+    # A stale "on" from the entity restore cache must not win.
+    mock_restore_cache_with_extra_data(hass, ((State(CONTROL, "on"), {}),))
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(CONTROL).state == "off"

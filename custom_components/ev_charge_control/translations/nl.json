@@ -7,12 +7,14 @@
         "data": {
           "name": "Naam",
           "import_yaml": "Importeren uit EV Load Balancer",
-          "dashboard": "Dashboard toevoegen"
+          "dashboard": "Dashboard toevoegen",
+          "dashboard_title": "Naam van het dashboard"
         },
         "data_description": {
           "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat. Zijn entiteiten krijgen deze naam.",
           "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan.",
-          "dashboard": "Voegt een dashboard voor deze regelaar toe aan de zijbalk. Als het YAML-pakket EV Load Balancer geïnstalleerd is, krijgt het een tweede weergave die de regelaar met het pakket vergelijkt. Je kunt het later toevoegen of verwijderen via Configureren."
+          "dashboard": "Voegt een dashboard voor deze regelaar toe aan de zijbalk. Als het YAML-pakket EV Load Balancer geïnstalleerd is, krijgt het een tweede weergave die de regelaar met het pakket vergelijkt. Je kunt het later toevoegen of verwijderen via Configureren.",
+          "dashboard_title": "De naam van het dashboard in de zijbalk. Met de standaardnaam en meer dan één regelaar voegen de andere dashboards hun apparaatnaam toe."
         }
       },
       "outputs": {
@@ -164,7 +166,11 @@
       "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
       "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
       "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam.",
-      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn."
+      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn.",
+      "power_unit_unknown": "Een vermogensentiteit heeft geen meeteenheid, of geen vermogenseenheid (W of kW). Stel de eenheid in op de sensor of helper, zodat de regelaar de waarde in de juiste eenheid leest.",
+      "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
+      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
+      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
     }
   },
   "options": {
@@ -306,11 +312,13 @@
         "description": "Het dashboard van de regelaar in de zijbalk. Je kunt het bewerken zoals elk ander dashboard.",
         "data": {
           "dashboard": "Dashboard tonen",
-          "dashboard_rebuild": "Dashboard opnieuw opbouwen"
+          "dashboard_rebuild": "Dashboard opnieuw opbouwen",
+          "dashboard_title": "Naam van het dashboard"
         },
         "data_description": {
           "dashboard": "Uit verwijdert het dashboard en je wijzigingen eraan.",
-          "dashboard_rebuild": "Bouwt het dashboard opnieuw op uit de huidige instellingen en verwijdert je wijzigingen. Gebruik het na een wijziging van entiteiten in deze stappen, of na een update."
+          "dashboard_rebuild": "Bouwt het dashboard opnieuw op uit de huidige instellingen en verwijdert je wijzigingen. Gebruik het na een wijziging van entiteiten in deze stappen, of na een update.",
+          "dashboard_title": "De naam in de zijbalk. Een nieuwe naam geldt na het opslaan; de inhoud van het dashboard blijft."
         }
       },
       "shared": {
@@ -330,7 +338,11 @@
       "car_min_above_max": "De minimale stroom van de auto is hoger dan de maximale.",
       "attribute_without_price": "Kies een prijssensor om een prijsattribuut te gebruiken.",
       "price_attribute_missing": "De prijssensor heeft geen attribuut met deze naam.",
-      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn."
+      "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn.",
+      "power_unit_unknown": "Een vermogensentiteit heeft geen meeteenheid, of geen vermogenseenheid (W of kW). Stel de eenheid in op de sensor of helper, zodat de regelaar de waarde in de juiste eenheid leest.",
+      "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
+      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
+      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
     }
   },
   "selector": {
@@ -513,6 +525,14 @@
     "charger_not_responding": {
       "title": "{name}: de laadpaal reageert niet",
       "description": "De laadpaal volgde de laatste 3 schrijfopdrachten niet: de toegepaste stroom of de actieve fasen veranderden niet op tijd. De regelaar probeert het bij elke run opnieuw, en deze melding verdwijnt zodra de laadpaal weer volgt.\n\nControleer of de laadpaal online is en of haar integratie werkt. Schakel Laadpaal aansturen uit om de pogingen te stoppen."
+    },
+    "input_renamed": {
+      "title": "{name}: {role} werd hernoemd",
+      "description": "De instellingen gebruiken **{old}** als {role}, maar die entiteit werd hernoemd naar **{new}**. De regelaar kan ze niet lezen en draait in de veilige stand tot je de nieuwe entiteit bevestigt.\n\nOpen **Configureren** op de integratiepagina, ga naar de stap **{step}** en kies **{new}** als {role}. Er wordt niets voor je gewijzigd."
+    },
+    "input_missing": {
+      "title": "{name}: {role} bestaat niet",
+      "description": "De instellingen gebruiken **{old}** als {role}, maar die entiteit bestaat niet. De regelaar kan ze niet lezen en draait in de veilige stand.\n\nWerd de entiteit hernoemd, open dan **Configureren** op de integratiepagina, ga naar de stap **{step}** en kies de nieuwe entiteit als {role}. Is haar integratie niet geladen, dan sluit deze melding zodra de entiteit terug is na een herlaad of herstart."
     }
   }
 }

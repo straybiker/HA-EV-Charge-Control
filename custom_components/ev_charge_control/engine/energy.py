@@ -104,6 +104,10 @@ class EnergyCounter:
             if last is None or meter_kwh < last:
                 return 0.0
             return meter_kwh - last
+        # Without the meter the power is integrated instead. The first meter
+        # reading after that is a new baseline, so the energy of the outage is
+        # not counted a second time.
+        self._last_meter_kwh = None
         if self._last_time is None or self._last_power_w is None:
             return 0.0
         elapsed = now - self._last_time

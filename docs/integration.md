@@ -19,7 +19,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 
 | Module | Job |
 |---|---|
-| `__init__.py` | Sets up an entry: builds the controller, loads the energy totals, loads the platforms, starts the coordinator after Home Assistant has started. Saves the totals on unload and deletes them when the entry is removed. |
+| `__init__.py` | Sets up an entry: builds the controller, loads the saved state, loads the platforms, sets up the dashboard (a failure there is logged and does not stop the entry), starts the coordinator after Home Assistant has started and the input watcher. Saves the state on unload and deletes it when the entry is removed. |
 | `config_flow.py` | The setup and options flow (`SchemaConfigFlowHandler`): outputs, phase options, inputs, fixed values, house, car, price and EMS, tuning, and a warning for inputs shared with another controller. All values go into `entry.options`; an options change reloads the entry. |
 | `yaml_import.py` | Reads the EV Load Balancer package for the first setup: values and outputs from its template sensors' attributes, input entities from its user-config file. The device settings it finds become `initial_settings` in the options, used only when a setting entity is created. |
 | `inputs.py` | Turns options into `ChargerSpec`, `CarSpec` and `Tuning`. `InputReader` reads the source entities into `Measurements` and `Extras` and converts units (kW → W, Wh → kWh). |
@@ -30,6 +30,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 | `select.py`, `number.py`, `switch.py` | Setting entities. They restore their last value and write it into the `SettingsStore`. |
 | `sensor.py`, `binary_sensor.py` | Decision, energy and diagnostic entities. Each reads one value from the `Snapshot`. |
 | `diagnostics.py` | Options (name redacted), settings, tuning, the latest inputs and snapshot, the energy state, the last setpoint and the writer state. |
+| `watch.py` | `InputWatcher`: repair issues when a source entity is renamed (with the new ID as a proposal) or does not exist. It never changes the setup. |
 
 ## Runtime
 
@@ -39,12 +40,12 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - **Charger maximum.** Read at each run from the max current entity. See [behaviour.md](behaviour.md#charger-maximum).
 - **Writing.** The coordinator gives every output to the writer. A write sequence runs as a background task of the entry, so a slow charger never delays a run; it waits for state changes with a timeout instead of polling. While it runs, later runs write nothing. The rules are in [behaviour.md](behaviour.md#charger-control).
 - **Repair issue.** `charger_not_responding_<entry_id>`, not fixable. Deleted on the first confirmed write, when Control charger is switched off, at setup (it describes the charger before the restart) and when the entry is removed.
-- **Energy.** `EnergyCounter` totals are saved with `homeassistant.helpers.storage.Store`, at most every 60 s and on unload.
+- **Saved state.** One `homeassistant.helpers.storage.Store` per entry holds the `EnergyCounter` totals, the `ChargingAverage` days and **Control charger**. The totals are saved at most every 60 s and on unload; Control charger is saved at once when it changes, so a crash cannot bring a recent "off" back as "on".
 
 ## Entities
 
 - All entities belong to the controller device, a regular device entry, and use translation keys.
-- Settings are `RestoreEntity` / `RestoreNumber` entities. A default applies only when the device is first created (decision D09).
+- Settings are `RestoreEntity` / `RestoreNumber` entities, except Control charger, which comes from the entry's store. A default applies only when the device is first created (decision D09).
 - Selecting 3-Phases Minimum while Single phase only is on, or the reverse, raises `ServiceValidationError`.
 - **Control charger** is off on a new device. The decision `charger_not_responding` comes from the writer; the engine never returns it.
 - The energy sensors are `energy` / `total_increasing` in kWh, so the Energy dashboard accepts them.

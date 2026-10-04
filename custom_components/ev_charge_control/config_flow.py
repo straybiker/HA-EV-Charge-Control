@@ -16,6 +16,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.util.unit_conversion import EnergyConverter, PowerConverter
 
 from . import dashboard
 from .const import (
@@ -32,6 +33,7 @@ from .const import (
     CONF_CURRENT_STEP,
     CONF_DASHBOARD,
     CONF_DASHBOARD_REBUILD,
+    CONF_DASHBOARD_TITLE,
     CONF_EMS,
     CONF_ENERGY_METER,
     CONF_FAILSAFE_KEEP_PHASE,
@@ -132,6 +134,9 @@ async def _name_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     if _offer_import(handler):
         fields[vol.Required(IMPORT_YAML, default=True)] = selector.BooleanSelector()
     fields[vol.Required(CONF_DASHBOARD, default=True)] = selector.BooleanSelector()
+    fields[vol.Optional(CONF_DASHBOARD_TITLE, default=dashboard.NAME)] = (
+        selector.TextSelector()
+    )
     return vol.Schema(fields)
 
 
@@ -256,6 +261,35 @@ def _numeric_state(handler: SchemaCommonFlowHandler, entity_id: str) -> float | 
         return None
 
 
+def _check_unit(
+    handler: SchemaCommonFlowHandler,
+    entity_id: str | None,
+    units: set[str],
+    error: str,
+) -> None:
+    """A value without a known unit would be read in the wrong unit.
+
+    Entities that have no state yet are not checked: the controller reads
+    them once they report.
+    """
+    if not entity_id:
+        return
+    state = _hass(handler).states.get(entity_id)
+    if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        return
+    if state.attributes.get("unit_of_measurement") not in units:
+        raise SchemaFlowError(error)
+
+
+def _check_power_units(
+    handler: SchemaCommonFlowHandler, *entity_ids: str | None
+) -> None:
+    for entity_id in entity_ids:
+        _check_unit(
+            handler, entity_id, PowerConverter.VALID_UNITS, "power_unit_unknown"
+        )
+
+
 def _own_entry_id(handler: SchemaCommonFlowHandler) -> str | None:
     parent = handler.parent_handler
     if isinstance(parent, SchemaOptionsFlowHandler):
@@ -267,6 +301,11 @@ async def _validate_outputs(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     hass = _hass(handler)
+    limit = hass.states.get(user_input[CONF_CURRENT_LIMIT])
+    # The controller stops the car with 0 A; a number that starts higher
+    # would refuse every stop.
+    if limit is not None and (limit.attributes.get("min") or 0) > 0:
+        raise SchemaFlowError("current_limit_min_not_zero")
     phase_entity = user_input[CONF_PHASE_SELECT]
     if _domain(phase_entity) in SELECT_DOMAINS:
         state = hass.states.get(phase_entity)
@@ -301,6 +340,25 @@ async def _validate_inputs(
             and connection_from_mode3(state.state) == ConnectionState.UNKNOWN
         ):
             raise SchemaFlowError("connection_not_mode3")
+    _check_power_units(handler, user_input[CONF_CHARGER_POWER])
+    _check_unit(
+        handler,
+        user_input.get(CONF_ENERGY_METER),
+        EnergyConverter.VALID_UNITS,
+        "energy_unit_unknown",
+    )
+    return user_input
+
+
+async def _validate_household(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    _check_power_units(
+        handler,
+        user_input[CONF_HOUSE_POWER],
+        user_input[CONF_POWER_LIMIT],
+        user_input.get(CONF_SOLAR_POWER),
+    )
     return user_input
 
 
@@ -321,6 +379,13 @@ async def _validate_limits(
         CONF_FALLBACK_PHASE
     ] != str(int(Phase.ONE)):
         raise SchemaFlowError("fallback_needs_three_phases")
+    limit = _hass(handler).states.get(handler.options[CONF_CURRENT_LIMIT])
+    number_step = limit.attributes.get("step") if limit is not None else None
+    if (
+        number_step
+        and float(number_step) > CURRENT_STEPS[user_input[CONF_CURRENT_STEP]]
+    ):
+        raise SchemaFlowError("current_step_too_fine")
     return user_input
 
 
@@ -421,6 +486,7 @@ async def _validate_price(
         state = _hass(handler).states.get(price)
         if state is not None and attribute not in state.attributes:
             raise SchemaFlowError("price_attribute_missing")
+    _check_power_units(handler, user_input.get(CONF_EMS))
     return user_input
 
 
@@ -470,6 +536,7 @@ async def _shared_placeholders(handler: SchemaCommonFlowHandler) -> dict[str, st
 DASHBOARD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DASHBOARD, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_DASHBOARD_TITLE): selector.TextSelector(),
         vol.Required(CONF_DASHBOARD_REBUILD, default=False): selector.BooleanSelector(),
     }
 )
@@ -511,7 +578,9 @@ def _steps(outputs_step: str, *, options: bool) -> dict[str, SchemaFlowFormStep]
         "limits": SchemaFlowFormStep(
             LIMITS_SCHEMA, validate_user_input=_validate_limits, next_step="household"
         ),
-        "household": SchemaFlowFormStep(HOUSEHOLD_SCHEMA, next_step="car"),
+        "household": SchemaFlowFormStep(
+            HOUSEHOLD_SCHEMA, validate_user_input=_validate_household, next_step="car"
+        ),
         "car": SchemaFlowFormStep(
             CAR_SCHEMA, validate_user_input=_validate_car, next_step="price"
         ),

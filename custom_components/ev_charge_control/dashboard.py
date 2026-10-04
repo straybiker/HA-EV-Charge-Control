@@ -34,6 +34,7 @@ from .const import (
     CONF_CONNECTION,
     CONF_CURRENT_LIMIT,
     CONF_DASHBOARD,
+    CONF_DASHBOARD_TITLE,
     CONF_EMS,
     CONF_HOUSE_POWER,
     CONF_PHASE_OPTION_1,
@@ -103,7 +104,11 @@ async def async_remove(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 def title(hass: HomeAssistant, entry: ConfigEntry) -> str:
-    """EV Charge Control; with more controllers, the others add their name."""
+    """The name from the setup. With the default name, the first controller is
+    EV Charge Control and the others add their device name."""
+    custom = (entry.options.get(CONF_DASHBOARD_TITLE) or "").strip()
+    if custom and custom != NAME:
+        return custom
     entries = hass.config_entries.async_entries(DOMAIN)
     if not entries or entries[0].entry_id == entry.entry_id:
         return NAME

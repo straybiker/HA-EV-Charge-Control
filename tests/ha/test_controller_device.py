@@ -447,3 +447,12 @@ async def test_debug_log_shows_each_run(
     hass.states.async_set(HOUSE_POWER, "500", W)
     await _tick(hass)
     assert f"Input {HOUSE_POWER} can be read again" in caplog.text
+
+
+async def test_a_non_finite_input_counts_as_unknown(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    hass.states.async_set(HOUSE_POWER, "nan", W)
+    await setup(hass, entry)
+    await _select(hass, "fast")
+    assert hass.states.get(DECISION).state == "failsafe"

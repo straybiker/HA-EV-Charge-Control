@@ -86,6 +86,11 @@ class SettingSwitch(SwitchEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        if self.entity_description.key == CONTROL_CHARGER:
+            # Restored by the coordinator from the entry's own store, which is
+            # written at once on every change.
+            self._attr_is_on = bool(self._store.get(CONTROL_CHARGER))
+            return
         last = await self.async_get_last_state()
         if last is not None and last.state in (STATE_ON, STATE_OFF):
             self._attr_is_on = last.state == STATE_ON

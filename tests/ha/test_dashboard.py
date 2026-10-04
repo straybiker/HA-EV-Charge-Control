@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 import pytest
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.lovelace.const import LOVELACE_DATA
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -163,3 +165,24 @@ async def test_a_second_controller_adds_its_name(
         "EV Charge Control Garage"
     )
     assert PATH in _panels(hass)
+
+
+async def test_a_dashboard_failure_does_not_stop_the_controller(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    with patch(
+        "custom_components.ev_charge_control.dashboard.async_setup",
+        side_effect=RuntimeError("lovelace changed"),
+    ):
+        await setup(hass, with_dashboard)
+    assert with_dashboard.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_charger_decision") is not None
+
+
+async def test_the_user_names_the_dashboard(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    entry = make_entry(hass, dashboard=True, dashboard_title="Garage charger")
+    await setup(hass, entry)
+    assert _panels(hass)["garage-charger"].sidebar_title == "Garage charger"
+    assert PATH not in _panels(hass)

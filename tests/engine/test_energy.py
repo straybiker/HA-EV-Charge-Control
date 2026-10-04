@@ -78,6 +78,16 @@ def test_meter_reset_is_ignored_for_one_step():
     assert totals.charged_kwh == A(0.5)
 
 
+def test_meter_outage_is_not_counted_twice():
+    """While the meter is away the power counts; the meter's return is a baseline."""
+    c = EnergyCounter()
+    run(c, 0, 3600, 500, meter=100.0)
+    run(c, 10, 3600, 500, meter=None)  # 10 s at 3.6 kW: 0.01 kWh from power
+    totals = run(c, 20, 3600, 500, meter=100.5)  # the meter is back
+    assert totals.charged_kwh == A(0.01)
+    assert run(c, 30, 0, 500, meter=100.6).charged_kwh == A(0.11)
+
+
 def test_restore_keeps_the_totals():
     c = EnergyCounter()
     run(c, 0, 3600, 500)

@@ -9,6 +9,7 @@ pass it on is noticed.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable
 
 import voluptuous as vol
@@ -163,6 +164,11 @@ class ChargerWriter:
         except (HomeAssistantError, vol.Invalid) as err:
             LOGGER.warning("Writing to the charger failed: %s", err)
             confirmed = False
+        except Exception:  # noqa: BLE001 - a charger integration may raise anything
+            # Counted as a failure: the repair issue must still appear, and the
+            # error must not end as an unhandled task exception.
+            LOGGER.warning("Writing to the charger failed", exc_info=True)
+            confirmed = False
         self._record(confirmed)
 
     async def _hand_over(self, sp: Setpoint) -> None:
@@ -171,6 +177,8 @@ class ChargerWriter:
             await self._sequence(sp, by_charger=False)
         except (HomeAssistantError, vol.Invalid) as err:
             LOGGER.warning("Handing the charger over failed: %s", err)
+        except Exception:  # noqa: BLE001
+            LOGGER.warning("Handing the charger over failed", exc_info=True)
 
     async def _sequence(self, sp: Setpoint, by_charger: bool) -> bool:
         """0 A before a 1 -> 3 switch, then the phase, then the current."""
@@ -236,7 +244,14 @@ class ChargerWriter:
             return
         self.failures += 1
         self._retry = True
-        LOGGER.warning("The charger did not confirm write %s in a row", self.failures)
+        # One warning at the first failure and one at the repair issue; the
+        # retries in between would fill the log while the charger is down.
+        level = (
+            logging.WARNING if self.failures in (1, MAX_UNCONFIRMED) else logging.DEBUG
+        )
+        LOGGER.log(
+            level, "The charger did not confirm write %s in a row", self.failures
+        )
         if self.failures == MAX_UNCONFIRMED:
             ir.async_create_issue(
                 self._hass,

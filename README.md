@@ -91,7 +91,7 @@ flowchart LR
   | Current limit | A `number` entity that the charger accepts. |
   | Phase setting | The entity that switches between 1 and 3 phases: a `select` (an option per phase count), a `switch` (on/off) or a `number` (a value per phase count). For a charger that only charges on 1 phase, the 3-phase option or value can stay empty. |
 
-- **House power without the charger** (W, negative during export). If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
+- **House power without the charger** (W or kW; negative during export). Power inputs need a unit of measurement. If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
 - **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
 - Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
 - For the optional [dashboard](#the-dashboard): nothing extra. It uses only built-in cards and works on every supported Home Assistant version. From Home Assistant 2026.6, the lines of its power graph get their own colours. It needs the Dashboards integration, which Home Assistant loads by default.
@@ -122,7 +122,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 
 | Step | Kind | What you enter |
 |---|---|---|
-| New charge controller | | The device name, and **Add a dashboard** (on). On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
+| New charge controller | | The device name, **Add a dashboard** (on) and the **Dashboard name**. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
 | Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. |
 | Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
@@ -131,7 +131,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Car (optional) | Reads | Battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
 | Price and EMS (optional) | Reads | Price sensor (or one of its attributes), EMS signal. Without a price, the price check is skipped. |
 | Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s). |
-| Dashboard (Configure only) | | **Show the dashboard**, and **Rebuild the dashboard**. See [The dashboard](#the-dashboard). |
+| Dashboard (Configure only) | | **Show the dashboard**, the **Dashboard name**, and **Rebuild the dashboard**. See [The dashboard](#the-dashboard). |
 
 **More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power, power limit or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power and the price can be shared.
 
@@ -173,7 +173,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 
 ### The dashboard
 
-With **Add a dashboard** on, the controller gets a dashboard in the sidebar, named **EV Charge Control**. With more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
+With **Add a dashboard** on, the controller gets a dashboard in the sidebar. **Dashboard name** sets its name; the default is **EV Charge Control**. With the default name and more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
 
 - **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, the settings, the energy charged today and since setup, and the average charging power.
 - **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint next to what the package writes to the charger, for the shadow-mode period.
@@ -181,9 +181,10 @@ With **Add a dashboard** on, the controller gets a dashboard in the sidebar, nam
 Edit it like any other dashboard; the edits stay. To add or remove it later, select **Configure** on the integration page and go to the last step, **Dashboard**:
 
 - **Show the dashboard** on adds it; off removes it and your edits.
+- **Dashboard name** renames it. The content stays.
 - **Rebuild the dashboard** builds it again from the current setup and discards your edits. Use it after you change entities in the setup, or after an update.
 
-The dashboard belongs to the controller. It is listed under **Settings → Dashboards**, but the integration sets its name and icon at every start, and it is removed with the controller. To add, remove or rebuild it, use **Configure**, not the dashboard settings.
+The dashboard belongs to the controller. It is listed under **Settings → Dashboards**, but the integration sets its name and icon at every start, and it is removed with the controller. To add, remove, rename or rebuild it, use **Configure**, not the dashboard settings.
 
 ### Taking control of the charger
 
@@ -312,6 +313,9 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | **Charger not responding**, with a repair issue. | The charger is offline, or its integration does not pass the values on. Check the charger's current-limit number and applied current. Switch Control charger off to stop the attempts. |
 | The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |
 | The target current stays at the fallback current. | The maximum current entity has not sent a value since the start. |
+| A repair issue says an input **was renamed** or **does not exist**. | The setup still points at the old entity ID, so the controller runs in fail-safe. Open **Configure**, go to the step the issue names and select the new entity. The integration never changes the setup by itself. After a restart, a renamed entity shows as missing. |
+| Setup refuses an entity because of its **unit**. | Power inputs need W or kW, the energy meter Wh, kWh or MWh. Set the unit on the sensor or helper. Without a unit the value would be read in the wrong unit. |
+| Setup refuses the **current limit** number. | It must accept 0 A (the controller stops the car with 0 A) and its step must not be coarser than the current step you pick. |
 
 ### Debug logging
 

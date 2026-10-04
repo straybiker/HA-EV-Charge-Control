@@ -11,6 +11,7 @@ from custom_components.ev_charge_control.const import DOMAIN
 
 from .conftest import (
     CAR_SOC,
+    CHARGER_ENERGY,
     CHARGER_POWER,
     CURRENT_LIMIT,
     HOUSE_POWER,
@@ -68,8 +69,9 @@ async def test_full_flow_creates_entry(hass: HomeAssistant, sources) -> None:
     assert options["control_off_action"] == "fallback"
     # Tuning defaults, as in the EV Load Balancer package.
     assert {k: options[k] for k in TUNING_STEP} == TUNING_STEP
-    # The dashboard is offered on, at the first step.
+    # The dashboard is offered on, at the first step, with the default name.
     assert options["dashboard"] is True
+    assert options["dashboard_title"] == "EV Charge Control"
 
 
 async def test_phase_options_come_from_the_select(hass: HomeAssistant, sources) -> None:
@@ -311,3 +313,41 @@ async def test_phase_setting_can_be_a_number(hass: HomeAssistant, sources) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"]["phase_option_1"] == "1.0"
     assert result["options"]["phase_option_3"] == "3.0"
+
+
+async def test_power_entity_needs_a_power_unit(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(HOUSE_POWER, "500")  # no unit
+    assert await _error(hass, "household", HOUSEHOLD_STEP) == "power_unit_unknown"
+
+
+async def test_energy_meter_needs_an_energy_unit(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(CHARGER_ENERGY, "100")  # no unit
+    data = INPUTS_STEP | {"charger_energy_entity": CHARGER_ENERGY}
+    assert await _error(hass, "inputs", data) == "energy_unit_unknown"
+
+
+async def test_unavailable_entities_are_not_unit_checked(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set(HOUSE_POWER, "unavailable")
+    result = await _to_step(hass, "household")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], HOUSEHOLD_STEP
+    )
+    assert result["step_id"] == "car"
+
+
+async def test_current_limit_must_accept_zero(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(CURRENT_LIMIT, "6", {"min": 6, "max": 16, "step": 0.1})
+    assert await _error(hass, "outputs", OUTPUTS_STEP) == "current_limit_min_not_zero"
+
+
+async def test_current_step_must_fit_the_number(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(CURRENT_LIMIT, "0", {"min": 0, "max": 16, "step": 1})
+    assert await _error(hass, "limits", LIMITS_STEP) == "current_step_too_fine"
+    # 1 A steps are fine for that number.
+    result = await _to_step(hass, "limits")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], LIMITS_STEP | {"current_step_a": "1"}
+    )
+    assert result["step_id"] == "household"

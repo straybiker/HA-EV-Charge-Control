@@ -105,18 +105,30 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         """Where the energy totals of an entry are kept between restarts."""
         return Store(hass, _STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.energy")
 
-    async def async_load_energy(self) -> None:
-        """Restore the energy totals and the average saved before the last stop."""
-        state = await self._energy_store.async_load()
-        self.energy = EnergyCounter.restore(state)
-        self.average = ChargingAverage.restore((state or {}).get("average"))
+    async def async_load_state(self) -> None:
+        """Restore what was saved before the last stop.
 
-    async def async_save_energy(self) -> None:
-        """Write the totals now, so an unload or reload loses nothing."""
+        The energy totals, the average and Control charger. The switch is
+        saved here at once when it changes, not through the entity restore
+        state that Home Assistant writes only every 15 minutes: after a crash
+        the controller must not write to the charger again because a recent
+        "off" was lost.
+        """
+        state = await self._energy_store.async_load() or {}
+        self.energy = EnergyCounter.restore(state)
+        self.average = ChargingAverage.restore(state.get("average"))
+        self.store.set(CONTROL_CHARGER, bool(state.get(CONTROL_CHARGER)), notify=False)
+
+    async def async_save_state(self) -> None:
+        """Write the state now, so an unload, reload or crash loses nothing."""
         await self._energy_store.async_save(self._stored_state())
 
     def _stored_state(self) -> dict:
-        return {**self.energy.state(), "average": self.average.state()}
+        return {
+            **self.energy.state(),
+            "average": self.average.state(),
+            CONTROL_CHARGER: bool(self.store.get(CONTROL_CHARGER)),
+        }
 
     async def _async_update_data(self) -> Snapshot:
         now = dt_util.utcnow()
@@ -241,6 +253,12 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
     @callback
     def _on_setting(self, key: str) -> None:
         LOGGER.debug("Setting %s changed: run now", key)
+        if key == CONTROL_CHARGER:
+            # Saved at once: see async_load_state.
+            assert self.config_entry is not None
+            self.config_entry.async_create_background_task(
+                self.hass, self.async_save_state(), name=f"{DOMAIN} save"
+            )
         self._schedule_run()
 
     @callback

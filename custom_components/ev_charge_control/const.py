@@ -73,6 +73,7 @@ CONF_PEAK_FACTOR = "peak_factor_pct"
 # The controller's dashboard in the sidebar.
 CONF_DASHBOARD = "dashboard"
 CONF_DASHBOARD_REBUILD = "dashboard_rebuild"
+CONF_DASHBOARD_TITLE = "dashboard_title"
 
 DEFAULT_NAME = "EV charger controller"
 DEFAULT_MAX_CURRENT = 16

@@ -7,6 +7,7 @@ that means.
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -240,6 +241,8 @@ class InputReader:
         try:
             value = float(raw) if raw is not None else None
         except TypeError, ValueError:
+            value = None
+        if value is not None and not math.isfinite(value):
             value = None
         self._log_readable(
             entity_id if not attribute else f"{entity_id}[{attribute}]", raw, value
