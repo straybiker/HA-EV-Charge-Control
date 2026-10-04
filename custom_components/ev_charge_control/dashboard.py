@@ -265,47 +265,38 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
 def _control_badges(e: Mapping[str, str]) -> list[dict]:
     """Control charger, coloured by what the controller does.
 
-    A badge colour cannot follow a template, so one badge per state: grey
-    when off (the default), blue while charging, green at the target, and
-    the default colour when on but idle.
+    A badge colour cannot follow a template, so one badge per state: red
+    when off, grey without a car, amber with a car that does not charge,
+    blue while charging, green at the target.
     """
-    on = {"condition": "state", "entity": e["control_charger"], "state": "on"}
+    control, decision = e["control_charger"], e["decision"]
+    on = {"condition": "state", "entity": control, "state": "on"}
     active = ["charging", "emergency"]
 
-    def badge(color: str | None, *visibility: dict) -> dict:
-        b: dict[str, Any] = {
+    def badge(color: str, *visibility: dict) -> dict:
+        return {
             "type": "entity",
-            "entity": e["control_charger"],
+            "entity": control,
             "name": "Control charger",
             "show_name": True,
             "show_state": True,
+            "color": color,
             "tap_action": {"action": "more-info"},
             "visibility": list(visibility),
         }
-        if color:
-            b["color"] = color
-        return b
+
+    def decided(**state: Any) -> dict:
+        return {"condition": "state", "entity": decision, **state}
 
     return [
+        badge("red", {"condition": "state", "entity": control, "state": "off"}),
+        badge("grey", on, decided(state="not_connected")),
+        badge("blue", on, decided(state=active)),
+        badge("green", on, decided(state="target_reached")),
         badge(
-            None, {"condition": "state", "entity": e["control_charger"], "state": "off"}
-        ),
-        badge(
-            "blue", on, {"condition": "state", "entity": e["decision"], "state": active}
-        ),
-        badge(
-            "green",
+            "orange",
             on,
-            {"condition": "state", "entity": e["decision"], "state": "target_reached"},
-        ),
-        badge(
-            None,
-            on,
-            {
-                "condition": "state",
-                "entity": e["decision"],
-                "state_not": [*active, "target_reached"],
-            },
+            decided(state_not=[*active, "target_reached", "not_connected"]),
         ),
     ]
 
