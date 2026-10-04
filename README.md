@@ -149,13 +149,25 @@ The dashboard belongs to the controller. It is listed under **Settings → Dashb
 
 ### Taking control of the charger
 
-1. Leave **Control charger** off for some days. Compare **Target current** and **Target phases** with what your current automation does.
-2. Turn off the automation that sets the charger now. Two controllers on one charger work against each other.
+A new device starts with **Control charger** off: it calculates, but writes nothing. How you switch it on depends on what sets the charger today.
+
+**Clean install** (nothing sets the charger's current or phases):
+
+1. Plug in the car, select a charge mode and check the device: **Decision**, **Target current** and **Target phases** must match what you expect for that mode.
+2. Make sure nothing else writes to the charger, for example a schedule or load balancing in the charger's own app.
 3. Switch **Control charger** on.
 
-The controller then writes to the charger's current-limit number and phase setting. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
+**Migrating** (an automation or the EV Load Balancer YAML package sets the charger now):
 
-When you switch **Control charger** off, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in Charger limits and safety can change this to *Leave as it is* or *Stop charging (0 A)*.
+1. Leave **Control charger** off for some days. Compare **Target current** and **Target phases** with what your automation sets. With the YAML package, the **Shadow comparison** view of the [dashboard](#the-dashboard) shows both side by side.
+2. Turn off the automation or the package. Two controllers on one charger work against each other.
+3. Switch **Control charger** on.
+
+For the YAML package, the [migration guide](docs/migration.md) has the full steps: import, parameter mapping, comparison and removal of the package.
+
+**When Control charger is on**, the controller writes to the charger's current-limit number and phase setting. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
+
+**When you switch Control charger off**, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in Charger limits and safety can change this to *Leave as it is* or *Stop charging (0 A)*.
 
 ### Charge modes
 
