@@ -56,18 +56,13 @@ def _car_from_solar(s: Snapshot) -> int | None:
     return round(min(s.output.power_w, s.solar_surplus_w))
 
 
-def _available_from_grid(s: Snapshot) -> int | None:
-    """The grid part of Available for the car; the solar surplus is the rest."""
-    if s.house_power_w is None:
-        return None
-    return round(max(s.power_limit_w - max(s.house_power_w, 0.0), 0.0))
+def _available(part: str) -> Callable[[Snapshot], int | None]:
+    """A part of Available: total_w, solar_w or grid_w."""
 
+    def value(s: Snapshot) -> int | None:
+        return None if s.available is None else round(getattr(s.available, part))
 
-def _available(s: Snapshot) -> int | None:
-    """What the car could take within the limit, with the house as it is now."""
-    if s.house_power_w is None:
-        return None
-    return round(max(s.power_limit_w - s.house_power_w, 0.0))
+    return value
 
 
 def _energy(key: str, field: str) -> OutputSensorDescription:
@@ -142,19 +137,28 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_car_from_solar,
     ),
+    # As if the car were charging now in the current mode; while it charges,
+    # the total is the target power.
     OutputSensorDescription(
         key="available_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_available,
+        value_fn=_available("total_w"),
     ),
     OutputSensorDescription(
         key="available_from_grid",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_available_from_grid,
+        value_fn=_available("grid_w"),
+    ),
+    OutputSensorDescription(
+        key="available_from_solar",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_available("solar_w"),
     ),
     OutputSensorDescription(
         key="phase_hold_until",

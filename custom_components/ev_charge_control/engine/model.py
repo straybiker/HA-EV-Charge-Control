@@ -141,6 +141,21 @@ class Budget:
 
 
 @dataclass(frozen=True, slots=True)
+class Available:
+    """What the car would take now if it were charging, split by source.
+
+    For display only: the controller never acts on it.
+    """
+
+    solar_w: float
+    grid_w: float
+
+    @property
+    def total_w(self) -> float:
+        return self.solar_w + self.grid_w
+
+
+@dataclass(frozen=True, slots=True)
 class Setpoint:
     """What to write to the charger after filtering."""
 

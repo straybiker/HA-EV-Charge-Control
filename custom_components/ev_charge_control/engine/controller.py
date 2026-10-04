@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from .budget import Limits, ems_stops_charging, grid_gate_open, plan
 from .model import (
+    Available,
     CarSpec,
     ChargeMode,
     ChargerSpec,
@@ -70,6 +71,60 @@ class Controller:
             phase_hold_until=_active(self._phase_hold_until, now),
             grace_until=_active(self._grace_until, now),
         )
+
+    def available(
+        self, settings: Settings, m: Measurements, now: datetime
+    ) -> Available | None:
+        """The power the car would get now in the current mode, as if it were
+        connected and charging, with the solar and grid parts.
+
+        It follows the same plan, phase choice and rounding as step(), so
+        while the car charges it equals the target power. It changes no
+        state. None while the house power is unknown.
+        """
+        if m.house_power_w is None:
+            return None
+        nothing = Available(solar_w=0.0, grid_w=0.0)
+        if settings.mode == ChargeMode.OFF or settings.power_limit_w <= 0:
+            return nothing
+        if settings.mode == ChargeMode.MIN_3P and settings.single_phase_only:
+            return nothing
+        car_aware = self._car_aware(settings, m)
+        policy = self._policy(settings, m, car_aware)
+        assert policy is not None
+        soc = m.car_soc if m.car_soc is not None else 0.0
+        emergency = car_aware and soc < settings.emergency_soc
+        if car_aware and not emergency and soc >= settings.target_soc:
+            return nothing
+        min_a, max_a = self._current_range(car_aware)
+        eff = self._efficiency
+        volts = self.charger.voltage_v
+        limits = Limits(
+            min_1p_w=min_a * volts * eff,
+            min_3p_w=min_a * volts * 3 * eff,
+            max_w=max_a * volts * 3 * eff,
+        )
+        budget = plan(
+            settings, m, policy, limits, emergency, grid_gate_open(settings, m)
+        )
+        target_w = min(budget.request_w, budget.headroom_w, limits.max_w)
+        hold_active = (
+            self._phase_hold_until is not None and now < self._phase_hold_until
+        )
+        phase = choose_phase(
+            policy,
+            settings,
+            target_w / (volts * 3 * eff),
+            min_a,
+            m.commanded_phase,
+            hold_active,
+        )
+        current = to_current(
+            target_w, phase, self.charger, eff, min_a, max_a, budget.headroom_w
+        )
+        total_w = current * volts * int(phase) * eff
+        solar_w = min(budget.solar_w, total_w)
+        return Available(solar_w=solar_w, grid_w=total_w - solar_w)
 
     # --- state -------------------------------------------------------------
 

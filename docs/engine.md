@@ -6,7 +6,7 @@
 
 | Module | Job |
 |---|---|
-| `model.py` | Immutable value types: `ChargerSpec`, `CarSpec`, `Settings`, `Measurements`, `Output`, `Budget`, `Setpoint`, and the enums `ChargeMode`, `Phase`, `ConnectionState`, `Reason`. |
+| `model.py` | Immutable value types: `ChargerSpec`, `CarSpec`, `Settings`, `Measurements`, `Output`, `Budget`, `Available`, `Setpoint`, and the enums `ChargeMode`, `Phase`, `ConnectionState`, `Reason`. |
 | `policy.py` | `MODE_POLICY`: one row per mode (grid request, minimum cap, forced phase, phase hold). `resolve_mode()` turns Comfort into Limited or Solar. |
 | `budget.py` | Grid gate, EMS rules, grid allowance, the solar-first rule. Returns a `Budget`. |
 | `phases.py` | 1 or 3 phases, with the phase hold. |
@@ -34,6 +34,7 @@ out = controller.step(settings, measurements, now)
 
 - One `Controller` per charger, kept for the life of the config entry.
 - `step()` runs one decision. `now` is passed in, so tests control time.
+- `available(settings, measurements, now)` returns what the car would get now, as if it were connected and charging, split into solar and grid. It uses the same plan, phase choice and rounding as `step()` and changes no state. For display only.
 - `out.reason`, `out.phase`, `out.current_a`, `out.power_w`: the decision.
 - `out.setpoint`: what to write, or `None` when nothing changes. The Home Assistant writer performs it.
 - `out.budget`, `out.efficiency`, `out.grid_allowed`, `out.emergency`, `out.target_reached`, `out.phase_hold_until`, `out.grace_until`: diagnostics.

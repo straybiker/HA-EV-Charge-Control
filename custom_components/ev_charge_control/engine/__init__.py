@@ -7,6 +7,7 @@ from .controller import (
     Controller,
 )
 from .model import (
+    Available,
     Budget,
     CarSpec,
     ChargeMode,
@@ -27,6 +28,7 @@ __all__ = [
     "GRACE_PERIOD",
     "MODE_POLICY",
     "RESET_AFTER_DISCONNECT",
+    "Available",
     "Budget",
     "CarSpec",
     "ChargeMode",

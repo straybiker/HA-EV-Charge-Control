@@ -117,6 +117,9 @@
       "available_from_grid": {
         "default": "mdi:transmission-tower"
       },
+      "available_from_solar": {
+        "default": "mdi:solar-power-variant"
+      },
       "phase_hold_until": {
         "default": "mdi:timer-lock-outline"
       },

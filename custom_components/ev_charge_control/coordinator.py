@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
-from .engine import Controller, Measurements, Output, Reason
+from .engine import Available, Controller, Measurements, Output, Reason
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
 from .inputs import Extras, InputReader, Tuning
@@ -39,10 +39,10 @@ class Snapshot:
     output: Output
     power_limit_w: float
     limit_entity_w: float | None
-    # House power without the charger and its export: known also when
-    # nothing is charging.
-    house_power_w: float | None
+    # Export of the house, known also when nothing is charging.
     solar_surplus_w: float | None
+    # What the car would take now in the current mode, also without a car.
+    available: Available | None
     # None when the setup has no EMS entity.
     ems_signal_w: float | None
     max_current_a: float
@@ -139,13 +139,13 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             output=output,
             power_limit_w=power_limit_w,
             limit_entity_w=limit_w,
-            house_power_w=measurements.house_power_w,
             ems_signal_w=measurements.ems_signal_w,
             solar_surplus_w=(
                 None
                 if measurements.house_power_w is None
                 else max(-measurements.house_power_w, 0.0)
             ),
+            available=self.controller.available(settings, measurements, now),
             max_current_a=max_a,
             energy=energy,
             computed_at=now,

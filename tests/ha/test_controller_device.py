@@ -162,37 +162,63 @@ async def test_unplug_runs_at_once(
 async def test_status_sensors_without_charging(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
-    """Mode Off: the export, the budget and the grid gate are known."""
+    """Mode Off: the export and the grid gate are known; nothing is available."""
     hass.states.async_set(HOUSE_POWER, "-2000", W)
     await setup(hass, entry)
     assert hass.states.get("sensor.test_charger_solar_surplus").state == "2000"
+    assert hass.states.get("sensor.test_charger_available_for_the_car").state == "0"
     assert hass.states.get("sensor.test_charger_car_from_grid").state == "0"
     assert hass.states.get("sensor.test_charger_car_from_solar").state == "0"
-    # The effective limit plus the export.
-    limit = float(hass.states.get(EFFECTIVE_LIMIT).state)
-    available = float(
-        hass.states.get("sensor.test_charger_available_for_the_car").state
-    )
-    assert available == pytest.approx(limit + 2000, abs=1)
-    # Exporting: the grid part is the whole limit, the export is the rest.
-    grid = float(hass.states.get("sensor.test_charger_available_from_grid").state)
-    assert grid == pytest.approx(limit, abs=1)
     # No EMS entity in the setup.
     assert hass.states.get("binary_sensor.test_charger_ems_active").state == "unknown"
     assert hass.states.get("binary_sensor.test_charger_grid_allowed").state == "on"
 
 
-async def test_car_from_grid_and_solar_split_the_target(
+def _available(hass: HomeAssistant) -> tuple[float, float, float]:
+    """(total, from grid, from solar) of Available for the car."""
+    return tuple(
+        float(hass.states.get(f"sensor.test_charger_{key}").state)
+        for key in (
+            "available_for_the_car",
+            "available_from_grid",
+            "available_from_solar",
+        )
+    )
+
+
+async def test_available_follows_the_mode(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """Solar mode offers only the export; Limited adds the grid up to the limit."""
+    hass.states.async_set(MODE3, "A")
+    hass.states.async_set(HOUSE_POWER, "-3000", W)
+    await setup(hass, entry)
+    await _select(hass, "solar")
+    total, grid, solar = _available(hass)
+    assert grid == 0
+    assert total == solar == pytest.approx(3000, abs=70)
+    await _select(hass, "limited")
+    total, grid, solar = _available(hass)
+    assert solar == pytest.approx(3000, abs=1)
+    assert total == pytest.approx(8000, abs=70)  # 3000 W export + 5000 W limit
+    assert total == pytest.approx(grid + solar, abs=1)
+
+
+async def test_available_is_the_target_while_charging(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
     hass.states.async_set(HOUSE_POWER, "-1000", W)
     await setup(hass, entry)
     await _select(hass, "fast")
     target = float(hass.states.get("sensor.test_charger_target_power").state)
-    grid = float(hass.states.get("sensor.test_charger_car_from_grid").state)
-    solar = float(hass.states.get("sensor.test_charger_car_from_solar").state)
-    assert grid == pytest.approx(target - 1000, abs=1)
+    total, grid, solar = _available(hass)
+    assert total == pytest.approx(target, abs=1)
     assert solar == pytest.approx(1000, abs=1)
+    # Car from grid and Car from solar split the same target.
+    car_grid = float(hass.states.get("sensor.test_charger_car_from_grid").state)
+    car_solar = float(hass.states.get("sensor.test_charger_car_from_solar").state)
+    assert car_grid == pytest.approx(target - 1000, abs=1)
+    assert car_solar == pytest.approx(1000, abs=1)
 
 
 async def test_charger_without_three_phase_option(hass: HomeAssistant, sources) -> None:
@@ -377,13 +403,11 @@ async def test_available_from_grid_while_importing(
 ) -> None:
     """The house import comes off the limit; nothing is left for solar."""
     await setup(hass, entry)
-    limit = float(hass.states.get(EFFECTIVE_LIMIT).state)
-    grid = float(hass.states.get("sensor.test_charger_available_from_grid").state)
-    available = float(
-        hass.states.get("sensor.test_charger_available_for_the_car").state
-    )
-    assert grid == pytest.approx(limit - 500, abs=1)
-    assert available == pytest.approx(grid, abs=1)
+    await _select(hass, "limited")
+    total, grid, solar = _available(hass)
+    assert solar == 0
+    assert grid == pytest.approx(total, abs=1)
+    assert total == pytest.approx(4500, abs=70)  # 5000 W limit − 500 W import
 
 
 async def test_ems_active_follows_the_signal(hass: HomeAssistant, sources) -> None:

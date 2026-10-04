@@ -434,6 +434,9 @@
       "available_from_grid": {
         "name": "Available from grid"
       },
+      "available_from_solar": {
+        "name": "Available from solar"
+      },
       "phase_hold_until": {
         "name": "Phase hold until"
       },
