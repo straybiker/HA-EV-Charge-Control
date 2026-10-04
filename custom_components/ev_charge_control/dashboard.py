@@ -267,21 +267,36 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
 
     A badge colour cannot follow a template, so one badge per state: red
     when off, grey without a car, amber with a car that does not charge,
-    blue while charging, green at the target.
+    blue while charging, green at the target. The badges show the Decision
+    sensor, not the switch: a badge colour applies only while its entity is
+    active, and a switch that is off is not. A tap toggles Control charger.
     """
     control, decision = e["control_charger"], e["decision"]
     on = {"condition": "state", "entity": control, "state": "on"}
     active = ["charging", "emergency"]
 
-    def badge(color: str, *visibility: dict) -> dict:
+    def badge(color: str, *visibility: dict, off: bool = False) -> dict:
         return {
             "type": "entity",
-            "entity": control,
-            "name": "Control charger",
-            "show_name": True,
-            "show_state": True,
+            "entity": decision,
+            "icon": "mdi:ev-plug-type2",
+            "name": "Control charger off" if off else "Control charger",
+            "show_name": off,
+            "show_state": not off,
             "color": color,
-            "tap_action": {"action": "more-info"},
+            "tap_action": {
+                "action": "perform-action",
+                "perform_action": "switch.toggle",
+                "target": {"entity_id": control},
+                "confirmation": {
+                    "text": (
+                        _CONTROL_CONFIRM
+                        if off
+                        else "Switch Control charger off? The charger gets the "
+                        "fallback setpoint once, and the controller stops writing."
+                    )
+                },
+            },
             "visibility": list(visibility),
         }
 
@@ -289,14 +304,14 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
         return {"condition": "state", "entity": decision, **state}
 
     return [
-        badge("red", {"condition": "state", "entity": control, "state": "off"}),
+        badge(
+            "red", {"condition": "state", "entity": control, "state": "off"}, off=True
+        ),
         badge("grey", on, decided(state="not_connected")),
         badge("blue", on, decided(state=active)),
         badge("green", on, decided(state="target_reached")),
         badge(
-            "amber",
-            on,
-            decided(state_not=[*active, "target_reached", "not_connected"]),
+            "amber", on, decided(state_not=[*active, "target_reached", "not_connected"])
         ),
     ]
 
