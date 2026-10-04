@@ -76,7 +76,8 @@ _MODE_HELP = (
     "'min_1p': 'Exactly the minimum current on 1 phase, from grid or solar.', "
     "'min_3p': 'Exactly the minimum current on 3 phases.', "
     "'limited': 'Grid up to the power limit, with solar added.', "
-    "'fast': 'As much as the charger accepts, within the power limit.', "
+    "'fast': 'As much as the charger accepts, within the power limit; "
+    "also when the price is above the maximum.', "
     "'solar': 'Solar surplus first; the bridge closes a small gap to the minimum.', "
     "'comfort': 'Limited until the comfort SOC, then Solar.'}"
 )

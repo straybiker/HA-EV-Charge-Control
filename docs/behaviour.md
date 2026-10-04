@@ -12,7 +12,7 @@ All power values are AC power at the charger meter, in watts. "House power" excl
 | 1-Phase Minimum | up to the minimum | yes | exactly the minimum | 1 | no |
 | 3-Phases Minimum | up to the minimum | yes | exactly the minimum | 3 | no |
 | Limited | up to the power limit | yes, on top | power limit | 1 or 3 | yes |
-| Fast | up to the hardware maximum | yes, on top | power limit | 1 or 3 | no |
+| Fast | up to the hardware maximum, also above the maximum price | yes, on top | power limit | 1 or 3 | no |
 | Solar | only the bridge | yes, first | power limit | 1 or 3 | yes |
 | Comfort | as Limited below the comfort SOC, as Solar from the comfort SOC | | | | |
 
@@ -35,7 +35,8 @@ Each run applies the first rule that matches.
 
 - **Solar** = export = `max(−house power, 0)`.
 - **Headroom** = `max(power limit − house power, 0)`.
-- **Grid gate.** The grid is allowed when the price is at or below the maximum cost (no price: the check is skipped) and, with EMS control on, the EMS signal is above 0 W (no signal: closed).
+- **Grid gate.** The grid is allowed when the price is at or below the maximum cost (no price: the check is skipped) and, with EMS control on, the EMS signal is above 0 W (no signal: closed). Fast skips the price check; the EMS check stays (B19).
+- **What skips what.** No rule skips the power limit. Fast skips the price check. The emergency skips the price, the EMS and the Minimum cap. Solar and Comfort from the comfort SOC let the price and the EMS block only the bridge.
 - **Grid allowance.** Gate closed: 0. Otherwise the mode's request (bridge, minimum, power limit or hardware maximum). With EMS in budget mode, capped at the EMS signal in watts. With EMS in on/off mode, the signal only opens or closes the gate.
 - **EMS at 0 W** stops Minimum, Limited and Fast, also on solar, unless "Charge on solar when EMS blocks" is on: then they charge on solar only. Solar (and Comfort from the comfort SOC) keeps charging on solar; EMS blocks only its bridge.
 - **Request.**
@@ -46,7 +47,7 @@ Each run applies the first rule that matches.
 
 ## Power limit
 
-- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS. With the capacity tariff, the EMS gives it a floor and lets it follow the paid peak, for example max(default, 90 % × monthly peak); a raw monthly peak resets at the start of the month.
+- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS. With a capacity tariff, the EMS gives it a floor and lets it follow the paid peak, for example max(default, 90 % × monthly peak). A raw monthly peak is not a good limit where the tariff resets it at the start of the month.
 - **Effective power limit** = peak factor × power limit. The peak factor is an optional setup field (50–100 %, empty: 100 %): a safety buffer, so a held charging power stays below the billed peak.
 - Limit unavailable: the last known value. No value since start: 0, so the controller has no power limit and writes nothing.
 - The controller uses the effective limit everywhere the rules above say "power limit".
@@ -167,3 +168,4 @@ A change to the charging behaviour adds or updates a row here.
 | B16 | Not responding | Retry at each run; after 3 unconfirmed writes in a row a repair issue and decision `charger_not_responding`; the first confirmed write clears both. |
 | B17 | Control switched off | Hand the charger over once. Setup option: fallback current and phases (default), leave as it is, or stop (0 A). |
 | B18 | Single-phase charger | The option for 3 phases is optional. Without it, Single phase only is forced on and its switch refuses to turn off; 3-Phases Minimum is refused and the fallback phases must be 1. |
+| B19 | Fast and the price | Fast skips the maximum charging cost: it uses the grid up to the power limit also when the price is high. The EMS and the power limit still apply. Without this, Fast sets the same current as Limited, because both are capped by the headroom under the power limit. |

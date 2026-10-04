@@ -388,6 +388,32 @@ def test_no_car_spec_means_no_car_awareness():
     assert not out.emergency
 
 
+# --- Fast ignores the price (B19) -----------------------------------------------------
+
+EXPENSIVE = {"price": 0.50}
+
+
+def test_fast_uses_the_grid_above_the_maximum_price():
+    """Limited charges on solar only; Fast takes the grid up to the power limit."""
+    limited = step(M.LIMITED, -3000, m=EXPENSIVE)
+    fast = step(M.FAST, -3000, m=EXPENSIVE)
+    assert result(limited) == (1, 13.0)  # 3000 W of solar
+    assert result(fast) == (3, 16.0)  # the charger maximum, within the limit
+    assert fast.grid_allowed is True and limited.grid_allowed is False
+
+
+def test_fast_still_follows_the_ems():
+    out = step(M.FAST, -1000, s=EMS_BUDGET, m=EXPENSIVE | {"ems_signal_w": 0})
+    assert result(out) == (1, 0.0)
+    assert out.grid_allowed is False
+
+
+def test_grid_allowed_without_a_car_follows_the_mode():
+    unplugged = EXPENSIVE | {"connection": ConnectionState.DISCONNECTED}
+    assert step(M.FAST, 500, m=unplugged).grid_allowed is True
+    assert step(M.LIMITED, 500, m=unplugged).grid_allowed is False
+
+
 # --- stops keep the phase -------------------------------------------------------------
 
 

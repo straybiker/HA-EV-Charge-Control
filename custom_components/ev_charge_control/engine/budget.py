@@ -26,13 +26,19 @@ class Limits:
         return self.min_1p_w
 
 
-def grid_gate_open(settings: Settings, m: Measurements) -> bool:
+def grid_gate_open(
+    settings: Settings, m: Measurements, policy: ModePolicy | None = None
+) -> bool:
     """May the car use the grid at all?
 
-    Without a price the price check is skipped (D01). With EMS control on,
-    a missing or zero EMS signal closes the gate.
+    Without a price the price check is skipped (D01); Fast skips it too
+    (B19). With EMS control on, a missing or zero EMS signal closes the gate.
     """
-    price_ok = m.price is None or m.price <= settings.max_cost_rate
+    price_ok = (
+        (policy is not None and policy.ignores_price)
+        or m.price is None
+        or m.price <= settings.max_cost_rate
+    )
     ems_ok = not settings.ems_control or (m.ems_signal_w or 0) > 0
     return price_ok and ems_ok
 

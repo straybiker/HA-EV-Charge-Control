@@ -110,7 +110,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 |---|---|---|
 | Setting | Control charger | Write to the charger. Off on a new device. See [Taking control of the charger](#taking-control-of-the-charger). |
 | Setting | Charge mode | See [charge modes](#charge-modes). |
-| Setting | Max charging cost (per kWh) | Above this price, the car does not use the grid. Default 0.30. |
+| Setting | Max charging cost (per kWh) | Above this price, the car does not use the grid, except in Fast mode. Default 0.30. |
 | Setting | Target SOC, Comfort SOC, Emergency SOC (%) | Battery levels. They need **Car aware**. Defaults 80, 50 and 20 %. |
 | Setting | Solar bridge (W) | The grid power that Solar mode can import to reach the minimum. Default 0 W: solar only. |
 | Setting | Car aware | Use the car's battery level. |
@@ -177,11 +177,22 @@ For the YAML package, the [migration guide](docs/migration.md) has the full step
 | **1-Phase Minimum** | Exactly the minimum current on 1 phase (6 A ≈ 1.4 kW), from grid or solar. |
 | **3-Phases Minimum** | Exactly the minimum current on 3 phases (6 A ≈ 4.1 kW). Stops when there is not sufficient power; does not change to 1 phase. Not possible together with Single phase only. |
 | **Limited** | Grid up to the power limit, with solar added. |
-| **Fast** | As much as the charger accepts, within the power limit. |
+| **Fast** | As much as the charger accepts, within the power limit. **Skips the price check:** it also uses the grid when the price is above Max charging cost. EMS still applies. |
 | **Solar** | Solar surplus only. When the surplus is just below the minimum, the solar bridge imports the difference. |
 | **Comfort** | Limited until the car reaches the comfort SOC, then Solar. Needs Car aware; without it, Comfort operates as Limited. |
 
-All modes stay within the power limit. The car only gets the power that the house leaves available.
+**What each mode follows.** No mode skips the power limit: the car only gets the power that the house leaves available. Two cases skip the price check or the EMS:
+
+| Mode | Power limit | Max charging cost | EMS |
+|---|---|---|---|
+| 1-Phase and 3-Phases Minimum | Follows | Follows | Follows |
+| Limited | Follows | Follows | Follows |
+| **Fast** | Follows | **Skipped** | Follows |
+| Solar | Follows | Bridge only | Bridge only |
+| Comfort | Follows | As Limited, then as Solar | As Limited, then as Solar |
+| **Emergency charging** (any mode except Off, battery below Emergency SOC, needs Car aware) | Follows | **Skipped** | **Skipped** |
+
+"Bridge only": the price and the EMS can block the solar bridge, but Solar mode keeps charging on the export.
 
 ### Power limit and the capacity tariff
 
@@ -189,7 +200,10 @@ The **power limit** is the most power the house may take from the grid, charger 
 
 The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. The controller only reads it.
 
-With the capacity tariff, the tariff bills the highest quarter-hour of the month, so charging up to that peak costs nothing extra. Use a limit with a floor, which your EMS keeps up to date: **max(desired limit, 90 % × this month's peak)**. Do not use the raw monthly peak: it resets at the start of the month (to 2.5 kW in Flanders) and would limit charging hard until the house has set a new peak.
+With a capacity tariff, you pay for the highest quarter-hour peak of the month, so charging up to that peak costs nothing extra. Let your EMS keep the limit entity at the higher of two values: a minimum limit that you choose, and 90 % of this month's peak. For example: **max(5 kW, 90 % × monthly peak)**. The limit then never drops below your minimum, and it rises with the peak that you already pay for.
+
+> [!NOTE]
+> Do not use the monthly peak itself as the limit. In some tariffs it resets at the start of the month, in Flanders for example to 2.5 kW. It would then limit charging hard until the house sets a new peak. How the peak is calculated and reset differs per grid operator and country.
 
 The optional **peak factor** is a safety buffer: the controller uses that share of the limit. With 90 % and a limit of 8 kW, the car's limit is 7.2 kW, so a short overshoot stays below the billed peak. Empty means 100 %; leave it empty when the limit entity already has a buffer.
 
@@ -206,7 +220,7 @@ The **Effective power limit** sensor shows the value in use.
 
 ### Price and EMS
 
-- **Max charging cost:** with a price sensor, the grid is blocked while the price is above this value. The car can still charge on solar.
+- **Max charging cost:** with a price sensor, the grid is blocked while the price is above this value. The car can still charge on solar. **Fast** mode and emergency charging skip this check.
 - **EMS control:** the EMS signal (in W) limits the grid. As a **budget**, the grid share is at most the signal. As **on/off**, a value above 0 W allows the grid.
 - **EMS at 0 W** stops the grid modes, also on solar. **Charge on solar when EMS blocks** lets them continue on solar. Solar mode always continues on solar.
 

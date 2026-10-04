@@ -58,3 +58,11 @@ def test_off_offers_nothing() -> None:
 
 def test_unknown_house_power() -> None:
     assert available(M.LIMITED, None) is None
+
+
+def test_fast_offers_the_grid_above_the_maximum_price() -> None:
+    a = available(
+        M.FAST, -4500, s={"max_cost_rate": 0.10, "power_limit_w": 5200}, m=UNPLUGGED
+    )
+    assert a.solar_w == pytest.approx(4500)
+    assert a.grid_w > 4000

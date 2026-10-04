@@ -91,6 +91,7 @@ Run both for a few days. Compare the device's **Target current** and **Target ph
 - The current never goes over the power limit by rounding (D16).
 - Minimum modes take exactly the minimum, never surplus (D05).
 - With EMS control on, the EMS budget caps every grid mode, also Fast and Minimum (D03, D04).
+- Fast skips Max charging cost: it uses the grid also when the price is above it. In the package, Fast stops using the grid above that price (B19).
 - Without a valid battery level, all SOC rules are off, as if Car aware is off (D08).
 
 ## 4. Switch over

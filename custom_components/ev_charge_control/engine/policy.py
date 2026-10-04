@@ -27,6 +27,8 @@ class ModePolicy:
     forced_phase: Phase | None
     # Hold a 1 -> 3 upgrade for a while after a drop to 1 phase.
     phase_hold: bool
+    # Use the grid also above the maximum charging cost (B19).
+    ignores_price: bool = False
 
     @property
     def solar_first(self) -> bool:
@@ -38,7 +40,9 @@ MODE_POLICY: dict[ChargeMode, ModePolicy] = {
     ChargeMode.MIN_1P: ModePolicy(GridRequest.MINIMUM, True, Phase.ONE, False),
     ChargeMode.MIN_3P: ModePolicy(GridRequest.MINIMUM, True, Phase.THREE, False),
     ChargeMode.LIMITED: ModePolicy(GridRequest.POWER_LIMIT, False, None, True),
-    ChargeMode.FAST: ModePolicy(GridRequest.HARDWARE_MAX, False, None, False),
+    ChargeMode.FAST: ModePolicy(
+        GridRequest.HARDWARE_MAX, False, None, False, ignores_price=True
+    ),
     ChargeMode.SOLAR: ModePolicy(GridRequest.BRIDGE, False, None, True),
 }
 

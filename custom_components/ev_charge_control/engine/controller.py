@@ -63,7 +63,8 @@ class Controller:
         # is known also when nothing is charging.
         grid_allowed = out.grid_allowed
         if grid_allowed is None:
-            grid_allowed = grid_gate_open(settings, m)
+            policy = self._policy(settings, m, car_aware)
+            grid_allowed = grid_gate_open(settings, m, policy)
         return replace(
             out,
             grid_allowed=grid_allowed,
@@ -105,7 +106,7 @@ class Controller:
             max_w=max_a * volts * 3 * eff,
         )
         budget = plan(
-            settings, m, policy, limits, emergency, grid_gate_open(settings, m)
+            settings, m, policy, limits, emergency, grid_gate_open(settings, m, policy)
         )
         target_w = min(budget.request_w, budget.headroom_w, limits.max_w)
         hold_active = (
@@ -235,7 +236,7 @@ class Controller:
         emergency = car_aware and soc < settings.emergency_soc
         target_reached = car_aware and not emergency and soc >= settings.target_soc
         stop_phase = policy.forced_phase or m.commanded_phase
-        gate_open = grid_gate_open(settings, m)
+        gate_open = grid_gate_open(settings, m, policy)
 
         if target_reached:
             return self._result(
