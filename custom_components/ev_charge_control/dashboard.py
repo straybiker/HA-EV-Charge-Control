@@ -294,7 +294,7 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
         badge("blue", on, decided(state=active)),
         badge("green", on, decided(state="target_reached")),
         badge(
-            "orange",
+            "amber",
             on,
             decided(state_not=[*active, "target_reached", "not_connected"]),
         ),
