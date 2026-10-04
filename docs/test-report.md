@@ -4,7 +4,7 @@
 
 Run 04/10/2026 12:56 · branch `main` · commit `e434f93` · Home Assistant 2026.9.4 · Python 3.14.5 · results: [GitHub Actions](https://github.com/straybiker/HA-EV-Charge-Control/actions/runs/37196909212)
 
-An interactive version is in [test-report.html](test-report.html): download it and open it in a browser.
+An [interactive version](https://htmlpreview.github.io/?https://github.com/straybiker/HA-EV-Charge-Control/blob/main/docs/test-report.html) shows the same run in the browser.
 
 ## Summary
 

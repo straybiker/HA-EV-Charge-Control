@@ -322,7 +322,7 @@ For a support request, download the diagnostics from the device page (⋮ → **
 - [Charging behaviour](docs/behaviour.md): all rules and the design decisions.
 - [Engine](docs/engine.md): the decision engine.
 - [Home Assistant integration](docs/integration.md): runtime, entities and validation.
-- [Test report](docs/test-report.md): the latest test run ([interactive HTML version](docs/test-report.html)).
+- [Test report](docs/test-report.md): the latest test run ([interactive version](https://htmlpreview.github.io/?https://github.com/straybiker/HA-EV-Charge-Control/blob/main/docs/test-report.html)).
 
 ## Contributing
 
