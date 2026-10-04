@@ -6,8 +6,8 @@ reimbursement.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import asdict, dataclass, replace
+from datetime import date, datetime, timedelta
 from typing import Any
 
 # Longer gaps (Home Assistant stopped, sensor away) are not integrated: the
@@ -20,6 +20,12 @@ class EnergyTotals:
     charged_kwh: float = 0.0
     from_grid_kwh: float = 0.0
     from_solar_kwh: float = 0.0
+    # The same, since the start of `day` (local date, ISO). They start again at
+    # 0 on the first run of a new day.
+    day: str | None = None
+    charged_today_kwh: float = 0.0
+    from_grid_today_kwh: float = 0.0
+    from_solar_today_kwh: float = 0.0
 
 
 def solar_share(charger_power_w: float | None, house_power_w: float | None) -> float:
@@ -56,15 +62,36 @@ class EnergyCounter:
         charger_power_w: float | None,
         house_power_w: float | None,
         meter_kwh: float | None = None,
+        day: date | None = None,
     ) -> EnergyTotals:
+        """Add the energy since the previous run.
+
+        `day` is the local date of `now`; a new day starts the today totals
+        at 0. Energy of a step across midnight counts for the new day.
+        """
+        t = self.totals
+        if day is not None and t.day != day.isoformat():
+            t = replace(
+                t,
+                day=day.isoformat(),
+                charged_today_kwh=0.0,
+                from_grid_today_kwh=0.0,
+                from_solar_today_kwh=0.0,
+            )
         delta_kwh = self._delta(now, meter_kwh)
         if delta_kwh > 0:
             solar = delta_kwh * self._last_share
-            self.totals = EnergyTotals(
-                charged_kwh=self.totals.charged_kwh + delta_kwh,
-                from_grid_kwh=self.totals.from_grid_kwh + delta_kwh - solar,
-                from_solar_kwh=self.totals.from_solar_kwh + solar,
+            grid = delta_kwh - solar
+            t = replace(
+                t,
+                charged_kwh=t.charged_kwh + delta_kwh,
+                from_grid_kwh=t.from_grid_kwh + grid,
+                from_solar_kwh=t.from_solar_kwh + solar,
+                charged_today_kwh=t.charged_today_kwh + delta_kwh,
+                from_grid_today_kwh=t.from_grid_today_kwh + grid,
+                from_solar_today_kwh=t.from_solar_today_kwh + solar,
             )
+        self.totals = t
         self._last_time = now
         self._last_power_w = charger_power_w
         self._last_share = solar_share(charger_power_w, house_power_w)
@@ -90,13 +117,15 @@ class EnergyCounter:
     @classmethod
     def restore(cls, state: dict[str, Any] | None) -> EnergyCounter:
         """Rebuild from state(); bad or missing data starts from zero."""
+        state = state or {}
         try:
             totals = EnergyTotals(
-                **{k: float(v) for k, v in (state or {}).items() if k in _FIELDS}
+                **{k: float(v) for k, v in state.items() if k in _NUMBERS}
             )
         except TypeError, ValueError:
-            totals = EnergyTotals()
-        return cls(totals)
+            return cls(EnergyTotals())
+        day = state.get("day")
+        return cls(replace(totals, day=day if isinstance(day, str) else None))
 
 
-_FIELDS = set(EnergyTotals.__dataclass_fields__)
+_NUMBERS = set(EnergyTotals.__dataclass_fields__) - {"day"}

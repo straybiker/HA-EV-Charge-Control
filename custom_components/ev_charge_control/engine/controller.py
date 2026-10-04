@@ -259,7 +259,7 @@ class Controller:
             self._disconnected_since = now
         if now - self._disconnected_since < RESET_AFTER_DISCONNECT:
             return _skipped(Reason.NOT_CONNECTED)
-        return self._result(
+        reset = self._result(
             Reason.NOT_CONNECTED,
             self.charger.fallback_phase,
             self.charger.fallback_current_a,
@@ -267,6 +267,9 @@ class Controller:
             m,
             self.charger.min_current_a,
         )
+        # The fallback setpoint prepares the next session; without a car
+        # nothing is drawn, so the target power is 0.
+        return replace(reset, power_w=0.0)
 
     def _current_range(self, car_aware: bool) -> tuple[float, float]:
         """The car narrows the charger range only when its data is trusted."""

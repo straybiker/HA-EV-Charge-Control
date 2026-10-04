@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 import pytest
 from hypothesis import given
@@ -123,3 +123,27 @@ def test_charged_is_grid_plus_solar_and_never_decreases(steps):
         assert totals.from_grid_kwh >= previous.from_grid_kwh - 1e-12
         assert totals.from_solar_kwh >= previous.from_solar_kwh - 1e-12
         previous = totals
+
+
+def test_today_totals_start_again_on_a_new_day():
+    c = EnergyCounter()
+    day1, day2 = date(2026, 10, 3), date(2026, 10, 4)
+    c.update(NOW, 3600, 500, day=day1)
+    first = c.update(NOW + timedelta(seconds=10), 3600, 500, day=day1)
+    assert first.charged_today_kwh == A(0.01)
+    assert first.day == "2026-10-03"
+    second = c.update(NOW + timedelta(seconds=20), 0, 500, day=day2)
+    # The step across midnight counts for the new day; the total keeps growing.
+    assert second.day == "2026-10-04"
+    assert second.charged_today_kwh == A(0.01)
+    assert second.charged_kwh == A(0.02)
+    assert second.from_grid_today_kwh == A(0.01)
+
+
+def test_today_totals_survive_a_restore():
+    c = EnergyCounter()
+    c.update(NOW, 3600, -3600, day=date(2026, 10, 4))
+    c.update(NOW + timedelta(seconds=10), 3600, -3600, day=date(2026, 10, 4))
+    restored = EnergyCounter.restore(c.state())
+    assert restored.totals == c.totals
+    assert restored.totals.from_solar_today_kwh == A(0.01)

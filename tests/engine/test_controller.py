@@ -475,6 +475,8 @@ def test_disconnect_resets_to_fallback_after_a_minute():
     assert first.setpoint is None and early.setpoint is None
     assert late.reason == Reason.NOT_CONNECTED and result(late) == (1, 7.0)
     assert late.setpoint is not None and late.setpoint.write_current
+    # The reset prepares the next session; no car draws power.
+    assert late.power_w == 0
 
 
 def test_error_state_never_resets():

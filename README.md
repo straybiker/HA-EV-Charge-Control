@@ -116,6 +116,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
 | Decision | Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
+| Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
 | Diagnostic | Solar surplus | The house export now (W), also without a car. |
 | Diagnostic | Grid share | The part of the target power that comes from the grid; 0 W while the controller does not charge. |
 | Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging. Starts again at 100 % after a restart. |

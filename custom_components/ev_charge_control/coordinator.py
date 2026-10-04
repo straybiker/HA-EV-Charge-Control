@@ -128,6 +128,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             measurements.charger_power_w,
             measurements.house_power_w,
             extras.meter_kwh,
+            dt_util.as_local(now).date(),
         )
         self._energy_store.async_delay_save(self.energy.state, _ENERGY_SAVE_DELAY_S)
         return Snapshot(

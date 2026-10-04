@@ -113,6 +113,15 @@
       },
       "charged_from_solar": {
         "default": "mdi:solar-power-variant-outline"
+      },
+      "charged_today": {
+        "default": "mdi:battery-charging-medium"
+      },
+      "charged_from_grid_today": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "charged_from_solar_today": {
+        "default": "mdi:solar-power-variant-outline"
       }
     }
   }

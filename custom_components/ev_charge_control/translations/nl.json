@@ -454,6 +454,15 @@
           "grace_period": "Wachten na faseschakeling",
           "charger_not_responding": "Laadpaal reageert niet"
         }
+      },
+      "charged_today": {
+        "name": "Vandaag geladen"
+      },
+      "charged_from_grid_today": {
+        "name": "Vandaag geladen van het net"
+      },
+      "charged_from_solar_today": {
+        "name": "Vandaag geladen van zon"
       }
     }
   },

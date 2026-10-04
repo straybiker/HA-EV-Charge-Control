@@ -278,6 +278,9 @@ async def test_energy_from_the_charger_meter(hass: HomeAssistant, sources) -> No
     assert float(hass.states.get(CHARGED).state) == pytest.approx(2.0)
     assert float(hass.states.get(CHARGED_SOLAR).state) == pytest.approx(0.5)
     assert float(hass.states.get(CHARGED_GRID).state) == pytest.approx(1.5)
+    # The today sensors count the same energy; they start again at midnight.
+    today = hass.states.get("sensor.test_charger_charged_today")
+    assert float(today.state) == pytest.approx(2.0)
 
 
 async def test_energy_totals_survive_a_reload(hass: HomeAssistant, sources) -> None:

@@ -126,6 +126,10 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
     _energy("charged_energy", "charged_kwh"),
     _energy("charged_from_grid", "from_grid_kwh"),
     _energy("charged_from_solar", "from_solar_kwh"),
+    # Start again at 0 at local midnight: no utility meter helper needed.
+    _energy("charged_today", "charged_today_kwh"),
+    _energy("charged_from_grid_today", "from_grid_today_kwh"),
+    _energy("charged_from_solar_today", "from_solar_today_kwh"),
 )
 
 

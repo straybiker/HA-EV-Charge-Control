@@ -22,7 +22,7 @@ Comfort needs trusted car data. Without it Comfort stays Limited.
 
 Each run applies the first rule that matches.
 
-1. **Not connected.** Write nothing. After 60 s unplugged, write the fallback setpoint (1 phase, fallback current) once, so the next session starts gently. A charger in error never gets the reset.
+1. **Not connected.** Write nothing. After 60 s unplugged, write the fallback setpoint (1 phase, fallback current) once, so the next session starts gently. The target current and phases then show that setpoint; the target power is 0 W, as no car draws power. A charger in error never gets the reset.
 2. **Charger unavailable** (current limit or phase setting unknown), **power limit 0**, or **grace period** (40 s after a 1→3 switch): write nothing.
 3. **Fail-safe.** House power, charger power, applied current or active phases unknown: set `min(current setting, fallback current)` and the fallback phase (1). The current never goes up on a sensor fault, and a charger that stops responding is not left on an unintended phase. The charger option "Keep the phase on a sensor fault" keeps the current phase instead.
 4. **Refused.** 3-Phases Minimum with single phase only: 1 phase, 0 A. The Home Assistant entities also block selecting this combination.
@@ -108,6 +108,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 - **Charged energy:** from the charger's own energy meter when one is set in setup (a meter that resets or jumps back adds nothing for that step), otherwise charger power × time between runs (gaps over 5 min are not counted).
 - **From solar / from grid:** each step is split with the conditions of the previous run: solar = `min(charger power, export)`, where export comes from house power without the charger; the rest is grid.
 - Totals in kWh, `total_increasing`, usable in the Energy dashboard. They survive restarts (saved at most every 60 s and on unload).
+- **Today:** the same three values since local midnight. The first run of a new day starts them at 0; the energy of a step across midnight counts for the new day.
 
 ## Decision sensor values
 

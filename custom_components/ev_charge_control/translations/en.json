@@ -454,6 +454,15 @@
           "grace_period": "Waiting after phase switch",
           "charger_not_responding": "Charger not responding"
         }
+      },
+      "charged_today": {
+        "name": "Charged today"
+      },
+      "charged_from_grid_today": {
+        "name": "Charged from grid today"
+      },
+      "charged_from_solar_today": {
+        "name": "Charged from solar today"
       }
     }
   },
