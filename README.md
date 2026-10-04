@@ -131,7 +131,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 
 ### The dashboard
 
-With **Add a dashboard** on, the controller gets a dashboard in the sidebar, named after the device. It uses only built-in cards:
+With **Add a dashboard** on, the controller gets a dashboard in the sidebar, named **EV Charge Control**. With more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
 
 - **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, the settings, and the energy charged today and since setup.
 - **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint next to what the package writes to the charger, for the shadow-mode period.

@@ -50,6 +50,7 @@ from .yaml_import import package_present
 _LOVELACE_STORE_KEY = "lovelace.{}"
 _LOVELACE_STORE_VERSION = 1
 _ICON = "mdi:ev-station"
+NAME = "EV Charge Control"
 # Entities of the EV Load Balancer YAML package, for the shadow comparison.
 _YAML_MODE = "input_select.ev_load_balancer_charge_mode"
 
@@ -98,14 +99,20 @@ async def async_remove(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await _store(hass, entry).async_remove()
 
 
+def title(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """EV Charge Control; with more controllers, the others add their name."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries or entries[0].entry_id == entry.entry_id:
+        return NAME
+    return f"{NAME} {entry.title}"
+
+
 def url_path(hass: HomeAssistant, entry: ConfigEntry) -> str:
-    """A path from the device name, with a hyphen as Lovelace requires.
+    """A path from the title; it has the hyphen that Lovelace requires.
 
     The entry ID is added when another panel already uses the path.
     """
-    base = slugify(entry.title, separator="-") or "ev-charge-control"
-    if "-" not in base:
-        base = f"{base}-dashboard"
+    base = slugify(title(hass, entry), separator="-")
     if frontend.async_panel_exists(hass, base):
         return f"{base}-{entry.entry_id[-6:].lower()}"
     return base
@@ -121,12 +128,13 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     path = url_path(hass, entry)
+    name = title(hass, entry)
     board = lovelace.LovelaceStorage(
         hass,
         {
             "id": _store_id(entry),
             "url_path": path,
-            "title": entry.title,
+            "title": name,
             "icon": _ICON,
             "mode": "storage",
             "show_in_sidebar": True,
@@ -143,7 +151,7 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
     frontend.async_register_built_in_panel(
         hass,
         "lovelace",
-        sidebar_title=entry.title,
+        sidebar_title=name,
         sidebar_icon=_ICON,
         frontend_url_path=path,
         config={"mode": "storage"},
@@ -211,7 +219,7 @@ def build(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     views = [_overview(e, o)]
     if package_present(hass):
         views.append(_shadow(e, o))
-    return {"title": entry.title, "views": views}
+    return {"title": title(hass, entry), "views": views}
 
 
 def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:

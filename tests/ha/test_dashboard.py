@@ -24,8 +24,8 @@ from .conftest import (
     setup,
 )
 
-# From the device name "Test charger".
-PATH = "test-charger"
+# The first controller's dashboard.
+PATH = "ev-charge-control"
 
 
 @pytest.fixture
@@ -134,3 +134,32 @@ async def test_option_adds_the_dashboard_later(
     assert PATH in _panels(hass)
     await _options(hass, entry, {"dashboard": False})
     assert PATH not in _panels(hass)
+
+
+async def test_named_ev_charge_control(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    assert _panels(hass)[PATH].sidebar_title == "EV Charge Control"
+    assert (await _config(hass))["title"] == "EV Charge Control"
+
+
+async def test_a_second_controller_adds_its_name(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    garage = MockConfigEntry(
+        domain="ev_charge_control",
+        title="Garage",
+        options=with_dashboard.options
+        | {
+            "current_limit_entity": "number.test_garage_limit",
+            "phase_select_entity": "select.test_garage_phases",
+        },
+    )
+    garage.add_to_hass(hass)
+    await setup(hass, garage)
+    assert _panels(hass)["ev-charge-control-garage"].sidebar_title == (
+        "EV Charge Control Garage"
+    )
+    assert PATH in _panels(hass)
