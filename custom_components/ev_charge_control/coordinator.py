@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
 from .engine import Available, Controller, Measurements, Output, Reason
+from .engine.average import ChargingAverage
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
 from .inputs import Extras, InputReader, Tuning
@@ -47,6 +48,8 @@ class Snapshot:
     ems_signal_w: float | None
     max_current_a: float
     energy: EnergyTotals
+    # Mean charger power while charging, over a rolling window.
+    average_charging_power_w: float | None
     computed_at: datetime = field(compare=False)
 
 
@@ -89,6 +92,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self.writer = writer
         self.tuning = tuning
         self.energy = EnergyCounter()
+        self.average = ChargingAverage()
         self._energy_store = self.energy_store(hass, entry)
         self._last_max_a: float | None = None
         self._last_limit_w: float | None = None
@@ -101,12 +105,17 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         return Store(hass, _STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.energy")
 
     async def async_load_energy(self) -> None:
-        """Restore the energy totals saved before the last stop."""
-        self.energy = EnergyCounter.restore(await self._energy_store.async_load())
+        """Restore the energy totals and the average saved before the last stop."""
+        state = await self._energy_store.async_load()
+        self.energy = EnergyCounter.restore(state)
+        self.average = ChargingAverage.restore((state or {}).get("average"))
 
     async def async_save_energy(self) -> None:
         """Write the totals now, so an unload or reload loses nothing."""
-        await self._energy_store.async_save(self.energy.state())
+        await self._energy_store.async_save(self._stored_state())
+
+    def _stored_state(self) -> dict:
+        return {**self.energy.state(), "average": self.average.state()}
 
     async def _async_update_data(self) -> Snapshot:
         now = dt_util.utcnow()
@@ -134,7 +143,10 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             extras.meter_kwh,
             dt_util.as_local(now).date(),
         )
-        self._energy_store.async_delay_save(self.energy.state, _ENERGY_SAVE_DELAY_S)
+        average_w = self.average.update(
+            now, measurements.charger_power_w, dt_util.as_local(now).date()
+        )
+        self._energy_store.async_delay_save(self._stored_state, _ENERGY_SAVE_DELAY_S)
         return Snapshot(
             output=output,
             power_limit_w=power_limit_w,
@@ -148,6 +160,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             available=self.controller.available(settings, measurements, now),
             max_current_a=max_a,
             energy=energy,
+            average_charging_power_w=average_w,
             computed_at=now,
         )
 

@@ -160,6 +160,18 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_available("solar_w"),
     ),
+    # For planning by an EMS: the speed the car usually charges at.
+    OutputSensorDescription(
+        key="average_charging_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda s: (
+            None
+            if s.average_charging_power_w is None
+            else round(s.average_charging_power_w)
+        ),
+    ),
     OutputSensorDescription(
         key="phase_hold_until",
         device_class=SensorDeviceClass.TIMESTAMP,

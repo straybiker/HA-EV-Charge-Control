@@ -451,6 +451,9 @@
       "available_from_solar": {
         "name": "Beschikbaar van zon"
       },
+      "average_charging_power": {
+        "name": "Gemiddeld laadvermogen"
+      },
       "phase_hold_until": {
         "name": "Fase vastgehouden tot"
       },

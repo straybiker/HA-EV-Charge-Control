@@ -451,6 +451,9 @@
       "available_from_solar": {
         "name": "Available from solar"
       },
+      "average_charging_power": {
+        "name": "Average charging power"
+      },
       "phase_hold_until": {
         "name": "Phase hold until"
       },

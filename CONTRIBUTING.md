@@ -58,7 +58,7 @@ docker run --rm -v "$PWD:/github/workspace" ghcr.io/home-assistant/hassfest
 
 ## Test report
 
-[docs/test-report.md](docs/test-report.md) and [docs/test-report.html](docs/test-report.html) ([view it rendered](https://htmlpreview.github.io/?https://github.com/straybiker/HA-EV-Charge-Control/blob/main/docs/test-report.html)) show the latest full run. Rebuild them after a change to behaviour or tests, and commit them with the change.
+[docs/test-report.md](docs/test-report.md) and [docs/test-report.html](docs/test-report.html) ([view it rendered](https://straybiker.github.io/HA-EV-Charge-Control/test-report.html)) show the latest full run. Rebuild them after a change to behaviour or tests, and commit them with the change.
 
 ```powershell
 python scripts/report/collect.py        # runs the suite and hassfest in Docker

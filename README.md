@@ -162,6 +162,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
 | Decision | Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
+| Energy | Average charging power (W) | The mean charger power while charging above 1000 W, over the last 60 days: energy ÷ charging time. The speed your car usually charges at, for planning by an EMS. Unknown until the car has charged. |
 | Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
 | Diagnostic | Solar surplus | The house export now (W), also without a car. |
 | Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
@@ -174,7 +175,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 
 With **Add a dashboard** on, the controller gets a dashboard in the sidebar, named **EV Charge Control**. With more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
 
-- **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, the settings, and the energy charged today and since setup.
+- **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, the settings, the energy charged today and since setup, and the average charging power.
 - **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint next to what the package writes to the charger, for the shadow-mode period.
 
 Edit it like any other dashboard; the edits stay. To add or remove it later, select **Configure** on the integration page and go to the last step, **Dashboard**:
@@ -279,6 +280,8 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 
 **Charged energy**, **Charged from grid** and **Charged from solar** count kWh. The values come from the charger's energy meter when you set one, else from the charger power. Use them in the Energy dashboard as individual device consumption, or let your EMS calculate cost and reimbursement. The integration does not calculate money.
 
+**Average charging power** gives an EMS the power to plan a charging session with, for example as the nominal power of a deferrable load. It counts only the time above 1000 W, so the car's idle draw and the ramps at the start and end of a session do not lower it. It keeps a total per day, survives restarts and forgets days older than 60 days.
+
 ### Decision values
 
 | Value | Meaning |
@@ -322,7 +325,7 @@ For a support request, download the diagnostics from the device page (⋮ → **
 - [Charging behaviour](docs/behaviour.md): all rules and the design decisions.
 - [Engine](docs/engine.md): the decision engine.
 - [Home Assistant integration](docs/integration.md): runtime, entities and validation.
-- [Test report](docs/test-report.md): the latest test run ([interactive version](https://htmlpreview.github.io/?https://github.com/straybiker/HA-EV-Charge-Control/blob/main/docs/test-report.html)).
+- [Test report](docs/test-report.md): the latest test run ([interactive version](https://straybiker.github.io/HA-EV-Charge-Control/test-report.html)).
 
 ## Contributing
 

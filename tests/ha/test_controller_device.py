@@ -421,3 +421,15 @@ async def test_ems_active_follows_the_signal(hass: HomeAssistant, sources) -> No
     hass.states.async_set(ems, "2300", W)
     await _tick(hass)
     assert hass.states.get(active).state == "on"
+
+
+async def test_average_charging_power_while_charging(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    average = "sensor.test_charger_average_charging_power"
+    await setup(hass, entry)
+    assert hass.states.get(average).state == "unknown"
+    hass.states.async_set(CHARGER_POWER, "7400", W)
+    await _tick(hass)
+    await _tick(hass)
+    assert float(hass.states.get(average).state) == pytest.approx(7400, abs=1)

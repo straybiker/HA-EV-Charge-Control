@@ -120,6 +120,9 @@
       "available_from_solar": {
         "default": "mdi:solar-power-variant"
       },
+      "average_charging_power": {
+        "default": "mdi:car-speed-limiter"
+      },
       "phase_hold_until": {
         "default": "mdi:timer-lock-outline"
       },

@@ -423,6 +423,9 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _tile(e["charged_energy"], "Total charged", 12),
                 _tile(e["charged_from_grid"], "Total from grid", 12),
                 _tile(e["charged_from_solar"], "Total from solar", 12),
+                _tile(
+                    e["average_charging_power"], "Average charging power (60 days)", 12
+                ),
             ),
         ],
     }

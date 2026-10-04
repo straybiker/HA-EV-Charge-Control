@@ -161,7 +161,7 @@ def markdown(data: dict) -> str:
         + (" + uncommitted changes" if env["dirty"] else "")
         + f" · Home Assistant {env['homeassistant']} · Python {env['python']} · results: {results}",
         "",
-        "An [interactive version](https://htmlpreview.github.io/?https://github.com/straybiker/HA-EV-Charge-Control/blob/main/docs/test-report.html) shows the same run in the browser.",
+        "An [interactive version](https://straybiker.github.io/HA-EV-Charge-Control/test-report.html) shows the same run in the browser.",
         "",
         "## Summary",
         "",
