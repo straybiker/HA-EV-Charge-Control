@@ -198,6 +198,8 @@ async def test_available_follows_the_mode(
     assert grid == 0
     assert total == solar == pytest.approx(3000, abs=70)
     await _select(hass, "limited")
+    # The second change falls in the debounce of the first; it runs after it.
+    await _tick(hass, _DEBOUNCE)
     total, grid, solar = _available(hass)
     assert solar == pytest.approx(3000, abs=1)
     assert total == pytest.approx(8000, abs=70)  # 3000 W export + 5000 W limit
