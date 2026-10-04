@@ -306,7 +306,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 "name": "Control charger",
                 "show_name": True,
                 "show_state": True,
-                "color": "amber",
+                # No fixed colour: the badge follows the state, grey when off.
                 "tap_action": {"action": "more-info"},
             }
         ],
