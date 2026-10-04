@@ -38,13 +38,29 @@ def _solar_surplus(s: Snapshot) -> int | None:
     return None if s.solar_surplus_w is None else round(s.solar_surplus_w)
 
 
-def _grid_share(s: Snapshot) -> int | None:
+def _car_from_grid(s: Snapshot) -> int | None:
     """The part of the target power that comes from the grid; 0 when idle."""
     if not s.output.current_a or s.output.power_w is None:
         return 0
     if s.solar_surplus_w is None:
         return None
     return round(max(s.output.power_w - s.solar_surplus_w, 0.0))
+
+
+def _car_from_solar(s: Snapshot) -> int | None:
+    """The rest of the target power: with Car from grid, the whole target."""
+    if not s.output.current_a or s.output.power_w is None:
+        return 0
+    if s.solar_surplus_w is None:
+        return None
+    return round(min(s.output.power_w, s.solar_surplus_w))
+
+
+def _available(s: Snapshot) -> int | None:
+    """What the car could take within the limit, with the house as it is now."""
+    if s.house_power_w is None:
+        return None
+    return round(max(s.power_limit_w - s.house_power_w, 0.0))
 
 
 def _energy(key: str, field: str) -> OutputSensorDescription:
@@ -102,13 +118,29 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_solar_surplus,
     ),
+    # The key stays grid_share so existing entity IDs do not change.
     OutputSensorDescription(
         key="grid_share",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_grid_share,
+        value_fn=_car_from_grid,
+    ),
+    OutputSensorDescription(
+        key="car_from_solar",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_car_from_solar,
+    ),
+    OutputSensorDescription(
+        key="available_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_available,
     ),
     OutputSensorDescription(
         key="phase_hold_until",

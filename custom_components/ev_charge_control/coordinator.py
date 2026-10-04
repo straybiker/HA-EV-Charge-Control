@@ -39,7 +39,9 @@ class Snapshot:
     output: Output
     power_limit_w: float
     limit_entity_w: float | None
-    # Export of the house, known also when nothing is charging.
+    # House power without the charger and its export: known also when
+    # nothing is charging.
+    house_power_w: float | None
     solar_surplus_w: float | None
     max_current_a: float
     energy: EnergyTotals
@@ -135,6 +137,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             output=output,
             power_limit_w=power_limit_w,
             limit_entity_w=limit_w,
+            house_power_w=measurements.house_power_w,
             solar_surplus_w=(
                 None
                 if measurements.house_power_w is None

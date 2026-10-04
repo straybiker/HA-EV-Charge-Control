@@ -112,13 +112,14 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | EMS control, EMS as on/off | The EMS signal limits the grid, as a watt budget or as on/off. |
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
 | Decision | Effective power limit | The limit in use: the power limit entity × the peak factor. See [power limit](#power-limit-and-the-capacity-tariff). |
+| Decision | Available for the car | Effective power limit − house power without the charger (W): what the car could take now. Known also without a car. |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
 | Decision | Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
 | Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
 | Diagnostic | Solar surplus | The house export now (W), also without a car. |
-| Diagnostic | Grid share | The part of the target power that comes from the grid; 0 W while the controller does not charge. |
+| Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
 | Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging. Starts again at 100 % after a restart. |
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
 

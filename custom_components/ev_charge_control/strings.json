@@ -420,7 +420,13 @@
         "name": "Solar surplus"
       },
       "grid_share": {
-        "name": "Grid share"
+        "name": "Car from grid"
+      },
+      "car_from_solar": {
+        "name": "Car from solar"
+      },
+      "available_power": {
+        "name": "Available for the car"
       },
       "phase_hold_until": {
         "name": "Phase hold until"

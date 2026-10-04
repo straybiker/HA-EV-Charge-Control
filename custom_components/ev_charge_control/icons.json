@@ -99,6 +99,12 @@
       "grid_share": {
         "default": "mdi:transmission-tower-import"
       },
+      "car_from_solar": {
+        "default": "mdi:solar-power-variant"
+      },
+      "available_power": {
+        "default": "mdi:car-electric"
+      },
       "phase_hold_until": {
         "default": "mdi:timer-lock-outline"
       },

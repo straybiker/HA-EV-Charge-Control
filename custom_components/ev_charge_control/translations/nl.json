@@ -420,7 +420,13 @@
         "name": "Zonne-overschot"
       },
       "grid_share": {
-        "name": "Netaandeel"
+        "name": "Auto van het net"
+      },
+      "car_from_solar": {
+        "name": "Auto van zon"
+      },
+      "available_power": {
+        "name": "Beschikbaar voor de auto"
       },
       "phase_hold_until": {
         "name": "Fase vastgehouden tot"

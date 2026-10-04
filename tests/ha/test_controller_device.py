@@ -162,23 +162,32 @@ async def test_unplug_runs_at_once(
 async def test_status_sensors_without_charging(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
-    """Mode Off: the export, the grid gate and a zero grid share are known."""
+    """Mode Off: the export, the budget and the grid gate are known."""
     hass.states.async_set(HOUSE_POWER, "-2000", W)
     await setup(hass, entry)
     assert hass.states.get("sensor.test_charger_solar_surplus").state == "2000"
-    assert hass.states.get("sensor.test_charger_grid_share").state == "0"
+    assert hass.states.get("sensor.test_charger_car_from_grid").state == "0"
+    assert hass.states.get("sensor.test_charger_car_from_solar").state == "0"
+    # The effective limit plus the export.
+    limit = float(hass.states.get(EFFECTIVE_LIMIT).state)
+    available = float(
+        hass.states.get("sensor.test_charger_available_for_the_car").state
+    )
+    assert available == pytest.approx(limit + 2000, abs=1)
     assert hass.states.get("binary_sensor.test_charger_grid_allowed").state == "on"
 
 
-async def test_grid_share_is_the_grid_part_of_the_target(
+async def test_car_from_grid_and_solar_split_the_target(
     hass: HomeAssistant, sources, entry: MockConfigEntry
 ) -> None:
     hass.states.async_set(HOUSE_POWER, "-1000", W)
     await setup(hass, entry)
     await _select(hass, "fast")
     target = float(hass.states.get("sensor.test_charger_target_power").state)
-    grid = float(hass.states.get("sensor.test_charger_grid_share").state)
+    grid = float(hass.states.get("sensor.test_charger_car_from_grid").state)
+    solar = float(hass.states.get("sensor.test_charger_car_from_solar").state)
     assert grid == pytest.approx(target - 1000, abs=1)
+    assert solar == pytest.approx(1000, abs=1)
 
 
 async def test_charger_without_three_phase_option(hass: HomeAssistant, sources) -> None:
