@@ -1,7 +1,7 @@
 <header class="top wrap">
   <span class="eyebrow">EV Charge Control · charge controller</span>
   <h1>Test report</h1>
-  <p class="muted">The full pytest run in Linux (engine, property, translation and Home Assistant tests), hassfest, the 13 original load-balancer cases against the new engine, and the behaviour decisions behind every difference.</p>
+  <p class="muted">The full pytest run in Linux (engine, property, translation and Home Assistant tests), hassfest and the 13 original load-balancer cases against the new engine, with a note on every difference.</p>
   <div class="meta" id="meta"></div>
 </header>
 
@@ -9,7 +9,6 @@
   <div class="wrap">
     <a href="#verdict">Verdict</a>
     <a href="#golden">Golden cases</a>
-    <a href="#decisions">Decision record</a>
     <a href="#tests">All tests</a>
   </div>
 </nav>
@@ -27,25 +26,13 @@
     <header>
       <span class="eyebrow">Golden cases</span>
       <h2>Golden cases: the original 13 and Comfort</h2>
-      <p class="muted">Same inputs as the YAML package's own test, at two power limits: 6 kW (a realistic household on the capacity tariff) and the test's original 10 kW. 16 A charger at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data. The engine rounds the current to the nearest 0.1 A when there is headroom and rounds down when rounding up would exceed the power limit (decision D16); the YAML package always rounds to the nearest step and can end up to 35 W above the limit. The charger power is split into solar used and grid import; the meter column shows the house plus the charger, to check it against the power limit.</p>
+      <p class="muted">Same inputs as the YAML package's own test, at two power limits: 6 kW (a realistic household on the capacity tariff) and the test's original 10 kW. 16 A charger at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data. The engine rounds the current to the nearest 0.1 A when there is headroom and rounds down when rounding up would exceed the power limit; the YAML package always rounds to the nearest step and can end up to 35 W above the limit. The charger power is split into solar used and grid import; the meter column shows the house plus the charger, to check it against the power limit.</p>
     </header>
     <div class="filters">
       <div class="seg" role="group" aria-label="Case set" id="set-filter"></div>
       <div class="seg" role="group" aria-label="Power limit" id="limit-filter"></div>
     </div>
     <div class="scroll"><table id="golden-table"></table></div>
-  </section>
-
-  <section id="decisions">
-    <header>
-      <span class="eyebrow">Decision record</span>
-      <h2>Why the controller behaves as it does</h2>
-      <p class="muted">From <code>docs/behaviour.md</code>. D-items came from reviewing the YAML package's behaviour; B-items came from redesigning it.</p>
-    </header>
-    <div class="filters">
-      <div class="seg" role="group" aria-label="Filter decisions" id="decision-filter"></div>
-    </div>
-    <div class="scroll"><table id="decision-table"></table></div>
   </section>
 
   <section id="tests">
@@ -132,15 +119,7 @@ $("#verdict-panels").innerHTML = `
   <div class="panel">
     <span class="eyebrow">Golden cases</span>
     <div class="figure"><span class="big">${gPass}</span><span class="unit">of ${allGolden.length} as specified</span></div>
-    <p class="muted" style="font-size:.9rem">13 original and 10 Comfort cases, each at 6 kW and 10 kW. ${gSame} of ${allGolden.length} identical to the YAML package; the decision record explains the rest.</p>
-  </div>
-  <div class="panel">
-    <span class="eyebrow">Decision record</span>
-    <div class="figure"><span class="big">${DATA.decisions.length}</span><span class="unit">decisions</span></div>
-    <div class="legend">
-      <span><span class="pill s-accepted">review</span> ${DATA.decisions.filter((d) => d.id.startsWith("D")).length}</span>
-      <span><span class="pill s-fixed">redesign</span> ${DATA.decisions.filter((d) => d.id.startsWith("B")).length}</span>
-    </div>
+    <p class="muted" style="font-size:.9rem">13 original and 10 Comfort cases, each at 6 kW and 10 kW. ${gSame} of ${allGolden.length} identical to the YAML package; a note explains each difference.</p>
   </div>`;
 
 /* golden */
@@ -199,31 +178,6 @@ $("#limit-filter").addEventListener("click", (e) => {
   renderGolden();
 });
 renderGolden();
-
-/* decisions */
-let decisionFilter = "all";
-const DF = [["all", "All"], ["D", "Review (D)"], ["B", "Redesign (B)"]];
-$("#decision-filter").innerHTML = DF.map(([k, label]) => {
-  const n = k === "all" ? DATA.decisions.length : DATA.decisions.filter((d) => d.id.startsWith(k)).length;
-  return `<button type="button" data-f="${k}" aria-pressed="${k === "all"}">${label} <span class="num">${n}</span></button>`;
-}).join("");
-function renderDecisions() {
-  const rows = DATA.decisions.filter((d) => decisionFilter === "all" || d.id.startsWith(decisionFilter));
-  $("#decision-table").innerHTML = `
-    <thead><tr><th>ID</th><th>Topic</th><th>Decision</th></tr></thead>
-    <tbody>${rows.map((d) => `<tr>
-      <td><span class="pill ${d.id.startsWith("D") ? "s-accepted" : "s-fixed"}">${esc(d.id)}</span></td>
-      <td>${esc(d.topic)}</td>
-      <td>${esc(d.decision).replace(/`([^`]+)`/g, "<code>$1</code>")}</td>
-    </tr>`).join("")}</tbody>`;
-}
-$("#decision-filter").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b) return;
-  decisionFilter = b.dataset.f;
-  for (const x of $("#decision-filter").children) x.setAttribute("aria-pressed", String(x === b));
-  renderDecisions();
-});
-renderDecisions();
 
 /* tests */
 const FILE_LABEL = {

@@ -2,7 +2,7 @@
 
 Gets the results of the full test suite and hassfest, evaluates the golden
 cases with the engine and, when the sibling EV_Loadbalancer checkout exists,
-with the YAML package, and reads the design decisions. Writes
+with the YAML package. Writes
 build/report/data.json; build.py turns it into docs/test-report.html and .md.
 
     python scripts/report/collect.py        # run tests and hassfest in Docker
@@ -204,12 +204,12 @@ def _why(name: str, mode: str, yaml_: list | None, engine: list) -> str:
     if yaml_ is None or yaml_ == engine:
         return ""
     if "bridge" in name:
-        return "bridge lifts the surplus to the minimum (B2)"
+        return "bridge lifts the surplus to the minimum"
     if mode == "comfort" and "ems 0" in name:
-        return "Comfort above its SOC runs as Solar; EMS blocks only grid (B2)"
+        return "Comfort above its SOC runs as Solar; EMS blocks only grid"
     if engine[1] < yaml_[1]:
-        return "rounded down at the power limit (D16)"
-    return "see the decision record"
+        return "rounded down at the power limit"
+    return "see docs/behaviour.md"
 
 
 def golden_row(name, mode, house, s, m, limit, expected) -> dict:
@@ -269,15 +269,6 @@ def golden_cases() -> dict:
     return golden
 
 
-def decisions() -> list[dict]:
-    rows = []
-    for line in (ROOT / "docs" / "behaviour.md").read_text("utf-8").splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) == 3 and re.fullmatch(r"[DB]\d\d?", cells[0]):
-            rows.append({"id": cells[0], "topic": cells[1], "decision": cells[2]})
-    return rows
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -319,7 +310,6 @@ def main() -> None:
         },
         "tests": tests,
         "golden": golden_cases(),
-        "decisions": decisions(),
         "hassfest": hassfest,
     }
     (BUILD / "data.json").write_text(json.dumps(data, indent=1), "utf-8")

@@ -186,8 +186,7 @@ def markdown(data: dict) -> str:
         "at 230 V, price 0.20 €/kWh under a 0.30 €/kWh maximum, no car data unless a SOC is shown.",
         "",
         "- **YAML package:** what the YAML package sets for the same inputs.",
-        "- **Engine:** what this integration sets. A note explains a difference; the "
-        "[decision record](behaviour.md#decision-record) gives the reason.",
+        "- **Engine:** what this integration sets. A note explains a difference.",
         "- **Solar used / Grid import:** how the charger power splits.",
         "- **Meter:** house plus charger at the grid connection, checked against the power limit.",
         "",
