@@ -9,6 +9,10 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 > [!IMPORTANT]
 > **A new device starts in shadow mode.** It calculates what it would set and shows it on its sensors, but writes nothing until you switch **Control charger** on. See [Taking control of the charger](#taking-control-of-the-charger).
 
+![The EV Charge Control dashboard: live status, power budget, gates and inputs, power today, settings and charged energy](https://raw.githubusercontent.com/straybiker/HA-EV-Charge-Control/main/docs/images/dashboard.png)
+
+*The optional [dashboard](#the-dashboard), generated from your setup.*
+
 ## Contents
 
 - [Features](#features)
