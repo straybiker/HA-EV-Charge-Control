@@ -15,6 +15,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 
 ## Contents
 
+- [How it works](#how-it-works)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -25,6 +26,42 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
+
+## How it works
+
+The controller sits between your house and the charger. It does not talk to the car or the charger itself: it reads the entities of their own integrations and writes the charger's current limit and phase setting.
+
+```mermaid
+flowchart LR
+    subgraph inputs["Read at every run"]
+        car_soc["Car<br/>battery level (optional)"]
+        grid["Grid and house<br/>house power without the charger"]
+        pv["Solar<br/>export"]
+        limit["Power limit<br/>helper or EMS"]
+        price["Price and EMS signal<br/>(optional)"]
+        state["Charger state<br/>connection, power, current, phases"]
+    end
+
+    controller{{"EV Charge Control<br/>charge mode, settings, decision"}}
+
+    subgraph outputs["Written while Control charger is on"]
+        current["Current limit"]
+        phases["Phase setting"]
+    end
+
+    charger["Charger<br/>through its own integration"]
+    car["Car<br/>charges"]
+
+    car_soc & grid & pv & limit & price & state --> controller
+    controller --> current & phases
+    current & phases --> charger
+    charger --> car
+```
+
+1. **Read.** Every few seconds (10 s by default) the controller reads the house power, the solar export, the power limit and the charger's state. Optional inputs: the car's battery level, an electricity price and an EMS signal.
+2. **Decide.** The charge mode and the settings on the device turn these into a target current and number of phases, within the power limit.
+3. **Write.** With **Control charger** on, the controller writes the target to the charger's current limit and phase setting, and checks that the charger follows. With it off (shadow mode), it only shows the target.
+4. **Charge.** The charger sets the car's charging power. The new charger power and battery level are read again at the next run.
 
 ## Features
 
