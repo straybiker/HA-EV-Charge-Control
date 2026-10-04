@@ -43,6 +43,8 @@ class Snapshot:
     # nothing is charging.
     house_power_w: float | None
     solar_surplus_w: float | None
+    # None when the setup has no EMS entity.
+    ems_signal_w: float | None
     max_current_a: float
     energy: EnergyTotals
     computed_at: datetime = field(compare=False)
@@ -138,6 +140,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             power_limit_w=power_limit_w,
             limit_entity_w=limit_w,
             house_power_w=measurements.house_power_w,
+            ems_signal_w=measurements.ems_signal_w,
             solar_surplus_w=(
                 None
                 if measurements.house_power_w is None

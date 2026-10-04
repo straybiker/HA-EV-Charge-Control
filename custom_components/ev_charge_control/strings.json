@@ -401,6 +401,9 @@
       },
       "target_reached": {
         "name": "Target reached"
+      },
+      "ems_active": {
+        "name": "EMS active"
       }
     },
     "sensor": {
@@ -427,6 +430,9 @@
       },
       "available_power": {
         "name": "Available for the car"
+      },
+      "available_from_grid": {
+        "name": "Available from grid"
       },
       "phase_hold_until": {
         "name": "Phase hold until"

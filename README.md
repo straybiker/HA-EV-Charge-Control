@@ -113,6 +113,8 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
 | Decision | Effective power limit | The limit in use: the power limit entity × the peak factor. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Decision | Available for the car | Effective power limit − house power without the charger (W): what the car could take now. Known also without a car. |
+| Decision | Available from grid | The grid part of Available for the car: the effective power limit minus the house import (W). The solar surplus is the rest. Price and EMS do not change it; Grid allowed shows whether the grid may be used now. |
+| Decision | EMS active | On while the EMS signal is above 0 W. Unknown when the setup has no EMS entity. |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
 | Decision | Emergency charging, Target reached | Yes/no details of the decision. |

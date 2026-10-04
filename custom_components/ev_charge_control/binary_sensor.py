@@ -31,6 +31,12 @@ BINARY_SENSORS: tuple[OutputBinaryDescription, ...] = (
     OutputBinaryDescription(
         key="target_reached", value_fn=lambda s: s.output.target_reached
     ),
+    # The EMS signal as the controller reads it: above 0 W the EMS allows the
+    # grid. Unknown when the setup has no EMS entity.
+    OutputBinaryDescription(
+        key="ems_active",
+        value_fn=lambda s: None if s.ems_signal_w is None else s.ems_signal_w > 0,
+    ),
 )
 
 

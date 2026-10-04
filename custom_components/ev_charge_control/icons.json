@@ -45,7 +45,10 @@
         "default": "mdi:numeric-1-circle-outline"
       },
       "ems_control": {
-        "default": "mdi:chart-timeline-variant"
+        "default": "mdi:toggle-switch-off-outline",
+        "state": {
+          "on": "mdi:toggle-switch"
+        }
       },
       "ems_as_onoff": {
         "default": "mdi:toggle-switch-outline"
@@ -60,6 +63,12 @@
       },
       "target_reached": {
         "default": "mdi:flag-checkered"
+      },
+      "ems_active": {
+        "default": "mdi:home-lightning-bolt-outline",
+        "state": {
+          "on": "mdi:home-lightning-bolt"
+        }
       }
     },
     "sensor": {
@@ -104,6 +113,9 @@
       },
       "available_power": {
         "default": "mdi:car-electric"
+      },
+      "available_from_grid": {
+        "default": "mdi:transmission-tower"
       },
       "phase_hold_until": {
         "default": "mdi:timer-lock-outline"

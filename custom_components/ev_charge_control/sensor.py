@@ -56,6 +56,13 @@ def _car_from_solar(s: Snapshot) -> int | None:
     return round(min(s.output.power_w, s.solar_surplus_w))
 
 
+def _available_from_grid(s: Snapshot) -> int | None:
+    """The grid part of Available for the car; the solar surplus is the rest."""
+    if s.house_power_w is None:
+        return None
+    return round(max(s.power_limit_w - max(s.house_power_w, 0.0), 0.0))
+
+
 def _available(s: Snapshot) -> int | None:
     """What the car could take within the limit, with the house as it is now."""
     if s.house_power_w is None:
@@ -141,6 +148,13 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_available,
+    ),
+    OutputSensorDescription(
+        key="available_from_grid",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_available_from_grid,
     ),
     OutputSensorDescription(
         key="phase_hold_until",

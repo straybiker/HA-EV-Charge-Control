@@ -174,6 +174,11 @@ async def test_status_sensors_without_charging(
         hass.states.get("sensor.test_charger_available_for_the_car").state
     )
     assert available == pytest.approx(limit + 2000, abs=1)
+    # Exporting: the grid part is the whole limit, the export is the rest.
+    grid = float(hass.states.get("sensor.test_charger_available_from_grid").state)
+    assert grid == pytest.approx(limit, abs=1)
+    # No EMS entity in the setup.
+    assert hass.states.get("binary_sensor.test_charger_ems_active").state == "unknown"
     assert hass.states.get("binary_sensor.test_charger_grid_allowed").state == "on"
 
 
@@ -365,3 +370,28 @@ async def test_controller_is_a_regular_device(
     device = devices[0]
     assert device.entry_type is None
     assert device.model == "Charge controller"
+
+
+async def test_available_from_grid_while_importing(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """The house import comes off the limit; nothing is left for solar."""
+    await setup(hass, entry)
+    limit = float(hass.states.get(EFFECTIVE_LIMIT).state)
+    grid = float(hass.states.get("sensor.test_charger_available_from_grid").state)
+    available = float(
+        hass.states.get("sensor.test_charger_available_for_the_car").state
+    )
+    assert grid == pytest.approx(limit - 500, abs=1)
+    assert available == pytest.approx(grid, abs=1)
+
+
+async def test_ems_active_follows_the_signal(hass: HomeAssistant, sources) -> None:
+    ems = "sensor.test_ems_signal"
+    hass.states.async_set(ems, "0", W)
+    await setup(hass, make_entry(hass, ems_entity=ems))
+    active = "binary_sensor.test_charger_ems_active"
+    assert hass.states.get(active).state == "off"
+    hass.states.async_set(ems, "2300", W)
+    await _tick(hass)
+    assert hass.states.get(active).state == "on"

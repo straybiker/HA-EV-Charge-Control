@@ -401,6 +401,9 @@
       },
       "target_reached": {
         "name": "Doel bereikt"
+      },
+      "ems_active": {
+        "name": "EMS actief"
       }
     },
     "sensor": {
@@ -427,6 +430,9 @@
       },
       "available_power": {
         "name": "Beschikbaar voor de auto"
+      },
+      "available_from_grid": {
+        "name": "Beschikbaar van het net"
       },
       "phase_hold_until": {
         "name": "Fase vastgehouden tot"
