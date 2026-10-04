@@ -101,8 +101,13 @@ class ChargerWriter:
             setpoint = _full_setpoint(output, m)
         if setpoint is not None:
             self.last_setpoint = setpoint
+        if setpoint is not None and not control:
+            LOGGER.debug("Shadow mode: would write %s", setpoint)
+        if setpoint is not None and control and self.busy:
+            LOGGER.debug("A write is still running: %s waits", setpoint)
         if not control or setpoint is None or self.busy:
             return
+        LOGGER.debug("Write %s", setpoint)
         self._retry = False
         self._start(self._write(setpoint, _charger_can_confirm(m)))
 
@@ -110,6 +115,7 @@ class ChargerWriter:
         """Control charger was switched off: hand over the charger once."""
         self.reset()
         action = self._off_action
+        LOGGER.debug("Hand the charger over: %s", action)
         if action == CONTROL_OFF_KEEP:
             return
         if action == CONTROL_OFF_STOP:
@@ -221,6 +227,7 @@ class ChargerWriter:
         return abs(applied - current_a) < tolerance + 1e-9
 
     def _record(self, confirmed: bool) -> None:
+        LOGGER.debug("Write %s", "confirmed" if confirmed else "not confirmed")
         if confirmed:
             if self.failures:
                 LOGGER.info("The charger follows the writes again")
@@ -244,6 +251,7 @@ class ChargerWriter:
     # --- the charger's entities ---------------------------------------------------
 
     async def _set_current(self, current_a: float) -> None:
+        LOGGER.debug("Set %s to %.1f A", self._current_entity, current_a)
         await self._hass.services.async_call(
             _domain(self._current_entity),
             "set_value",
@@ -262,6 +270,9 @@ class ChargerWriter:
             service, data = "set_value", {"entity_id": entity, "value": float(option)}
         else:
             service, data = "select_option", {"entity_id": entity, "option": option}
+        LOGGER.debug(
+            "Set %s for %s phase(s): %s.%s", entity, int(phase), domain, service
+        )
         await self._hass.services.async_call(domain, service, data, blocking=True)
 
     async def _wait_for(

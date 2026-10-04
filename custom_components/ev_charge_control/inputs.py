@@ -65,6 +65,7 @@ from .const import (
     DEFAULT_POWER_UPDATE_THRESHOLD_W,
     DEFAULT_RECALC_INTERVAL_S,
     DEFAULT_VOLTAGE,
+    LOGGER,
     NUMBER_DOMAINS,
 )
 from .engine import (
@@ -153,6 +154,8 @@ class InputReader:
         self._options = dict(options)
         self.last: Measurements | None = None
         self.last_extras: Extras | None = None
+        # Inputs that could not be read, so each change is logged only once.
+        self._unreadable: set[str] = set()
 
     def read_extras(self) -> Extras:
         o = self._options
@@ -235,9 +238,21 @@ class InputReader:
             state = self._state(entity_id)
             raw = state.state if state else None
         try:
-            return float(raw) if raw is not None else None
+            value = float(raw) if raw is not None else None
         except TypeError, ValueError:
-            return None
+            value = None
+        self._log_readable(
+            entity_id if not attribute else f"{entity_id}[{attribute}]", raw, value
+        )
+        return value
+
+    def _log_readable(self, source: str, raw: Any, value: float | None) -> None:
+        if value is None and source not in self._unreadable:
+            self._unreadable.add(source)
+            LOGGER.debug("Input %s cannot be read (%r)", source, raw)
+        elif value is not None and source in self._unreadable:
+            self._unreadable.discard(source)
+            LOGGER.debug("Input %s can be read again: %s", source, value)
 
     def _power(self, entity_id: str | None) -> float | None:
         state = self._state(entity_id)

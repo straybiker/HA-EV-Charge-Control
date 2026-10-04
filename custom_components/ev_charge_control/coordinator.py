@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
-from .engine import Available, Controller, Measurements, Output, Reason
+from .engine import Available, Controller, Measurements, Output, Reason, Settings
 from .engine.average import ChargingAverage
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
@@ -146,6 +147,8 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         average_w = self.average.update(
             now, measurements.charger_power_w, dt_util.as_local(now).date()
         )
+        available = self.controller.available(settings, measurements, now)
+        _log_run(settings, measurements, power_limit_w, output, available)
         self._energy_store.async_delay_save(self._stored_state, _ENERGY_SAVE_DELAY_S)
         return Snapshot(
             output=output,
@@ -157,7 +160,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
                 if measurements.house_power_w is None
                 else max(-measurements.house_power_w, 0.0)
             ),
-            available=self.controller.available(settings, measurements, now),
+            available=available,
             max_current_a=max_a,
             energy=energy,
             average_charging_power_w=average_w,
@@ -167,8 +170,10 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
     def _apply(self, output: Output, measurements: Measurements) -> Output:
         control = bool(self.store.get(CONTROL_CHARGER))
         if self._control_was and not control:
+            LOGGER.debug("Control charger off: handing the charger over")
             self.writer.release(measurements)
         elif control and self._control_was is False:
+            LOGGER.debug("Control charger on: the controller writes from now on")
             self.writer.reset()
         self._control_was = control
         self.writer.spec = self.controller.charger
@@ -229,11 +234,13 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         await self.async_request_refresh()
 
     @callback
-    def _on_event(self, _event: Event[EventStateChangedData]) -> None:
+    def _on_event(self, event: Event[EventStateChangedData]) -> None:
+        LOGGER.debug("%s changed: run now", event.data["entity_id"])
         self._schedule_run()
 
     @callback
-    def _on_setting(self, _key: str) -> None:
+    def _on_setting(self, key: str) -> None:
+        LOGGER.debug("Setting %s changed: run now", key)
         self._schedule_run()
 
     @callback
@@ -242,3 +249,36 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self.config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), name=f"{DOMAIN} run"
         )
+
+
+def _log_run(
+    settings: Settings,
+    m: Measurements,
+    power_limit_w: float,
+    out: Output,
+    available: Available | None,
+) -> None:
+    """One line per run: what the controller read and what it decided."""
+    if not LOGGER.isEnabledFor(logging.DEBUG):
+        return
+    target = (
+        f"{int(out.phase)} x {out.current_a:.1f} A ({out.power_w or 0:.0f} W)"
+        if out.phase is not None and out.current_a is not None
+        else "no setpoint"
+    )
+    LOGGER.debug(
+        "Run: mode %s, %s, house %s W, charger %s W, limit %.0f W, price %s, "
+        "EMS %s W, SOC %s %% -> %s, %s, grid %s, available %s W",
+        settings.mode.value,
+        m.connection.value if m.connection is not None else None,
+        m.house_power_w,
+        m.charger_power_w,
+        power_limit_w,
+        m.price,
+        m.ems_signal_w,
+        m.car_soc,
+        out.reason.value,
+        target,
+        "allowed" if out.grid_allowed else "blocked",
+        None if available is None else round(available.total_w),
+    )

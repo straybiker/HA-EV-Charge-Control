@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 
 import pytest
@@ -433,3 +434,16 @@ async def test_average_charging_power_while_charging(
     await _tick(hass)
     await _tick(hass)
     assert float(hass.states.get(average).state) == pytest.approx(7400, abs=1)
+
+
+async def test_debug_log_shows_each_run(
+    hass: HomeAssistant, sources, entry: MockConfigEntry, caplog
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="custom_components.ev_charge_control")
+    hass.states.async_set(HOUSE_POWER, "unavailable")
+    await setup(hass, entry)
+    assert "Run: mode off" in caplog.text
+    assert f"Input {HOUSE_POWER} cannot be read" in caplog.text
+    hass.states.async_set(HOUSE_POWER, "500", W)
+    await _tick(hass)
+    assert f"Input {HOUSE_POWER} can be read again" in caplog.text

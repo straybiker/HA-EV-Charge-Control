@@ -313,7 +313,33 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |
 | The target current stays at the fallback current. | The maximum current entity has not sent a value since the start. |
 
-For a support request, download the diagnostics from the device page (⋮ → **Download diagnostics**) and attach them to an [issue](https://github.com/straybiker/HA-EV-Charge-Control/issues).
+### Debug logging
+
+Debug logging shows what the controller reads and decides at every run. To turn it on:
+
+1. Go to **Settings → Devices & services → EV Charge Control**.
+2. Select ⋮ → **Enable debug logging**.
+3. Let the problem happen again.
+4. Select ⋮ → **Disable debug logging**. Home Assistant downloads the log.
+
+To keep it on after a restart, add this to `configuration.yaml`:
+
+```yaml
+logger:
+  logs:
+    custom_components.ev_charge_control: debug
+```
+
+The log then shows:
+
+- **Each run:** the charge mode, the connection, the house and charger power, the power limit, the price, the EMS signal and the battery level, then the decision, the target (phases × current and power), whether the grid is allowed and the power available for the car.
+- **Inputs:** an entity that cannot be read, and when it can be read again. Each change is logged once.
+- **Writes:** what shadow mode would write, every value written to the charger, and whether the charger confirmed it.
+- **Triggers:** a setting or the connection that started a run, and Control charger switched on or off.
+
+### Support
+
+For a support request, download the diagnostics from the device page (⋮ → **Download diagnostics**) and attach them to an [issue](https://github.com/straybiker/HA-EV-Charge-Control/issues), together with a debug log if you have one.
 
 ## Roadmap
 
