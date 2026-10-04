@@ -145,7 +145,7 @@ Edit it like any other dashboard; the edits stay. To add or remove it later, sel
 - **Show the dashboard** on adds it; off removes it and your edits.
 - **Rebuild the dashboard** builds it again from the current setup and discards your edits. Use it after you change entities in the setup, or after an update.
 
-The dashboard belongs to the controller: it is not listed under **Settings → Dashboards**, and it is removed with the controller. Home Assistant has no way for an integration to add a regular dashboard.
+The dashboard belongs to the controller. It is listed under **Settings → Dashboards**, but the integration sets its name and icon at every start, and it is removed with the controller. To add, remove or rebuild it, use **Configure**, not the dashboard settings.
 
 ### Taking control of the charger
 

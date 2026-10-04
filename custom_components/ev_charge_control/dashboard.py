@@ -1,10 +1,12 @@
 """The controller's dashboard in the sidebar.
 
-Home Assistant has no public API for an integration to add a dashboard to
-Settings > Dashboards. The integration registers its own Lovelace panel, as
-Lovelace does for each storage dashboard, with the configuration in a store
-of its own. The user can edit it in the UI. The Dashboard option removes it;
-Rebuild dashboard discards the edits and generates it again.
+Home Assistant has no public API for an integration to create a dashboard.
+The integration registers its own Lovelace panel, as Lovelace does for each
+storage dashboard, with the configuration in a store of its own. The panel
+shows in Settings > Dashboards, but it is not an item of Lovelace's
+dashboard collection: its name and icon come from the integration. The user
+can edit it in the UI. The Dashboard option removes it; Rebuild dashboard
+discards the edits and generates it again.
 
 Only built-in cards: a fresh install has no custom cards.
 """
