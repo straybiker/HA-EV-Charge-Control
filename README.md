@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/straybiker/HA-EV-Charge-Control/main/docs/images/hero.png?v=3" alt="EV Charge Control for Home Assistant: take control over your EV charger" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/straybiker/HA-EV-Charge-Control/1493e2a/docs/images/hero.png" alt="EV Charge Control for Home Assistant: take control over your EV charger" width="100%"></p>
 
 [![Tests](https://github.com/straybiker/HA-EV-Charge-Control/actions/workflows/test.yml/badge.svg)](https://github.com/straybiker/HA-EV-Charge-Control/actions/workflows/test.yml)
 [![Validate](https://github.com/straybiker/HA-EV-Charge-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/straybiker/HA-EV-Charge-Control/actions/workflows/validate.yml)
