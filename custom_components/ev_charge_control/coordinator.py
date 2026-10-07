@@ -19,7 +19,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, HARDWARE_MAX_CURRENT, LOGGER
-from .engine import Available, Controller, Measurements, Output, Reason, Settings
+from .engine import (
+    Available,
+    ConnectionState,
+    Controller,
+    Measurements,
+    Output,
+    Reason,
+    Settings,
+)
 from .engine.average import ChargingAverage
 from .engine.energy import EnergyCounter, EnergyTotals
 from .engine.limit import effective_power_limit
@@ -39,6 +47,8 @@ class Snapshot:
     """What one run produced. Entities read their state from it."""
 
     output: Output
+    # As the controller reads it from the connection entity.
+    connection: ConnectionState
     power_limit_w: float
     limit_entity_w: float | None
     # Export of the house, known also when nothing is charging.
@@ -164,6 +174,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self._energy_store.async_delay_save(self._stored_state, _ENERGY_SAVE_DELAY_S)
         return Snapshot(
             output=output,
+            connection=measurements.connection,
             power_limit_w=power_limit_w,
             limit_entity_w=limit_w,
             ems_signal_w=measurements.ems_signal_w,

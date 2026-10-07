@@ -419,6 +419,9 @@
       }
     },
     "binary_sensor": {
+      "car_connected": {
+        "name": "Car connected"
+      },
       "grid_allowed": {
         "name": "Grid allowed"
       },

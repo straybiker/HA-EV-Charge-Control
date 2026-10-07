@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -15,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EvChargeConfigEntry
 from .coordinator import EvChargeCoordinator, Snapshot
+from .engine import ConnectionState
 from .entity import init_entity
 
 
@@ -23,7 +25,21 @@ class OutputBinaryDescription(BinarySensorEntityDescription):
     value_fn: Callable[[Snapshot], bool | None]
 
 
+def _car_connected(s: Snapshot) -> bool | None:
+    """Unknown while the connection entity is unavailable or unreadable."""
+    if s.connection == ConnectionState.CONNECTED:
+        return True
+    if s.connection == ConnectionState.DISCONNECTED:
+        return False
+    return None
+
+
 BINARY_SENSORS: tuple[OutputBinaryDescription, ...] = (
+    OutputBinaryDescription(
+        key="car_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        value_fn=_car_connected,
+    ),
     OutputBinaryDescription(
         key="grid_allowed", value_fn=lambda s: s.output.grid_allowed
     ),

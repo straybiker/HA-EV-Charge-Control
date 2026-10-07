@@ -160,6 +160,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Available for the car, Available from grid, Available from solar | The power the car would get now in the current charge mode, as if it were charging, and its grid and solar parts (W). Mode, price, EMS, power limit and charger limits all count: in Solar mode it is only the export. While the car charges, it equals the target power. Known also without a car. |
 | Decision | EMS active | On while the EMS signal is above 0 W. Unknown when the setup has no EMS entity. |
 | Decision | Decision | The reason. See [decision values](#decision-values). |
+| Decision | Car connected | Whether a car is plugged in, as the controller reads it from the connection entity. Unknown while that entity is unavailable. |
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
 | Decision | Emergency charging, Target reached | Yes/no details of the decision. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
@@ -176,7 +177,7 @@ Settings keep their value after a restart. The controller runs at the recalculat
 
 With **Add a dashboard** on, the controller gets a dashboard in the sidebar. **Dashboard name** sets its name; the default is **EV Charge Control**. With the default name and more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
 
-- **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, a timeline of today's decisions, phases, connection and gates, the settings, the energy charged today and since setup, and the average charging power.
+- **Overview:** live status and what the car draws, the power budget for the current mode, gates and inputs, power today, a timeline of today's decisions, phases, car connection, Mode 3 state and gates, the settings, the energy charged today and since setup, and the average charging power.
 - **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint next to what the package writes to the charger, for the shadow-mode period.
 
 Edit it like any other dashboard; the edits stay. To add or remove it later, select **Configure** on the integration page and go to the last step, **Dashboard**:

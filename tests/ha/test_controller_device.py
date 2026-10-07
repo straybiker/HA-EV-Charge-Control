@@ -456,3 +456,17 @@ async def test_a_non_finite_input_counts_as_unknown(
     await setup(hass, entry)
     await _select(hass, "fast")
     assert hass.states.get(DECISION).state == "failsafe"
+
+
+async def test_car_connected_follows_the_connection(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    connected = "binary_sensor.test_charger_car_connected"
+    await setup(hass, entry)
+    assert hass.states.get(connected).state == "on"  # Mode 3 C2
+    hass.states.async_set(MODE3, "A")
+    await _tick(hass, _DEBOUNCE)
+    assert hass.states.get(connected).state == "off"
+    hass.states.async_set(MODE3, "unavailable")
+    await _tick(hass, _DEBOUNCE)
+    assert hass.states.get(connected).state == "unknown"

@@ -424,7 +424,8 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                         for x in (
                             {"entity": e["decision"], "name": "Decision"},
                             {"entity": e["target_phases"], "name": "Target phases"},
-                            {"entity": o[CONF_CONNECTION], "name": "Connection"},
+                            {"entity": e["car_connected"], "name": "Car connected"},
+                            {"entity": o[CONF_CONNECTION], "name": "Mode 3"},
                             {"entity": e["control_charger"], "name": "Control charger"},
                             {"entity": e["grid_allowed"], "name": "Grid allowed"},
                             {"entity": e["ems_active"], "name": "EMS active"}
