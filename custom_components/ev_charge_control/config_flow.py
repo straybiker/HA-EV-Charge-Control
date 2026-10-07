@@ -16,6 +16,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter, PowerConverter
 
 from . import dashboard
@@ -33,6 +34,7 @@ from .const import (
     CONF_CURRENT_STEP,
     CONF_DASHBOARD,
     CONF_DASHBOARD_REBUILD,
+    CONF_DASHBOARD_REBUILT,
     CONF_DASHBOARD_TITLE,
     CONF_EMS,
     CONF_ENERGY_METER,
@@ -547,13 +549,17 @@ async def _validate_dashboard(
 ) -> dict[str, Any]:
     """Rebuild is an action, not a setting: delete the saved dashboard now.
 
-    The reload after the options flow then builds it again.
+    The reload builds it again. Home Assistant reloads after an options flow
+    only when the options changed, so the rebuild time is saved as an
+    option: a rebuild alone still reloads, after the options are saved.
     """
     if user_input.pop(CONF_DASHBOARD_REBUILD, False):
+        hass = _hass(handler)
         entry_id = _own_entry_id(handler)
-        entry = _hass(handler).config_entries.async_get_entry(entry_id or "")
+        entry = hass.config_entries.async_get_entry(entry_id or "")
         if entry is not None:
-            await dashboard.async_remove(_hass(handler), entry)
+            await dashboard.async_remove(hass, entry)
+        user_input[CONF_DASHBOARD_REBUILT] = dt_util.utcnow().isoformat()
     return user_input
 
 

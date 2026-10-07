@@ -129,6 +129,24 @@ async def test_rebuild_discards_the_edits(
     assert "dashboard_rebuild" not in with_dashboard.options
 
 
+async def test_rebuild_without_other_changes(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    """Home Assistant reloads only when the options change; a rebuild alone
+    must still build the dashboard again."""
+    await setup(hass, with_dashboard)
+    await _options(hass, with_dashboard, {"dashboard": True})
+    await hass.data[LOVELACE_DATA].dashboards[PATH].async_save({"views": []})
+    before = dict(with_dashboard.options)
+    await _options(hass, with_dashboard, {"dashboard": True, "dashboard_rebuild": True})
+    after = dict(with_dashboard.options)
+    # Only the rebuild time changed.
+    assert after.pop("dashboard_rebuilt")
+    assert after == before
+    config = await _config(hass)
+    assert [view["path"] for view in config["views"]] == ["overview"]
+
+
 async def test_option_adds_the_dashboard_later(
     hass: HomeAssistant, sources, lovelace, entry: MockConfigEntry
 ) -> None:
