@@ -21,8 +21,9 @@ from homeassistant.components.lovelace import dashboard as lovelace
 from homeassistant.components.lovelace.const import LOVELACE_DATA, ConfigNotFound
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -152,7 +153,16 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         await board.async_load(False)
     except ConfigNotFound:
-        await board.async_save(build(hass, entry))
+        first = build(hass, entry)
+        await board.async_save(first)
+        if hass.state is not CoreState.running:
+            # During startup the YAML package's template sensors may not
+            # exist yet, which would leave out the shadow view.
+            async def _build_again(_hass: HomeAssistant) -> None:
+                if await board.async_load(False) == first:
+                    await board.async_save(build(hass, entry))
+
+            entry.async_on_unload(async_at_started(hass, _build_again))
 
     dashboards = hass.data[LOVELACE_DATA].dashboards
     dashboards[path] = board

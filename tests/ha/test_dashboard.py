@@ -9,7 +9,8 @@ import pytest
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -186,3 +187,18 @@ async def test_the_user_names_the_dashboard(
     await setup(hass, entry)
     assert _panels(hass)["garage-charger"].sidebar_title == "Garage charger"
     assert PATH not in _panels(hass)
+
+
+async def test_built_at_startup_is_built_again_once_started(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    """The YAML package's template sensors can load after the integration."""
+    hass.set_state(CoreState.not_running)
+    await setup(hass, with_dashboard)
+    assert [view["path"] for view in (await _config(hass))["views"]] == ["overview"]
+    hass.states.async_set("sensor.ev_load_balancer_charger", "Test charger")
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    config = await _config(hass)
+    assert [view["path"] for view in config["views"]] == ["overview", "shadow"]
