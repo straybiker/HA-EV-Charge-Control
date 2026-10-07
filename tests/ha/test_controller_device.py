@@ -22,6 +22,7 @@ from custom_components.ev_charge_control.diagnostics import (
 )
 
 from .conftest import (
+    APPLIED_CURRENT,
     CHARGED,
     CHARGED_GRID,
     CHARGED_SOLAR,
@@ -470,3 +471,38 @@ async def test_car_connected_follows_the_connection(
     hass.states.async_set(MODE3, "unavailable")
     await _tick(hass, _DEBOUNCE)
     assert hass.states.get(connected).state == "unknown"
+
+
+async def test_a_mode3_sub_state_change_waits_for_the_tick(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    """The house power is wrong for a few seconds when the car starts or stops
+    drawing; Mode 3 changes then, but only the timed run decides (B20)."""
+    await setup(hass, entry)
+    await _select(hass, "solar")
+    await _tick(hass)
+    before = hass.states.get(TARGET_CURRENT).state
+    hass.states.async_set(HOUSE_POWER, "-3000", W)
+    hass.states.async_set(MODE3, "B2")
+    await _tick(hass, _DEBOUNCE)
+    assert hass.states.get(TARGET_CURRENT).state == before
+    await _tick(hass)
+    assert hass.states.get(TARGET_CURRENT).state != before
+
+
+async def test_learned_efficiency_survives_a_reload(
+    hass: HomeAssistant, sources
+) -> None:
+    efficiency = "sensor.test_charger_charger_efficiency"
+    entry = make_entry(hass)
+    await setup(hass, entry)
+    hass.states.async_set(APPLIED_CURRENT, "10", {"unit_of_measurement": "A"})
+    hass.states.async_set(CHARGER_POWER, "2070", W)
+    for _ in range(4):
+        await _tick(hass)
+    learned = float(hass.states.get(efficiency).state)
+    assert learned < 100
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    await setup(hass, entry)
+    assert float(hass.states.get(efficiency).state) == learned

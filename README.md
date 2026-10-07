@@ -168,10 +168,10 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
 | Diagnostic | Solar surplus | The house export now (W), also without a car. |
 | Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
-| Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging. Starts again at 100 % after a restart. |
+| Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging, separately for 1 and 3 phases. Shows the value for the target phases. Kept across sessions and restarts. |
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
 
-Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting, the connection or the phase changes.
+Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting or the phase changes, and when the car connects or disconnects. Other changes of the connection entity (for example Mode 3 C1 to C2) wait for the next timed run: at that moment the house power is not reliable.
 
 ### The dashboard
 

@@ -570,21 +570,48 @@ def charging(c, power, now, applied=10.0, phases=Phase.ONE, house=500):
     return c.step(settings(M.FAST), m, now)
 
 
+def eff(c, phases=Phase.ONE):
+    return c.efficiency_state()[str(int(phases))]
+
+
 def test_efficiency_learns_only_when_steady():
     c = Controller(CHARGER, CAR)
-    assert charging(c, 2070, NOW).efficiency == 1.0  # first sample: no history
-    assert charging(c, 2070, NOW).efficiency == pytest.approx(0.97)
-    assert charging(c, 2070, NOW).efficiency == pytest.approx(0.949)
-    changed = charging(c, 2070, NOW, applied=12.0)
-    assert changed.efficiency == pytest.approx(0.949)  # ramp: no learning
+    charging(c, 2070, NOW)
+    assert eff(c) == 1.0  # first sample: no history
+    charging(c, 2070, NOW)
+    assert eff(c) == pytest.approx(0.97)
+    charging(c, 2070, NOW)
+    assert eff(c) == pytest.approx(0.949)
+    charging(c, 2070, NOW, applied=12.0)
+    assert eff(c) == pytest.approx(0.949)  # ramp: no learning
 
 
-def test_efficiency_converges_and_raises_the_current():
+def test_efficiency_is_learned_per_phase_count():
+    c = Controller(CHARGER, CAR)
+    for _ in range(40):
+        charging(c, 2070, NOW)
+    assert eff(c, Phase.ONE) == pytest.approx(0.9, abs=1e-4)
+    assert eff(c, Phase.THREE) == 1.0
+    # The same current on other phases is a change: no sample from the switch.
+    charging(c, 6210, NOW, phases=Phase.THREE)
+    assert eff(c, Phase.THREE) == 1.0
+    charging(c, 6210, NOW, phases=Phase.THREE)
+    assert eff(c, Phase.THREE) == pytest.approx(0.97)
+    assert eff(c, Phase.ONE) == pytest.approx(0.9, abs=1e-4)
+
+
+def test_efficiency_of_the_target_phases_sets_the_current():
+    c = Controller(CHARGER, CAR)
+    for _ in range(40):
+        out = charging(c, 6210, NOW, phases=Phase.THREE)
+    assert out.efficiency == pytest.approx(0.9, abs=1e-4)
+    assert result(out) == (3, 15.2)  # 9500 W / (690 V x 0.9)
+    # A 1-phase efficiency does not change a 3-phase current.
     c = Controller(CHARGER, CAR)
     for _ in range(40):
         out = charging(c, 2070, NOW)
-    assert out.efficiency == pytest.approx(0.9, abs=1e-4)
-    assert result(out) == (3, 15.2)  # 9500 W / (690 V x 0.9)
+    assert out.efficiency == 1.0
+    assert result(out) == (3, 13.7)  # 9500 W / 690 V
 
 
 def test_efficiency_floor():
@@ -597,13 +624,35 @@ def test_efficiency_floor():
 def test_low_power_does_not_teach():
     c = Controller(CHARGER, CAR)
     for _ in range(5):
-        out = charging(c, 900, NOW)
-    assert out.efficiency == 1.0
+        charging(c, 900, NOW)
+    assert eff(c) == 1.0
 
 
-def test_disconnect_resets_efficiency():
+def test_efficiency_survives_an_unplug():
     c = Controller(CHARGER, CAR)
     for _ in range(10):
         charging(c, 2070, NOW)
+    learned = eff(c)
     m = measurements(500, connection=ConnectionState.DISCONNECTED)
-    assert c.step(settings(M.FAST), m, NOW).efficiency == 1.0
+    c.step(settings(M.FAST), m, NOW)
+    assert eff(c) == learned < 1.0
+    # The first sample of the next session is not steady.
+    charging(c, 1900, NOW)
+    assert eff(c) == learned
+
+
+def test_efficiency_is_saved_and_restored():
+    c = Controller(CHARGER, CAR)
+    for _ in range(10):
+        charging(c, 2070, NOW)
+    restored = Controller(CHARGER, CAR)
+    restored.restore_efficiency(c.efficiency_state())
+    assert restored.efficiency_state() == c.efficiency_state()
+
+
+def test_restore_ignores_bad_values():
+    c = Controller(CHARGER, CAR)
+    c.restore_efficiency({"1": 0.5, "3": "x"})
+    assert c.efficiency_state() == {"1": 1.0, "3": 1.0}
+    c.restore_efficiency(None)
+    assert c.efficiency_state() == {"1": 1.0, "3": 1.0}

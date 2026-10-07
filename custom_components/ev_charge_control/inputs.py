@@ -222,10 +222,7 @@ class InputReader:
     def _state(self, entity_id: str | None) -> State | None:
         if not entity_id:
             return None
-        state = self._hass.states.get(entity_id)
-        if state is None or state.state in _INVALID:
-            return None
-        return state
+        return _valid(self._hass.states.get(entity_id))
 
     def _number(
         self, entity_id: str | None, attribute: str | None = None
@@ -283,16 +280,23 @@ class InputReader:
         return value
 
     def _connection(self, entity_id: str) -> ConnectionState:
-        state = self._state(entity_id)
-        if state is None:
-            return ConnectionState.UNKNOWN
-        if entity_id.startswith("binary_sensor."):
-            if state.state == STATE_ON:
-                return ConnectionState.CONNECTED
-            if state.state == STATE_OFF:
-                return ConnectionState.DISCONNECTED
-            return ConnectionState.UNKNOWN
-        return connection_from_mode3(state.state)
+        return _connection_of(entity_id, self._state(entity_id))
+
+    def triggers_run(
+        self, entity_id: str, old: State | None, new: State | None
+    ) -> bool:
+        """Whether a change of an event entity needs an immediate run.
+
+        The connection entity triggers one only when the car connects or
+        disconnects. Mode 3 also changes between its sub-states (B1, C2 …)
+        when the car starts or stops drawing power; at that moment the house
+        power is wrong for a few seconds, so the next timed run decides (B20).
+        """
+        if entity_id != self._options[CONF_CONNECTION]:
+            return True
+        return _connection_of(entity_id, _valid(old)) != _connection_of(
+            entity_id, _valid(new)
+        )
 
     def _phases(
         self, entity_id: str, option_1: str | None, option_3: str | None
@@ -319,6 +323,24 @@ class InputReader:
             # controller writes the 1-phase option back.
             return Phase.THREE
         return None
+
+
+def _valid(state: State | None) -> State | None:
+    if state is None or state.state in _INVALID:
+        return None
+    return state
+
+
+def _connection_of(entity_id: str, state: State | None) -> ConnectionState:
+    if state is None:
+        return ConnectionState.UNKNOWN
+    if entity_id.startswith("binary_sensor."):
+        if state.state == STATE_ON:
+            return ConnectionState.CONNECTED
+        if state.state == STATE_OFF:
+            return ConnectionState.DISCONNECTED
+        return ConnectionState.UNKNOWN
+    return connection_from_mode3(state.state)
 
 
 def _is_option(state: str, option: str | None, numeric: bool) -> bool:

@@ -40,7 +40,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - **Charger maximum.** Read at each run from the max current entity. See [behaviour.md](behaviour.md#charger-maximum).
 - **Writing.** The coordinator gives every output to the writer. A write sequence runs as a background task of the entry, so a slow charger never delays a run; it waits for state changes with a timeout instead of polling. While it runs, later runs write nothing. The rules are in [behaviour.md](behaviour.md#charger-control).
 - **Repair issue.** `charger_not_responding_<entry_id>`, not fixable. Deleted on the first confirmed write, when Control charger is switched off, at setup (it describes the charger before the restart) and when the entry is removed.
-- **Saved state.** One `homeassistant.helpers.storage.Store` per entry holds the `EnergyCounter` totals, the `ChargingAverage` days and **Control charger**. The totals are saved at most every 60 s and on unload; Control charger is saved at once when it changes, so a crash cannot bring a recent "off" back as "on".
+- **Saved state.** One `homeassistant.helpers.storage.Store` per entry holds the `EnergyCounter` totals, the `ChargingAverage` days, the controller's learned efficiencies and **Control charger**. The totals and efficiencies are saved at most every 60 s and on unload; Control charger is saved at once when it changes, so a crash cannot bring a recent "off" back as "on".
 
 ## Entities
 

@@ -75,10 +75,11 @@ Each run applies the first rule that matches.
 
 The ratio of measured charger power to commanded power (`current × voltage × phases`), so the controller can ask for a little more current to use the power it was given.
 
-- Learned as a running average, weight 0.3 per sample.
-- A sample counts only when the applied current was the same as in the previous run and the charger draws more than 1 kW.
+- One value for 1 phase and one for 3 phases: the losses differ (for example 98 % on 1 phase, 95 % on 3). Each power bound and each current uses the value of its phases: the 1-phase minimum uses the 1-phase value; the 3-phase minimum, the maximum and the phase choice use the 3-phase value.
+- Learned as a running average, weight 0.3 per sample, into the value of the active phases.
+- A sample counts only when the applied current and the active phases were the same as in the previous run and the charger draws more than 1 kW.
 - Limited to 0.85–1.0. A car drawing less than its limit would otherwise look like a very inefficient charger.
-- Reset to 1.0 when the car is unplugged.
+- Kept when the car is unplugged and saved across restarts. Each value starts at 1.0 on a new device.
 
 ## Writing
 
@@ -155,9 +156,9 @@ A change to the charging behaviour adds or updates a row here.
 | B3 | PV priority switch | Renamed "Charge on solar when EMS blocks". Its only job: with EMS at 0 W, grid modes charge on solar instead of stopping. |
 | B4 | Stops and phases | A stop keeps the current phase; the phase is chosen when charging restarts. |
 | B5 | Phase hold after restart | Starts only on a real 3→1 change. |
-| B6 | Efficiency learning | Running average, steady samples only, reset on unplug. |
+| B6 | Efficiency learning | Running average, steady samples only. |
 | B7 | Charger quirks | Current step (0.1 A or 1 A) and "widen small decreases" are charger options. |
-| B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and connection changes. Power sensor updates do not trigger a run. |
+| B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and phase changes and when the car connects or disconnects (B20). Power sensor updates do not trigger a run. |
 | B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the power limit is an existing entity; the runtime settings are device entities. |
 | B10 | Power limit | From a required entity (helper or EMS); the EMS, not the integration, makes it follow the monthly peak. Effective limit = peak factor × limit; the optional peak factor is a safety buffer (empty: 100 %). Unavailable: last known value; none yet: no power limit. |
 | B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
@@ -169,3 +170,5 @@ A change to the charging behaviour adds or updates a row here.
 | B17 | Control switched off | Hand the charger over once. Setup option: fallback current and phases (default), leave as it is, or stop (0 A). |
 | B18 | Single-phase charger | The option for 3 phases is optional. Without it, Single phase only is forced on and its switch refuses to turn off; 3-Phases Minimum is refused and the fallback phases must be 1. |
 | B19 | Fast and the price | Fast skips the maximum charging cost: it uses the grid up to the power limit also when the price is high. The EMS and the power limit still apply. Without this, Fast sets the same current as Limited, because both are capped by the headroom under the power limit. |
+| B20 | Mode 3 sub-states | A change between connected sub-states (B1, B2, C1, C2 …) does not trigger a run; only connect and disconnect do. The sub-state changes when the car starts or stops drawing, and the house power (grid minus charger, two meters) is then wrong for a few seconds. A run at that moment can start, stop or switch phases on a false value; the next timed run reads settled values. |
+| B21 | Efficiency per phase count | Learned separately for 1 and 3 phases, kept across sessions and restarts. One shared value, reset on unplug, set the 3-phase threshold with the 1-phase efficiency after each phase switch and started every session at 100 %, so the first minutes asked for too little current. |

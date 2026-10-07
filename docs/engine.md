@@ -14,7 +14,7 @@
 | `limit.py` | The effective power limit: the limit entity's value times the safety factor. |
 | `energy.py` | `EnergyCounter`: charged kWh from a meter or integrated power, split into grid and solar. |
 | `average.py` | `ChargingAverage`: mean charger power above 1000 W over a rolling 60-day window, kept per day. |
-| `controller.py` | `Controller`: the order of rules, plus the state shared between runs (phase hold, grace period, efficiency, unplug timer). |
+| `controller.py` | `Controller`: the order of rules, plus the state shared between runs (phase hold, grace period, efficiency per phase count, unplug timer). `efficiency_state()` and `restore_efficiency()` let the caller save the efficiencies. |
 
 ## API
 

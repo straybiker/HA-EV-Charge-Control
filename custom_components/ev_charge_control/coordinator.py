@@ -69,8 +69,8 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
 
     The coordinator does not poll by itself: a run must not depend on
     whether any entity listens. It runs on its own interval timer and at
-    once when a setting, the connection or the phase changes. Power sensors
-    are read at each run but never trigger one.
+    once when a setting or the phase changes or the car connects or
+    disconnects. Power sensors are read at each run but never trigger one.
 
     The writer gets every run's output. It writes only while Control
     charger is on; switching it off hands the charger over once.
@@ -118,7 +118,8 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
     async def async_load_state(self) -> None:
         """Restore what was saved before the last stop.
 
-        The energy totals, the average and Control charger. The switch is
+        The energy totals, the average, the learned charger efficiencies and
+        Control charger. The switch is
         saved here at once when it changes, not through the entity restore
         state that Home Assistant writes only every 15 minutes: after a crash
         the controller must not write to the charger again because a recent
@@ -127,6 +128,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         state = await self._energy_store.async_load() or {}
         self.energy = EnergyCounter.restore(state)
         self.average = ChargingAverage.restore(state.get("average"))
+        self.controller.restore_efficiency(state.get("efficiency"))
         self.store.set(CONTROL_CHARGER, bool(state.get(CONTROL_CHARGER)), notify=False)
 
     async def async_save_state(self) -> None:
@@ -137,6 +139,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         return {
             **self.energy.state(),
             "average": self.average.state(),
+            "efficiency": self.controller.efficiency_state(),
             CONTROL_CHARGER: bool(self.store.get(CONTROL_CHARGER)),
         }
 
@@ -258,7 +261,12 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
 
     @callback
     def _on_event(self, event: Event[EventStateChangedData]) -> None:
-        LOGGER.debug("%s changed: run now", event.data["entity_id"])
+        entity_id = event.data["entity_id"]
+        if not self.reader.triggers_run(
+            entity_id, event.data["old_state"], event.data["new_state"]
+        ):
+            return
+        LOGGER.debug("%s changed: run now", entity_id)
         self._schedule_run()
 
     @callback

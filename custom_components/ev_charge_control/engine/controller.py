@@ -41,7 +41,7 @@ class Controller:
     """Turns settings and measurements into a charger setpoint.
 
     Create one per charger and call step() on every run. The controller
-    keeps the phase hold, the grace period and the efficiency estimate.
+    keeps the phase hold, the grace period and the efficiency estimates.
     """
 
     def __init__(self, charger: ChargerSpec, car: CarSpec | None = None) -> None:
@@ -50,8 +50,9 @@ class Controller:
         self._last_phase: Phase | None = None
         self._phase_hold_until: datetime | None = None
         self._grace_until: datetime | None = None
-        self._efficiency = 1.0
-        self._last_applied_a: float | None = None
+        # One estimate per phase count: the losses differ (B21).
+        self._efficiency = {Phase.ONE: 1.0, Phase.THREE: 1.0}
+        self._last_sample: tuple[float, Phase] | None = None
         self._disconnected_since: datetime | None = None
 
     def step(self, settings: Settings, m: Measurements, now: datetime) -> Output:
@@ -68,10 +69,21 @@ class Controller:
         return replace(
             out,
             grid_allowed=grid_allowed,
-            efficiency=self._efficiency,
+            efficiency=self._efficiency[_shown_phase(out, m)],
             phase_hold_until=_active(self._phase_hold_until, now),
             grace_until=_active(self._grace_until, now),
         )
+
+    def efficiency_state(self) -> dict[str, float]:
+        """The learned efficiencies, to save between restarts (B21)."""
+        return {str(int(phase)): eff for phase, eff in self._efficiency.items()}
+
+    def restore_efficiency(self, state: dict | None) -> None:
+        """Take saved efficiencies back; values out of range are ignored."""
+        for phase in Phase:
+            value = (state or {}).get(str(int(phase)))
+            if isinstance(value, int | float) and EFFICIENCY_FLOOR <= value <= 1.0:
+                self._efficiency[phase] = float(value)
 
     def available(
         self, settings: Settings, m: Measurements, now: datetime
@@ -98,13 +110,8 @@ class Controller:
         if car_aware and not emergency and soc >= settings.target_soc:
             return nothing
         min_a, max_a = self._current_range(car_aware)
-        eff = self._efficiency
         volts = self.charger.voltage_v
-        limits = Limits(
-            min_1p_w=min_a * volts * eff,
-            min_3p_w=min_a * volts * 3 * eff,
-            max_w=max_a * volts * 3 * eff,
-        )
+        limits = self._limits(min_a, max_a)
         budget = plan(
             settings, m, policy, limits, emergency, grid_gate_open(settings, m, policy)
         )
@@ -115,11 +122,12 @@ class Controller:
         phase = choose_phase(
             policy,
             settings,
-            target_w / (volts * 3 * eff),
+            target_w / (volts * 3 * self._efficiency[Phase.THREE]),
             min_a,
             m.commanded_phase,
             hold_active,
         )
+        eff = self._efficiency[phase]
         current = to_current(
             target_w, phase, self.charger, eff, min_a, max_a, budget.headroom_w
         )
@@ -163,14 +171,14 @@ class Controller:
             self._grace_until = now + GRACE_PERIOD
 
     def _learn_efficiency(self, m: Measurements) -> None:
-        """Running estimate of measured power over commanded power (B4).
+        """Running estimate of measured power over commanded power (B6).
 
-        Learns only while the applied current is steady, so ramps after a
-        setpoint change do not count.
+        One estimate per phase count, kept across sessions (B21). Learns only
+        while the applied current and the phases are steady, so ramps after a
+        setpoint or phase change do not count.
         """
         if m.connection != ConnectionState.CONNECTED:
-            self._efficiency = 1.0
-            self._last_applied_a = None
+            self._last_sample = None
             return
         applied, power, phases = (
             m.applied_current_a,
@@ -179,13 +187,14 @@ class Controller:
         )
         if applied is None or power is None or phases is None:
             return
-        steady = applied == self._last_applied_a
-        self._last_applied_a = applied
+        steady = (applied, phases) == self._last_sample
+        self._last_sample = (applied, phases)
         if not steady or applied <= 0 or power <= EFFICIENCY_MIN_POWER_W:
             return
         sample = power / (applied * self.charger.voltage_v * int(phases))
         sample = min(max(sample, EFFICIENCY_FLOOR), 1.0)
-        self._efficiency += EFFICIENCY_SMOOTHING * (sample - self._efficiency)
+        eff = self._efficiency[phases]
+        self._efficiency[phases] = eff + EFFICIENCY_SMOOTHING * (sample - eff)
 
     def _policy(
         self, settings: Settings, m: Measurements, car_aware: bool
@@ -250,25 +259,26 @@ class Controller:
                 target_reached=True,
             )
 
-        eff = self._efficiency
         volts = self.charger.voltage_v
-        limits = Limits(
-            min_1p_w=min_a * volts * eff,
-            min_3p_w=min_a * volts * 3 * eff,
-            max_w=max_a * volts * 3 * eff,
-        )
+        limits = self._limits(min_a, max_a)
         budget = plan(settings, m, policy, limits, emergency, gate_open)
         target_w = min(budget.request_w, budget.headroom_w, limits.max_w)
 
         hold_active = (
             self._phase_hold_until is not None and now < self._phase_hold_until
         )
-        current_3p = target_w / (volts * 3 * eff)
+        current_3p = target_w / (volts * 3 * self._efficiency[Phase.THREE])
         phase = choose_phase(
             policy, settings, current_3p, min_a, m.commanded_phase, hold_active
         )
         current = to_current(
-            target_w, phase, self.charger, eff, min_a, max_a, budget.headroom_w
+            target_w,
+            phase,
+            self.charger,
+            self._efficiency[phase],
+            min_a,
+            max_a,
+            budget.headroom_w,
         )
 
         if current > 0:
@@ -336,6 +346,16 @@ class Controller:
             )
         return self.charger.min_current_a, self.charger.max_current_a
 
+    def _limits(self, min_a: float, max_a: float) -> Limits:
+        """Charger power bounds, each with the efficiency of its phases."""
+        volts = self.charger.voltage_v
+        eff1, eff3 = self._efficiency[Phase.ONE], self._efficiency[Phase.THREE]
+        return Limits(
+            min_1p_w=min_a * volts * eff1,
+            min_3p_w=min_a * volts * 3 * eff3,
+            max_w=max_a * volts * 3 * eff3,
+        )
+
     def _result(
         self,
         reason: Reason,
@@ -355,13 +375,14 @@ class Controller:
             min_a,
             settings.power_update_threshold_w,
         )
-        power = current * self.charger.voltage_v * int(phase) * self._efficiency
+        eff = self._efficiency[phase]
+        power = current * self.charger.voltage_v * int(phase) * eff
         return Output(
             reason=reason,
             phase=phase,
             current_a=current,
             power_w=power,
-            efficiency=self._efficiency,
+            efficiency=eff,
             setpoint=setpoint,
             **extra,
         )
@@ -371,6 +392,12 @@ def _skipped(reason: Reason) -> Output:
     return Output(
         reason=reason, phase=None, current_a=None, power_w=None, efficiency=1.0
     )
+
+
+def _shown_phase(out: Output, m: Measurements) -> Phase:
+    """The phases whose efficiency the output shows: the target's, else the
+    charger's, else 1."""
+    return out.phase or m.active_phases or m.commanded_phase or Phase.ONE
 
 
 def _active(deadline: datetime | None, now: datetime) -> datetime | None:
