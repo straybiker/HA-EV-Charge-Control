@@ -415,6 +415,29 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 span=3,
             ),
             _section(
+                _heading("Decisions today", "mdi:timeline-text-outline"),
+                {
+                    "type": "history-graph",
+                    "hours_to_show": 24,
+                    "entities": [
+                        x
+                        for x in (
+                            {"entity": e["decision"], "name": "Decision"},
+                            {"entity": e["target_phases"], "name": "Target phases"},
+                            {"entity": o[CONF_CONNECTION], "name": "Connection"},
+                            {"entity": e["control_charger"], "name": "Control charger"},
+                            {"entity": e["grid_allowed"], "name": "Grid allowed"},
+                            {"entity": e["ems_active"], "name": "EMS active"}
+                            if ems
+                            else None,
+                        )
+                        if x
+                    ],
+                    "grid_options": {"columns": "full", "rows": "auto"},
+                },
+                span=3,
+            ),
+            _section(
                 _heading("Configuration", "mdi:cog"),
                 _tile(
                     e["control_charger"],
