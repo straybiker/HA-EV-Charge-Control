@@ -435,7 +435,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _tile(o[CONF_HOUSE_POWER], "House without charger", 4),
             ),
             _section(
-                _heading("Gates and inputs", "mdi:gate"),
+                _heading("Gates and inputs", "mdi:traffic-light"),
                 _markdown(_car_state(o)),
                 _tile(e["grid_allowed"], "Grid allowed"),
                 _tile(e["ems_active"], "EMS active") if ems else None,
