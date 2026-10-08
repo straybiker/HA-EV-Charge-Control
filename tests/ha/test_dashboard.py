@@ -72,6 +72,9 @@ async def test_shadow_view_with_the_yaml_package(
     await setup(hass, with_dashboard)
     config = await _config(hass)
     assert [view["path"] for view in config["views"]] == ["overview", "shadow"]
+    shadow = json.dumps(config["views"][1])
+    assert "Power: shadow target vs charger" in shadow
+    assert HOUSE_POWER in shadow
 
 
 async def test_no_dashboard_without_the_option(

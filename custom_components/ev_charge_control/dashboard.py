@@ -573,6 +573,26 @@ def _shadow(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                     "grid_options": {"columns": "full", "rows": 5},
                 },
                 {
+                    # Charger power is what the YAML package makes the car
+                    # draw; the house power shows the room the target had.
+                    "type": "history-graph",
+                    "title": "Power: shadow target vs charger",
+                    "hours_to_show": 24,
+                    "entities": [
+                        {"entity": e["target_power"], "name": "Shadow target"},
+                        {"entity": o[CONF_CHARGER_POWER], "name": "Charger (YAML)"},
+                        {
+                            "entity": o[CONF_HOUSE_POWER],
+                            "name": "House without charger",
+                        },
+                        {
+                            "entity": e["effective_power_limit"],
+                            "name": "Effective limit",
+                        },
+                    ],
+                    "grid_options": {"columns": "full", "rows": 5},
+                },
+                {
                     "type": "history-graph",
                     "title": "Decisions and phases",
                     "hours_to_show": 24,
