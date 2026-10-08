@@ -506,3 +506,31 @@ async def test_learned_efficiency_survives_a_reload(
     await hass.async_block_till_done()
     await setup(hass, entry)
     assert float(hass.states.get(efficiency).state) == learned
+
+
+async def test_total_power_is_house_plus_charger(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    hass.states.async_set(CHARGER_POWER, "2300", W)
+    await setup(hass, entry)
+    assert hass.states.get("sensor.test_charger_total_power").state == "2800"
+
+
+async def test_import_price_reads_the_attribute_with_a_unit(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set("sensor.test_price", "1.2", {"rate_import": 0.2606})
+    entry = make_entry(
+        hass, price_entity="sensor.test_price", price_attribute="rate_import"
+    )
+    await setup(hass, entry)
+    state = hass.states.get("sensor.test_charger_import_price")
+    assert float(state.state) == pytest.approx(0.2606)
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+
+async def test_no_import_price_without_a_price_entity(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    await setup(hass, entry)
+    assert hass.states.get("sensor.test_charger_import_price") is None

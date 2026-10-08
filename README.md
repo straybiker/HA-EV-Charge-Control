@@ -167,6 +167,8 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Energy | Average charging power (W) | The mean charger power while charging above 1000 W, over the last 60 days: energy ÷ charging time. The speed your car usually charges at, for planning by an EMS. Unknown until the car has charged. |
 | Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
 | Diagnostic | Solar surplus | The house export now (W), also without a car. |
+| Diagnostic | Import price | The price the controller reads, in the currency of Home Assistant per kWh, like **Maximum charging cost**. Only with a price entity in the setup. |
+| Diagnostic | Total power | The house including the charger: house power plus charger power, as measured (W). |
 | Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
 | Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging, separately for 1 and 3 phases. Shows the value for the target phases. Kept across sessions and restarts. |
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |

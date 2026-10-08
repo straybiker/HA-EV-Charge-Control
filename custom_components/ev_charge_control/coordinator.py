@@ -53,6 +53,10 @@ class Snapshot:
     limit_entity_w: float | None
     # Export of the house, known also when nothing is charging.
     solar_surplus_w: float | None
+    # House including the charger, as measured.
+    total_power_w: float | None
+    # The import price the controller read, per kWh.
+    price: float | None
     # What the car would take now in the current mode, also without a car.
     available: Available | None
     # None when the setup has no EMS entity.
@@ -186,6 +190,13 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
                 if measurements.house_power_w is None
                 else max(-measurements.house_power_w, 0.0)
             ),
+            total_power_w=(
+                None
+                if measurements.house_power_w is None
+                or measurements.charger_power_w is None
+                else measurements.house_power_w + measurements.charger_power_w
+            ),
+            price=measurements.price,
             available=available,
             max_current_a=max_a,
             energy=energy,

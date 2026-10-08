@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EvChargeConfigEntry
+from .const import CONF_PRICE
 from .coordinator import EvChargeCoordinator, Snapshot
 from .engine import Reason
 from .entity import init_entity
@@ -36,6 +37,10 @@ class OutputSensorDescription(SensorEntityDescription):
 
 def _solar_surplus(s: Snapshot) -> int | None:
     return None if s.solar_surplus_w is None else round(s.solar_surplus_w)
+
+
+def _total_power(s: Snapshot) -> int | None:
+    return None if s.total_power_w is None else round(s.total_power_w)
 
 
 def _car_from_grid(s: Snapshot) -> int | None:
@@ -120,6 +125,22 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_solar_surplus,
     ),
+    OutputSensorDescription(
+        key="total_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_total_power,
+    ),
+    # The unit is the currency per kWh, set at setup like Maximum charging cost.
+    OutputSensorDescription(
+        key="import_price",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda s: s.price,
+    ),
     # The key stays grid_share so existing entity IDs do not change.
     OutputSensorDescription(
         key="grid_share",
@@ -201,7 +222,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    async_add_entities(OutputSensor(coordinator, entry, d) for d in SENSORS)
+    price_unit = f"{hass.config.currency}/kWh"
+    descriptions = []
+    for d in SENSORS:
+        if d.key == "import_price":
+            # Without a price entity there is no price to show.
+            if not entry.options.get(CONF_PRICE):
+                continue
+            d = replace(d, native_unit_of_measurement=price_unit)
+        descriptions.append(d)
+    async_add_entities(OutputSensor(coordinator, entry, d) for d in descriptions)
 
 
 class OutputSensor(CoordinatorEntity[EvChargeCoordinator], SensorEntity):

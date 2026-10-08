@@ -451,6 +451,12 @@
       "solar_surplus": {
         "name": "Solar surplus"
       },
+      "total_power": {
+        "name": "Total power"
+      },
+      "import_price": {
+        "name": "Import price"
+      },
       "grid_share": {
         "name": "Car from grid"
       },

@@ -451,6 +451,12 @@
       "solar_surplus": {
         "name": "Zonne-overschot"
       },
+      "total_power": {
+        "name": "Totaal vermogen"
+      },
+      "import_price": {
+        "name": "Importprijs"
+      },
       "grid_share": {
         "name": "Auto van het net"
       },

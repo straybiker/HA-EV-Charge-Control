@@ -43,7 +43,6 @@ from .const import (
     CONF_PHASE_SELECT,
     CONF_POWER_LIMIT,
     CONF_PRICE,
-    CONF_PRICE_ATTRIBUTE,
     CONF_SOLAR_POWER,
     DOMAIN,
     LOGGER,
@@ -378,8 +377,9 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
             _section(
                 _heading("Live", "mdi:lightning-bolt"),
                 _markdown(_live(e, o)),
-                _tile(e["grid_share"], "Target from grid", color="blue"),
-                _tile(e["car_from_solar"], "Target from solar", color="amber"),
+                _tile(e["grid_share"], "From grid", 4, color="blue"),
+                _tile(e["car_from_solar"], "From solar", 4, color="amber"),
+                _tile(e["total_power"], "Total power", 4),
             ),
             _section(
                 _heading("Power budget", "mdi:scale-balance"),
@@ -410,17 +410,9 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _heading("Gates and inputs", "mdi:gate"),
                 _tile(e["grid_allowed"], "Grid allowed"),
                 _tile(e["ems_active"], "EMS active") if ems else None,
-                _tile(
-                    price,
-                    "Import price",
-                    **(
-                        {"state_content": o[CONF_PRICE_ATTRIBUTE]}
-                        if o.get(CONF_PRICE_ATTRIBUTE)
-                        else {}
-                    ),
-                )
-                if price
-                else None,
+                # The integration's own sensor: it reads the attribute when
+                # the setup names one, and it has a unit.
+                _tile(e["import_price"], "Import price") if price else None,
                 _tile(e["charger_efficiency"], "Charger efficiency"),
                 _tile(o[CONF_POWER_LIMIT], "Power limit"),
             ),
@@ -591,6 +583,7 @@ def _shadow(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                     "entities": [
                         {"entity": e["target_power"], "name": "Shadow target"},
                         {"entity": o[CONF_CHARGER_POWER], "name": "Charger (YAML)"},
+                        {"entity": e["total_power"], "name": "Total power"},
                         {
                             "entity": o[CONF_HOUSE_POWER],
                             "name": "House without charger",
