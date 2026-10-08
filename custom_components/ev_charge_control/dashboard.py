@@ -240,10 +240,11 @@ def build(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
 
 
 def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
-    """What the car draws now, then what the controller targets.
+    """The power and the target setpoint.
 
-    The big number is the measured charger power, not the target: in shadow
-    mode the two differ, and the target must not read as real charging.
+    With Control charger on, the big number is the measured charger power.
+    In shadow mode nothing is written, so it is the target power, marked
+    virtual so it does not read as real charging.
     """
     charger = o[CONF_CHARGER_POWER]
     text = (
@@ -256,14 +257,14 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         f"{{% set a = states('{e['target_current']}') %}}"
         f"{{% set ph = states('{e['target_phases']}') %}}"
         "### {% if shadow %}Shadow mode · {% endif %}{{ d }} · {{ mode }}\n"
-        "# {{ (w / 1000) | round(1) }} kW\n"
+        "{% if shadow %}# {{ (p / 1000) | round(1) }} kW (Virtual)\n"
+        "{% else %}# {{ (w / 1000) | round(1) }} kW\n{% endif %}"
         "{% set has_setpoint = a | is_number and ph | is_number and (a | float) > 0 %}"
         f"{{% if has_setpoint and states('{e['decision']}') == 'not_connected' %}}"
         "Next session starts at **{{ ph }} × {{ a | float | round(1) }} A**"
         "{% elif has_setpoint %}"
-        "Target **{{ ph }} × {{ a | float | round(1) }} A** "
-        "({{ (p / 1000) | round(1) }} kW)"
-        "{% if shadow %}, not written: Control charger is off{% endif %}"
+        "Target **{{ ph }} × {{ a | float | round(1) }} A**"
+        "{% if not shadow %} ({{ (p / 1000) | round(1) }} kW){% endif %}"
         "{% else %}No target setpoint{% endif %}"
     )
     if soc := o.get(CONF_CAR_SOC):
@@ -407,8 +408,6 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                     ],
                     "grid_options": {"columns": "full"},
                 },
-                _tile(e["available_from_grid"], "Available from grid", color="blue"),
-                _tile(e["available_from_solar"], "Available from solar", color="amber"),
                 _tile(e["effective_power_limit"], "Effective limit", 4),
                 _tile(e["solar_surplus"], "Solar surplus", 4),
                 _tile(o[CONF_HOUSE_POWER], "House without charger", 4),
