@@ -260,7 +260,6 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         f"{{% set label = {_MODE3_LABELS} %}}"
         "### {% if shadow %}Shadow mode · {% endif %}{{ d }} · {{ mode }}\n"
         "# {{ (w / 1000) | round(1) }} kW\n"
-        "Drawn by the car now\n\n"
         "{% set has_setpoint = a | is_number and ph | is_number and (a | float) > 0 %}"
         f"{{% if has_setpoint and states('{e['decision']}') == 'not_connected' %}}"
         "Next session starts at **{{ ph }} × {{ a | float | round(1) }} A**"
