@@ -241,23 +241,34 @@ def build(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
 
 
 def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
-    connection = o[CONF_CONNECTION]
+    """What the car draws now, then what the controller targets.
+
+    The big number is the measured charger power, not the target: in shadow
+    mode the two differ, and the target must not read as real charging.
+    """
+    connection, charger = o[CONF_CONNECTION], o[CONF_CHARGER_POWER]
     text = (
         f"{{% set d = state_translated('{e['decision']}') %}}"
         f"{{% set mode = state_translated('{e['charge_mode']}') %}}"
+        f"{{% set shadow = is_state('{e['control_charger']}', 'off') %}}"
+        f"{{% set w = states('{charger}') | float(0) * (1000 if "
+        f"state_attr('{charger}', 'unit_of_measurement') == 'kW' else 1) %}}"
         f"{{% set p = states('{e['target_power']}') | float(0) %}}"
         f"{{% set a = states('{e['target_current']}') %}}"
         f"{{% set ph = states('{e['target_phases']}') %}}"
         f"{{% set c = states('{connection}') %}}"
         f"{{% set label = {_MODE3_LABELS} %}}"
-        "### {{ d }} · {{ mode }}\n"
-        "# {{ (p / 1000) | round(1) }} kW\n"
+        "### {% if shadow %}Shadow mode · {% endif %}{{ d }} · {{ mode }}\n"
+        "# {{ (w / 1000) | round(1) }} kW\n"
+        "Drawn by the car now\n\n"
         "{% set has_setpoint = a | is_number and ph | is_number and (a | float) > 0 %}"
         f"{{% if has_setpoint and states('{e['decision']}') == 'not_connected' %}}"
         "Next session starts at **{{ ph }} × {{ a | float | round(1) }} A**"
         "{% elif has_setpoint %}"
-        "**{{ ph }} × {{ a | float | round(1) }} A** target setpoint"
-        "{% else %}Not charging{% endif %}\n\n"
+        "Target **{{ ph }} × {{ a | float | round(1) }} A** "
+        "({{ (p / 1000) | round(1) }} kW)"
+        "{% if shadow %}, not written: Control charger is off{% endif %}"
+        "{% else %}No target setpoint{% endif %}\n\n"
         f"{{{{ label.get(c, state_translated('{connection}')) }}}}"
     )
     if soc := o.get(CONF_CAR_SOC):
@@ -368,8 +379,8 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
             _section(
                 _heading("Live", "mdi:lightning-bolt"),
                 _markdown(_live(e, o)),
-                _tile(e["grid_share"], "Car from grid", color="blue"),
-                _tile(e["car_from_solar"], "Car from solar", color="amber"),
+                _tile(e["grid_share"], "Target from grid", color="blue"),
+                _tile(e["car_from_solar"], "Target from solar", color="amber"),
             ),
             _section(
                 _heading("Power budget", "mdi:scale-balance"),
