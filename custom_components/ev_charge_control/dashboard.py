@@ -279,6 +279,28 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     return text
 
 
+def _total_power(e: Mapping[str, str]) -> list[dict]:
+    """Total power, red above the effective limit.
+
+    A tile colour cannot follow a template, so two tiles with opposite
+    visibility: the threshold of a numeric_state condition may be an entity.
+    """
+    above = {
+        "condition": "numeric_state",
+        "entity": e["total_power"],
+        "above": e["effective_power_limit"],
+    }
+    return [
+        _tile(e["total_power"], "Total power", 4, color="red", visibility=[above]),
+        _tile(
+            e["total_power"],
+            "Total power",
+            4,
+            visibility=[{"condition": "not", "conditions": [above]}],
+        ),
+    ]
+
+
 def _car_state(o: Mapping[str, Any]) -> str:
     """The connection entity in words: a tile would show the bare Mode 3 code."""
     connection = o[CONF_CONNECTION]
@@ -387,7 +409,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _markdown(_live(e, o)),
                 _tile(e["grid_share"], "From grid", 4, color="blue"),
                 _tile(e["car_from_solar"], "From solar", 4, color="amber"),
-                _tile(e["total_power"], "Total power", 4),
+                *_total_power(e),
             ),
             _section(
                 _heading("Power budget", "mdi:scale-balance"),
