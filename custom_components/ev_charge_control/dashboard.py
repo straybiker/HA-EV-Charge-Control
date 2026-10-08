@@ -394,6 +394,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _tile(e["available_power"], "Available for the car", 12),
                 {
                     "type": "distribution",
+                    "title": "Grid and solar split",
                     "entities": [
                         {
                             "entity": e["available_from_grid"],
