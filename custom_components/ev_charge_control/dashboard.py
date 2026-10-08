@@ -245,7 +245,7 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     The big number is the measured charger power, not the target: in shadow
     mode the two differ, and the target must not read as real charging.
     """
-    connection, charger = o[CONF_CONNECTION], o[CONF_CHARGER_POWER]
+    charger = o[CONF_CHARGER_POWER]
     text = (
         f"{{% set d = state_translated('{e['decision']}') %}}"
         f"{{% set mode = state_translated('{e['charge_mode']}') %}}"
@@ -255,8 +255,6 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         f"{{% set p = states('{e['target_power']}') | float(0) %}}"
         f"{{% set a = states('{e['target_current']}') %}}"
         f"{{% set ph = states('{e['target_phases']}') %}}"
-        f"{{% set c = states('{connection}') %}}"
-        f"{{% set label = {_MODE3_LABELS} %}}"
         "### {% if shadow %}Shadow mode · {% endif %}{{ d }} · {{ mode }}\n"
         "# {{ (w / 1000) | round(1) }} kW\n"
         "{% set has_setpoint = a | is_number and ph | is_number and (a | float) > 0 %}"
@@ -266,8 +264,7 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         "Target **{{ ph }} × {{ a | float | round(1) }} A** "
         "({{ (p / 1000) | round(1) }} kW)"
         "{% if shadow %}, not written: Control charger is off{% endif %}"
-        "{% else %}No target setpoint{% endif %}\n\n"
-        f"{{{{ label.get(c, state_translated('{connection}')) }}}}"
+        "{% else %}No target setpoint{% endif %}"
     )
     if soc := o.get(CONF_CAR_SOC):
         text += (
@@ -279,6 +276,16 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
             f" · Target {{{{ states('{e['target_soc']}') | int(0) }}}} %"
         )
     return text
+
+
+def _car_state(o: Mapping[str, Any]) -> str:
+    """The connection entity in words: a tile would show the bare Mode 3 code."""
+    connection = o[CONF_CONNECTION]
+    return (
+        f"{{% set c = states('{connection}') %}}"
+        f"{{% set label = {_MODE3_LABELS} %}}"
+        f"Car: **{{{{ label.get(c, state_translated('{connection}')) }}}}**"
+    )
 
 
 def _control_badges(e: Mapping[str, str]) -> list[dict]:
@@ -408,6 +415,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
             ),
             _section(
                 _heading("Gates and inputs", "mdi:gate"),
+                _markdown(_car_state(o)),
                 _tile(e["grid_allowed"], "Grid allowed"),
                 _tile(e["ems_active"], "EMS active") if ems else None,
                 # The integration's own sensor: it reads the attribute when
