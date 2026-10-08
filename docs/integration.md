@@ -30,7 +30,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 | `select.py`, `number.py`, `switch.py` | Setting entities. They restore their last value and write it into the `SettingsStore`. |
 | `sensor.py`, `binary_sensor.py` | Decision, energy and diagnostic entities. Each reads one value from the `Snapshot`. |
 | `diagnostics.py` | Options (name redacted), settings, tuning, the latest inputs and snapshot, the energy state, the last setpoint and the writer state. |
-| `watch.py` | `InputWatcher`: repair issues when a source entity is renamed (with the new ID as a proposal) or does not exist. It never changes the setup. |
+| `watch.py` | `InputWatcher`: repair issues when a source entity is renamed (with the new ID as a proposal) or does not exist. Missing entities are checked 10 minutes after Home Assistant has started, and a missing-entity issue closes when the entity appears. It never changes the setup. |
 
 ## Runtime
 

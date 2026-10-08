@@ -5,15 +5,27 @@ the controller reads nothing and falls back to the fail-safe. The watcher
 says so with a repair issue, and proposes the new ID after a rename. It
 never changes the setup itself: the user confirms the new entity in
 Configure.
+
+Some sources appear only some time after a start: an EMS such as EMHASS
+publishes its sensors after its first run. The check for missing entities
+therefore waits, and a missing-entity issue closes when the entity appears.
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_call_later,
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.translation import async_get_translations
 
 from .const import (
@@ -37,6 +49,10 @@ from .const import (
 
 RENAMED = "input_renamed"
 MISSING = "input_missing"
+
+# How long after Home Assistant has started a source may still be missing
+# before it is reported.
+MISSING_GRACE = timedelta(minutes=10)
 
 # Option key -> the options-flow step that sets it, for the issue text.
 STEPS: dict[str, str] = {
@@ -77,11 +93,38 @@ class InputWatcher:
         self._roles: dict[str, str] = {
             entry.options[key]: key for key in STEPS if entry.options.get(key)
         }
-        self._unsubscribe = None
+        self._unsubscribe: list[CALLBACK_TYPE] = []
 
     async def async_start(self) -> None:
-        """Check the entities now and follow the entity registry from here on."""
+        """Follow the entity registry from now on; check for missing entities
+        once Home Assistant has started and the grace time has passed."""
         async_delete_issues(self._hass, self._entry)
+        self._unsubscribe = [
+            async_track_entity_registry_updated_event(
+                self._hass, list(self._roles), self._on_registry
+            ),
+            async_track_state_change_event(
+                self._hass, list(self._roles), self._on_state
+            ),
+        ]
+        # Runs _on_started at once when Home Assistant is already running, so
+        # the list must exist before it adds the timer to it.
+        self._unsubscribe.append(async_at_started(self._hass, self._on_started))
+
+    @callback
+    def stop(self) -> None:
+        for unsubscribe in self._unsubscribe:
+            unsubscribe()
+        self._unsubscribe = []
+        async_delete_issues(self._hass, self._entry)
+
+    @callback
+    def _on_started(self, _hass: HomeAssistant) -> None:
+        self._unsubscribe.append(
+            async_call_later(self._hass, MISSING_GRACE, self._check_missing)
+        )
+
+    async def _check_missing(self, _now: datetime) -> None:
         registry = er.async_get(self._hass)
         for entity_id, key in self._roles.items():
             if (
@@ -89,16 +132,16 @@ class InputWatcher:
                 and registry.async_get(entity_id) is None
             ):
                 await self._raise(MISSING, key, old=entity_id)
-        self._unsubscribe = async_track_entity_registry_updated_event(
-            self._hass, list(self._roles), self._on_registry
-        )
 
     @callback
-    def stop(self) -> None:
-        if self._unsubscribe is not None:
-            self._unsubscribe()
-            self._unsubscribe = None
-        async_delete_issues(self._hass, self._entry)
+    def _on_state(self, event: Event[EventStateChangedData]) -> None:
+        """A source that appears closes its missing-entity issue."""
+        if event.data["old_state"] is not None or event.data["new_state"] is None:
+            return
+        entity_id = event.data["entity_id"]
+        ir.async_delete_issue(
+            self._hass, DOMAIN, issue_id(MISSING, self._entry, self._roles[entity_id])
+        )
 
     @callback
     def _on_registry(self, event: Event[er.EventEntityRegistryUpdatedData]) -> None:

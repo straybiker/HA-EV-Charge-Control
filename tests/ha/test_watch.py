@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.ev_charge_control.const import DOMAIN
-from custom_components.ev_charge_control.watch import MISSING, RENAMED, issue_id
+from custom_components.ev_charge_control.watch import (
+    MISSING,
+    MISSING_GRACE,
+    RENAMED,
+    issue_id,
+)
 
 from .conftest import W, make_entry, setup
 
@@ -17,6 +28,12 @@ SOLAR = "sensor.test_solar"
 
 def _issue(hass: HomeAssistant, kind: str, entry: MockConfigEntry, key: str):
     return ir.async_get(hass).async_get_issue(DOMAIN, issue_id(kind, entry, key))
+
+
+async def _after_grace(hass: HomeAssistant) -> None:
+    later = dt_util.utcnow() + MISSING_GRACE + timedelta(seconds=1)
+    async_fire_time_changed(hass, later)
+    await hass.async_block_till_done()
 
 
 def _registered_solar(hass: HomeAssistant) -> er.RegistryEntry:
@@ -31,6 +48,9 @@ def _registered_solar(hass: HomeAssistant) -> er.RegistryEntry:
 async def test_a_missing_entity_raises_an_issue(hass: HomeAssistant, sources) -> None:
     entry = make_entry(hass, solar_power_entity="sensor.gone")
     await setup(hass, entry)
+    # Not before the grace time: a source can appear after a start.
+    assert _issue(hass, MISSING, entry, "solar_power_entity") is None
+    await _after_grace(hass)
     issue = _issue(hass, MISSING, entry, "solar_power_entity")
     assert issue is not None
     assert issue.translation_placeholders["old"] == "sensor.gone"
@@ -85,6 +105,39 @@ async def test_issues_close_when_the_setup_points_at_the_new_entity(
 async def test_unload_removes_the_issues(hass: HomeAssistant, sources) -> None:
     entry = make_entry(hass, solar_power_entity="sensor.gone")
     await setup(hass, entry)
+    await _after_grace(hass)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+    assert _issue(hass, MISSING, entry, "solar_power_entity") is None
+
+
+async def test_a_source_that_appears_in_time_raises_nothing(
+    hass: HomeAssistant, sources
+) -> None:
+    """An EMS publishes its sensors only after its first run."""
+    entry = make_entry(hass, solar_power_entity="sensor.late")
+    await setup(hass, entry)
+    hass.states.async_set("sensor.late", "1000", W)
+    await _after_grace(hass)
+    assert _issue(hass, MISSING, entry, "solar_power_entity") is None
+
+
+async def test_a_missing_issue_closes_when_the_entity_appears(
+    hass: HomeAssistant, sources
+) -> None:
+    entry = make_entry(hass, solar_power_entity="sensor.late")
+    await setup(hass, entry)
+    await _after_grace(hass)
+    assert _issue(hass, MISSING, entry, "solar_power_entity") is not None
+    hass.states.async_set("sensor.late", "1000", W)
+    await hass.async_block_till_done()
+    assert _issue(hass, MISSING, entry, "solar_power_entity") is None
+
+
+async def test_unload_cancels_the_missing_check(hass: HomeAssistant, sources) -> None:
+    entry = make_entry(hass, solar_power_entity="sensor.gone")
+    await setup(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    await _after_grace(hass)
     assert _issue(hass, MISSING, entry, "solar_power_entity") is None
