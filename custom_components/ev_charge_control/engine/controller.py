@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime, timedelta
+from typing import Any
 
 from .budget import Limits, ems_stops_charging, grid_gate_open, plan
 from .model import (
@@ -78,7 +79,7 @@ class Controller:
         """The learned efficiencies, to save between restarts (B21)."""
         return {str(int(phase)): eff for phase, eff in self._efficiency.items()}
 
-    def restore_efficiency(self, state: dict | None) -> None:
+    def restore_efficiency(self, state: dict[str, Any] | None) -> None:
         """Take saved efficiencies back; values out of range are ignored."""
         for phase in Phase:
             value = (state or {}).get(str(int(phase)))
@@ -364,7 +365,7 @@ class Controller:
         settings: Settings,
         m: Measurements,
         min_a: float,
-        **extra,
+        **extra: Any,
     ) -> Output:
         setpoint = filter_write(
             phase,

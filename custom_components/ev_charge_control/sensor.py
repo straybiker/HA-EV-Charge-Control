@@ -29,6 +29,10 @@ from .coordinator import EvChargeCoordinator, Snapshot
 from .engine import Reason
 from .entity import init_entity
 
+# The coordinator calculates; entities only read its result, and the
+# setting entities write to memory. No update needs to wait for another.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class OutputSensorDescription(SensorEntityDescription):
@@ -115,6 +119,8 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        # Repeats one of the two per-phase values below.
+        entity_registry_enabled_default=False,
         value_fn=lambda s: round(s.output.efficiency * 100, 1),
     ),
     OutputSensorDescription(

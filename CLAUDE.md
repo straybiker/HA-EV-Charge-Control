@@ -51,6 +51,7 @@ pytest -q                 # Windows: engine + translation tests; tests/ha is ski
 .\scripts\test-ha.ps1     # full suite in Docker (the HA test harness needs Linux)
 ruff check .
 ruff format --check .
+mypy                      # strict, configured in pyproject.toml
 ```
 
 - Test report: after a change to behaviour or tests, rebuild `docs/test-report.md` and `.html` with `python scripts/report/collect.py` (Docker) or `collect.py --ci` (the finished CI run of the pushed HEAD), then `python scripts/report/build.py`, and commit them with the change. Use the Windows venv's python.

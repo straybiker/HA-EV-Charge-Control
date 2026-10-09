@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from typing import Any, cast
 
 import voluptuous as vol
@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -254,7 +255,7 @@ TUNING_SCHEMA = vol.Schema(
 )
 
 
-def _hass(handler: SchemaCommonFlowHandler):
+def _hass(handler: SchemaCommonFlowHandler) -> HomeAssistant:
     return handler.parent_handler.hass
 
 
@@ -269,7 +270,7 @@ def _numeric_state(handler: SchemaCommonFlowHandler, entity_id: str) -> float | 
 def _check_unit(
     handler: SchemaCommonFlowHandler,
     entity_id: str | None,
-    units: set[str],
+    units: Collection[str | None],
     error: str,
 ) -> None:
     """A value without a known unit would be read in the wrong unit.

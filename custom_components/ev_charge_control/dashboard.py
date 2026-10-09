@@ -49,6 +49,9 @@ from .const import (
 )
 from .yaml_import import package_present
 
+# A Lovelace card, section or view: a JSON object.
+type Card = dict[str, Any]
+
 # Lovelace's own store layout, so its websocket API loads and saves the config.
 _LOVELACE_STORE_KEY = "lovelace.{}"
 _LOVELACE_STORE_VERSION = 1
@@ -195,7 +198,7 @@ def _own_entities(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, str]:
     }
 
 
-def _tile(entity: str, name: str, columns: int | str = 6, **extra: Any) -> dict:
+def _tile(entity: str, name: str, columns: int | str = 6, **extra: Any) -> Card:
     return {
         "type": "tile",
         "entity": entity,
@@ -205,25 +208,29 @@ def _tile(entity: str, name: str, columns: int | str = 6, **extra: Any) -> dict:
     }
 
 
-def _graph_entity(series: dict) -> dict:
+def _graph_entity(series: Card) -> Card:
     return (
         series if _GRAPH_COLORS else {k: v for k, v in series.items() if k != "color"}
     )
 
 
-def _heading(text: str, icon: str) -> dict:
+def _heading(text: str, icon: str) -> Card:
     return {"type": "heading", "heading": text, "icon": icon}
 
 
-def _section(*cards: dict | None, span: int | None = None) -> dict:
+def _section(*cards: Card | None, span: int | None = None) -> Card:
     section: dict[str, Any] = {"type": "grid", "cards": [c for c in cards if c]}
     if span:
         section["column_span"] = span
     return section
 
 
-def _markdown(content: str, *, text_only: bool = False, **extra: Any) -> dict:
-    card = {"type": "markdown", "content": content, "grid_options": {"columns": "full"}}
+def _markdown(content: str, *, text_only: bool = False, **extra: Any) -> Card:
+    card: Card = {
+        "type": "markdown",
+        "content": content,
+        "grid_options": {"columns": "full"},
+    }
     if text_only:
         card["text_only"] = True
     return {**card, **extra}
@@ -282,7 +289,7 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     return text
 
 
-def _total_power(e: Mapping[str, str]) -> list[dict]:
+def _total_power(e: Mapping[str, str]) -> list[Card]:
     """Total power, red above the effective limit.
 
     A tile colour cannot follow a template, so two tiles with opposite
@@ -304,14 +311,14 @@ def _total_power(e: Mapping[str, str]) -> list[dict]:
     ]
 
 
-def _phase_tiles(e: Mapping[str, str], three: bool) -> list[dict]:
+def _phase_tiles(e: Mapping[str, str], three: bool) -> list[Card]:
     """Efficiency per phase count, and the phase-switch timers while they run.
 
     A single-phase charger has neither the 3-phase efficiency nor the grace
     period after a 1 -> 3 switch.
     """
 
-    def running(key: str, name: str) -> dict:
+    def running(key: str, name: str) -> Card:
         return _tile(
             e[key],
             name,
@@ -341,14 +348,14 @@ def _power_limit(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
 
 def _settings_tiles(
     e: Mapping[str, str], o: Mapping[str, Any], three: bool, price: bool
-) -> list[dict]:
+) -> list[Card]:
     """The device settings that are not set elsewhere on the dashboard.
 
     Only those that do something in this setup: the battery levels need a
     battery level sensor, Single phase only a 3-phase option, and the
     maximum cost a price.
     """
-    tiles: list[dict] = []
+    tiles: list[Card] = []
     if o.get(CONF_CAR_SOC):
         tiles += [
             _tile(e["car_aware"], "Car aware"),
@@ -375,7 +382,7 @@ def _car_state(o: Mapping[str, Any]) -> str:
     )
 
 
-def _control_badges(e: Mapping[str, str]) -> list[dict]:
+def _control_badges(e: Mapping[str, str]) -> list[Card]:
     """Control charger, coloured by what the controller does.
 
     A badge colour cannot follow a template, so one badge per state: red
@@ -388,7 +395,7 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
     on = {"condition": "state", "entity": control, "state": "on"}
     active = ["charging", "emergency"]
 
-    def badge(color: str, *visibility: dict, off: bool = False) -> dict:
+    def badge(color: str, *visibility: Card, off: bool = False) -> Card:
         return {
             "type": "entity",
             "entity": decision,
@@ -413,7 +420,7 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
             "visibility": list(visibility),
         }
 
-    def decided(**state: Any) -> dict:
+    def decided(**state: Any) -> Card:
         return {"condition": "state", "entity": decision, **state}
 
     return [
@@ -429,7 +436,7 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
     ]
 
 
-def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
+def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
     ems = o.get(CONF_EMS)
     price = o.get(CONF_PRICE)
     three = bool(o.get(CONF_PHASE_OPTION_3))
@@ -610,7 +617,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
     }
 
 
-def _shadow(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
+def _shadow(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
     """Shadow controller next to the YAML package that still drives the charger."""
     limit, phase = o[CONF_CURRENT_LIMIT], o[CONF_PHASE_SELECT]
     one, three = o.get(CONF_PHASE_OPTION_1), o.get(CONF_PHASE_OPTION_3)

@@ -19,6 +19,7 @@ from .conftest import (
     HOUSEHOLD_STEP,
     INPUTS_STEP,
     LIMITS_STEP,
+    MAX_CURRENT,
     MODE3,
     NAME_STEP,
     OPTIONS,
@@ -408,3 +409,41 @@ async def test_the_power_limit_entity_is_optional(hass: HomeAssistant, sources) 
     data = {k: v for k, v in HOUSEHOLD_STEP.items() if k != "power_limit_entity"}
     result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
     assert result["step_id"] == "car"
+
+
+async def test_an_unreadable_maximum_falls_back_to_the_hardware_limit(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set(MAX_CURRENT, "unavailable")
+    result = await _to_step(hass, "limits")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], LIMITS_STEP
+    )
+    assert result["step_id"] == "household"
+
+
+async def test_a_number_phase_setting_needs_two_values(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set("input_number.test_phase_count", "3.0")
+    result = await _phases_step_for(hass, "input_number.test_phase_count")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"phase_value_1": 3, "phase_value_3": 3}
+    )
+    assert result["errors"]["base"] == "same_phase_option"
+
+
+async def test_car_minimum_above_its_maximum(hass: HomeAssistant, sources) -> None:
+    data = {"car_min_current_a": 12, "car_max_current_a": 8}
+    assert await _error(hass, "car", data) == "car_min_above_max"
+
+
+async def test_no_device_class_warning_for_a_missing_sensor(
+    hass: HomeAssistant, sources
+) -> None:
+    """A source that does not exist yet is reported later, by the watcher."""
+    result = await _to_step(hass, "household")
+    data = HOUSEHOLD_STEP | {"solar_power_entity": "sensor.not_there_yet"}
+    for step in (data, {}, {}, TUNING_STEP):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], step)
+    assert result["type"] is FlowResultType.CREATE_ENTRY

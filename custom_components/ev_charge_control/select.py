@@ -14,6 +14,10 @@ from .engine import ChargeMode
 from .entity import init_entity
 from .settings import SettingsStore
 
+# The coordinator calculates; entities only read its result, and the
+# setting entities write to memory. No update needs to wait for another.
+PARALLEL_UPDATES = 0
+
 MODE = SelectEntityDescription(key="charge_mode", options=[m.value for m in ChargeMode])
 
 

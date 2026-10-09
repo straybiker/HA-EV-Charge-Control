@@ -21,6 +21,7 @@ A Home Assistant integration for smart EV charging. It sets the charge current a
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [User manual](#user-manual)
+- [Known limitations](#known-limitations)
 - [Troubleshooting](#troubleshooting)
 - [Roadmap](#roadmap)
 - [Documentation](#documentation)
@@ -164,7 +165,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Decision | Decision | The reason. See [decision values](#decision-values). |
 | Decision | Car connected | Whether a car is plugged in, as the controller reads it from the connection entity. Unknown while that entity is unavailable. |
 | Decision | Grid allowed | Whether price and EMS allow the grid now. Known also without a car. |
-| Decision | Emergency charging, Target reached | Yes/no details of the decision. |
+| Decision | Emergency charging, Target reached | Yes/no details of the decision. Disabled by default: the Decision sensor already shows both. |
 | Energy | Charged energy, Charged from grid, Charged from solar (kWh) | Totals for the Energy dashboard or an EMS. |
 | Energy | Average charging power (W) | The mean charger power while charging above 1000 W, over the last 60 days: energy ÷ charging time. The speed your car usually charges at, for planning by an EMS. Unknown until the car has charged. |
 | Energy | Charged today, Charged from grid today, Charged from solar today (kWh) | The same since local midnight; they start again at 0 every day, so no utility meter helper is needed. |
@@ -172,12 +173,12 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Diagnostic | Import price | The price the controller reads, in the currency of Home Assistant per kWh, like **Maximum charging cost**. Only with a price entity in the setup. |
 | Diagnostic | Total power | The house including the charger: house power plus charger power, as measured (W). |
 | Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
-| Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging, separately for 1 and 3 phases. Shows the value for the target phases. Kept across sessions and restarts. |
+| Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging, separately for 1 and 3 phases. Shows the value for the target phases. Kept across sessions and restarts. Disabled by default: it repeats one of the two values below. |
 | Diagnostic | Efficiency 1 phase, Efficiency 3 phases | The learned efficiency for each phase count. Efficiency 3 phases only when the setup has the 3-phase option. |
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
 | Diagnostic | Grace period until | When the wait after a 1 → 3 phase switch ends. Empty (unknown) while no wait runs. Only with the 3-phase option. |
 
-Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting or the phase changes, and when the car connects or disconnects. Other changes of the connection entity (for example Mode 3 C1 to C2) wait for the next timed run: at that moment the house power is not reliable.
+The settings are listed under **Configuration** on the device page; Control charger and Charge mode are its main controls. Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting or the phase changes, and when the car connects or disconnects. Other changes of the connection entity (for example Mode 3 C1 to C2) wait for the next timed run: at that moment the house power is not reliable.
 
 ### The dashboard
 
@@ -291,6 +292,55 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 
 **Average charging power** gives an EMS the power to plan a charging session with, for example as the nominal power of a deferrable load. It counts only the time above 1000 W, so the car's idle draw and the ramps at the start and end of a session do not lower it. It keeps a total per day, survives restarts and forgets days older than 60 days.
 
+### Automation examples
+
+The entity IDs below belong to a device named **EV charger controller**; yours follow your device name.
+
+**Let your EMS set the power limit.** Leave the power limit entity in the setup empty, then write the device's **Power limit** from an automation, for example 90 % of this month's peak with a 5 kW floor:
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: sensor.monthly_peak
+actions:
+  - action: number.set_value
+    target:
+      entity_id: number.ev_charger_controller_power_limit
+    data:
+      value: "{{ [5000, states('sensor.monthly_peak') | float(0) * 0.9] | max | round(0) }}"
+```
+
+**Charge from the grid at night, on solar during the day:**
+
+```yaml
+triggers:
+  - trigger: time
+    at: "01:00:00"
+    id: night
+  - trigger: time
+    at: "07:00:00"
+    id: day
+actions:
+  - action: select.select_option
+    target:
+      entity_id: select.ev_charger_controller_charge_mode
+    data:
+      option: "{{ 'limited' if trigger.id == 'night' else 'solar' }}"
+```
+
+**Get a notification when the car reached its target:**
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: sensor.ev_charger_controller_decision
+    to: target_reached
+actions:
+  - action: notify.notify
+    data:
+      message: The car reached its target SOC.
+```
+
 ### Decision values
 
 | Value | Meaning |
@@ -308,6 +358,17 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | No power limit | The power limit entity has not reported a value yet, or is 0. |
 | Waiting after phase switch | A 40 s pause after a change to 3 phases. |
 | Charger not responding | The charger did not follow the last 3 writes. See [Taking control of the charger](#taking-control-of-the-charger). |
+
+## Known limitations
+
+- **One charger per controller.** A charger with two sockets, or two chargers, need two controllers. They share one house and one power limit, so give each its own limit; setup warns when they read the same house power.
+- **One limit for the whole house, not per phase.** The controller keeps the total grid power under the power limit. It does not balance the phases and does not protect a fuse: set the charger's own maximum current to what the installation allows.
+- **Seconds, not milliseconds.** The controller calculates every 10 s (setup field). A sudden house load can push the grid above the limit for a few seconds, until the next run lowers the current. The capacity tariff bills the 15-minute average, so such seconds count very little.
+- **Phase switching pauses the car.** A switch between 1 and 3 phases goes through 0 A; the car stops for a few seconds. After a change to 1 phase, the controller waits for the phase switch delay before it goes back to 3.
+- **The house power must exclude the charger.** With only a grid meter, make a template sensor (grid power − charger power).
+- **Car data only through other integrations.** The battery level comes from the car's own integration and can lag behind; the controller does not talk to the car.
+- **No money.** The integration counts energy, split into grid and solar, but calculates no cost or reimbursement.
+- **After a restart**, a missing EMS signal keeps the grid closed until your EMS publishes it again.
 
 ## Troubleshooting
 

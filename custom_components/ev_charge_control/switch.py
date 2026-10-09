@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,6 +18,10 @@ from .engine import ChargeMode
 from .entity import init_entity
 from .settings import CONTROL_CHARGER, SettingsStore
 
+# The coordinator calculates; entities only read its result, and the
+# setting entities write to memory. No update needs to wait for another.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SettingSwitchDescription(SwitchEntityDescription):
@@ -28,7 +32,8 @@ class SettingSwitchDescription(SwitchEntityDescription):
 SINGLE_PHASE_ONLY = "single_phase_only"
 
 SWITCHES: tuple[SettingSwitchDescription, ...] = tuple(
-    SettingSwitchDescription(key=key, field=key)
+    # Settings: the device page lists them under Configuration.
+    SettingSwitchDescription(key=key, field=key, entity_category=EntityCategory.CONFIG)
     for key in (
         "car_aware",
         "solar_when_ems_blocks",

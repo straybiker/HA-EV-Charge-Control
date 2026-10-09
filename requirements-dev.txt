@@ -13,3 +13,5 @@ pytest-homeassistant-custom-component==0.13.367
 hypothesis>=6.100
 # Keep in step with the ruff version in .github/workflows/test.yml.
 ruff==0.16.10
+# Keep in step with the mypy version in .github/workflows/test.yml.
+mypy==2.4.0

@@ -40,6 +40,12 @@ ruff check .
 ruff format --check .
 ```
 
+**Type check** in strict mode (configured in `pyproject.toml`; CI runs it too):
+
+```bash
+mypy
+```
+
 **hassfest** after a change to the manifest, strings, translations or icons:
 
 ```bash

@@ -123,9 +123,10 @@ class EnergyCounter:
         """Rebuild from state(); bad or missing data starts from zero."""
         state = state or {}
         try:
-            totals = EnergyTotals(
-                **{k: float(v) for k, v in state.items() if k in _NUMBERS}
-            )
+            numbers: dict[str, Any] = {
+                k: float(v) for k, v in state.items() if k in _NUMBERS
+            }
+            totals = EnergyTotals(**numbers)
         except TypeError, ValueError:
             return cls(EnergyTotals())
         day = state.get("day")

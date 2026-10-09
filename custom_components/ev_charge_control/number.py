@@ -12,6 +12,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -22,11 +23,17 @@ from .const import CONF_POWER_LIMIT
 from .entity import init_entity
 from .settings import SettingsStore
 
+# The coordinator calculates; entities only read its result, and the
+# setting entities write to memory. No update needs to wait for another.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SettingNumberDescription(NumberEntityDescription):
     field: str
     default: float
+    # Settings: the device page lists them under Configuration.
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
     # Settings store value = entity value x scale (minutes -> seconds).
     scale: float = 1.0
 
@@ -127,13 +134,14 @@ class SettingNumber(RestoreNumber):
         d = self.entity_description
         value = d.default
         initial = self._store.initial(d.key, d.default)
-        if d.native_min_value <= initial <= d.native_max_value:
+        low, high = d.native_min_value or 0.0, d.native_max_value or 0.0
+        if low <= initial <= high:
             value = initial
         last = await self.async_get_last_number_data()
         if (
             last is not None
             and last.native_value is not None
-            and d.native_min_value <= last.native_value <= d.native_max_value
+            and low <= last.native_value <= high
         ):
             value = last.native_value
         self._apply(value, notify=False)

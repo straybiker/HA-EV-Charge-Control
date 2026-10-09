@@ -1,0 +1,108 @@
+# Home Assistant Integration Quality Scale, self-assessed. hassfest does not
+# check this file for custom integrations; it records why each rule is met.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration registers no service actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      Nothing is polled from a device. The controller calculates at a fixed
+      interval (10 s by default, a setup field) and at once on setting and
+      connection changes.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: exempt
+    comment: No requirements; the integration uses only Home Assistant.
+  docs-actions:
+    status: exempt
+    comment: The integration registers no service actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration provides no device conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration provides no device triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: >-
+      No connection or credentials of its own: it reads entities of other
+      integrations. The config flow checks that they exist, their units, the
+      Mode 3 state and the current-limit range instead.
+  test-before-setup:
+    status: exempt
+    comment: >-
+      No connection of its own. Missing source entities raise a repair issue
+      once Home Assistant has started; the controller runs in fail-safe.
+  unique-config-entry:
+    status: done
+    comment: Two controllers cannot share a current limit or phase setting.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration registers no service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Nothing to discover; the user picks the charger's entities.
+  discovery-update-info:
+    status: exempt
+    comment: Nothing to discover.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: One fixed device per config entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: done
+    comment: The options flow changes every setup field.
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: One fixed device per config entry.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: No library dependency.
+  inject-websession:
+    status: exempt
+    comment: No HTTP connection.
+  strict-typing: done

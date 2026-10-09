@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -117,7 +118,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         self._control_was: bool | None = None
 
     @staticmethod
-    def energy_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict]:
+    def energy_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
         """Where the energy totals of an entry are kept between restarts."""
         return Store(hass, _STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.energy")
 
@@ -141,7 +142,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         """Write the state now, so an unload, reload or crash loses nothing."""
         await self._energy_store.async_save(self._stored_state())
 
-    def _stored_state(self) -> dict:
+    def _stored_state(self) -> dict[str, Any]:
         return {
             **self.energy.state(),
             "average": self.average.state(),

@@ -67,3 +67,7 @@ entities of other integrations ─▶ InputReader ─▶ Controller.step() ─�
 - Home Assistant 2026.3 is the first release on Python 3.14 and the minimum version (`hacs.json`). The tests run against the version that `pytest-homeassistant-custom-component` pins in `requirements-dev.txt`.
 - Brand images ship in `brand/`: `icon.png` (256 × 256) and `icon@2x.png` (512 × 512), trimmed, transparent background. `tests/test_manifest.py` checks the sizes.
 - HACS offers GitHub releases as versions. The Release workflow checks that the tag equals the manifest version.
+
+## Quality scale
+
+`custom_components/ev_charge_control/quality_scale.yaml` records each rule of the Home Assistant Integration Quality Scale as done or exempt, with the reason. The integration meets Platinum: strict typing (`mypy`, configured in `pyproject.toml`, runs in CI), `PARALLEL_UPDATES` on every platform, settings in the Configuration category, rarely used entities disabled by default, and full config flow test coverage. hassfest does not check this file for custom integrations.

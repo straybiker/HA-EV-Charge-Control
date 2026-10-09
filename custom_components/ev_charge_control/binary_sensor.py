@@ -19,6 +19,10 @@ from .coordinator import EvChargeCoordinator, Snapshot
 from .engine import ConnectionState
 from .entity import init_entity
 
+# The coordinator calculates; entities only read its result, and the
+# setting entities write to memory. No update needs to wait for another.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class OutputBinaryDescription(BinarySensorEntityDescription):
@@ -43,9 +47,16 @@ BINARY_SENSORS: tuple[OutputBinaryDescription, ...] = (
     OutputBinaryDescription(
         key="grid_allowed", value_fn=lambda s: s.output.grid_allowed
     ),
-    OutputBinaryDescription(key="emergency", value_fn=lambda s: s.output.emergency),
+    # Details of the decision, which already says emergency and target.
     OutputBinaryDescription(
-        key="target_reached", value_fn=lambda s: s.output.target_reached
+        key="emergency",
+        entity_registry_enabled_default=False,
+        value_fn=lambda s: s.output.emergency,
+    ),
+    OutputBinaryDescription(
+        key="target_reached",
+        entity_registry_enabled_default=False,
+        value_fn=lambda s: s.output.target_reached,
     ),
     # The EMS signal as the controller reads it: above 0 W the EMS allows the
     # grid. Unknown when the setup has no EMS entity.

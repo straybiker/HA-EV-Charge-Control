@@ -493,7 +493,8 @@ async def test_a_mode3_sub_state_change_waits_for_the_tick(
 async def test_learned_efficiency_survives_a_reload(
     hass: HomeAssistant, sources
 ) -> None:
-    efficiency = "sensor.test_charger_charger_efficiency"
+    # The test charges on 1 phase.
+    efficiency = "sensor.test_charger_efficiency_1_phase"
     entry = make_entry(hass)
     await setup(hass, entry)
     hass.states.async_set(APPLIED_CURRENT, "10", {"unit_of_measurement": "A"})

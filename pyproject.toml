@@ -22,3 +22,9 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # Markdown table rows and prose read better unbroken.
 "scripts/report/build.py" = ["E501"]
+
+[tool.mypy]
+# Strict typing, as the Home Assistant quality scale asks for Platinum.
+python_version = "3.14"
+strict = true
+files = ["custom_components/ev_charge_control"]

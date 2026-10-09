@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from datetime import datetime
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -85,7 +87,7 @@ class ChargerWriter:
         self.last_setpoint: Setpoint | None = None
         self.failures = 0
         self._retry = False
-        self._task: asyncio.Task | None = None
+        self._task: asyncio.Task[None] | None = None
 
     @property
     def busy(self) -> bool:
@@ -151,7 +153,7 @@ class ChargerWriter:
             self._task.cancel()
         self._task = None
 
-    def _start(self, coro) -> None:
+    def _start(self, coro: Coroutine[Any, Any, None]) -> None:
         self._task = self._entry.async_create_background_task(
             self._hass, coro, name=f"{DOMAIN} write"
         )
@@ -280,7 +282,7 @@ class ChargerWriter:
         domain = _domain(entity)
         if domain in SWITCH_DOMAINS:
             service = "turn_on" if option == "on" else "turn_off"
-            data: dict = {"entity_id": entity}
+            data: dict[str, Any] = {"entity_id": entity}
         elif domain in NUMBER_DOMAINS:
             service, data = "set_value", {"entity_id": entity, "value": float(option)}
         else:
@@ -304,7 +306,7 @@ class ChargerWriter:
                 done.set_result(True)
 
         @callback
-        def _expired(_now) -> None:
+        def _expired(_now: datetime) -> None:
             if not done.done():
                 done.set_result(False)
 
