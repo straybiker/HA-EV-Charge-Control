@@ -336,6 +336,31 @@ def _power_limit(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     return o.get(CONF_POWER_LIMIT) or e["power_limit"]
 
 
+def _settings_tiles(
+    e: Mapping[str, str], o: Mapping[str, Any], three: bool, price: bool
+) -> list[dict]:
+    """The device settings that are not set elsewhere on the dashboard.
+
+    Only those that do something in this setup: the battery levels need a
+    battery level sensor, Single phase only a 3-phase option, and the
+    maximum cost a price.
+    """
+    tiles: list[dict] = []
+    if o.get(CONF_CAR_SOC):
+        tiles += [
+            _tile(e["car_aware"], "Car aware"),
+            _tile(e["target_soc"], "Target SOC", 4),
+            _tile(e["comfort_soc"], "Comfort SOC", 4),
+            _tile(e["emergency_soc"], "Emergency SOC", 4),
+        ]
+    if three:
+        tiles.append(_tile(e["single_phase_only"], "Single phase only"))
+    if price:
+        tiles.append(_tile(e["max_charging_cost"], "Max charging cost"))
+    tiles.append(_tile(e["solar_bridge"], "Solar bridge"))
+    return tiles
+
+
 def _car_state(o: Mapping[str, Any]) -> str:
     """The connection entity in words: a tile would show the bare Mode 3 code."""
     connection = o[CONF_CONNECTION]
@@ -547,9 +572,11 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                     f"{{{{ help.get(states('{e['charge_mode']}'), '') }}}}",
                     text_only=True,
                 ),
+                *_settings_tiles(e, o, three, bool(price)),
             ),
             _section(
                 _heading("Charged today", "mdi:battery-charging-high"),
+                _tile(e["charged_today"], "Charged today", 12),
                 _tile(today_grid, "From grid today", color="blue"),
                 _tile(today_solar, "From solar today", color="amber"),
                 {
