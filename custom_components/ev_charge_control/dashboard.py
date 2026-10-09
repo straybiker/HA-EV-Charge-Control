@@ -256,6 +256,7 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         f"{{% set p = states('{e['target_power']}') | float(0) %}}"
         f"{{% set a = states('{e['target_current']}') %}}"
         f"{{% set ph = states('{e['target_phases']}') %}}"
+        f"{{% set lim = states('{e['effective_power_limit']}') %}}"
         "### {% if shadow %}Shadow mode · {% endif %}{{ d }} · {{ mode }}\n"
         "{% if shadow %}# {{ (p / 1000) | round(1) }} kW (Virtual)\n"
         "{% else %}# {{ (w / 1000) | round(1) }} kW\n{% endif %}"
@@ -266,6 +267,8 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         "Target **{{ ph }} × {{ a | float | round(1) }} A**"
         "{% if not shadow %} ({{ (p / 1000) | round(1) }} kW){% endif %}"
         "{% else %}No target setpoint{% endif %}"
+        "{% if lim | is_number %} · Limit {{ (lim | float / 1000) | round(1) }} kW"
+        "{% endif %}"
     )
     if soc := o.get(CONF_CAR_SOC):
         text += (
@@ -358,6 +361,7 @@ def _settings_tiles(
     if price:
         tiles.append(_tile(e["max_charging_cost"], "Max charging cost"))
     tiles.append(_tile(e["solar_bridge"], "Solar bridge"))
+    tiles.append(_tile(_power_limit(e, o), "Power limit"))
     return tiles
 
 
@@ -504,7 +508,6 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 # the setup names one, and it has a unit.
                 _tile(e["import_price"], "Import price") if price else None,
                 *_phase_tiles(e, three),
-                _tile(_power_limit(e, o), "Power limit"),
             ),
             _section(
                 _heading("Power today", "mdi:chart-areaspline"),
