@@ -149,6 +149,10 @@
           "recalc_interval_s": "Hoe vaak de regelaar rekent. Wijzigingen van modus, instelling, verbinding en fase starten meteen een berekening."
         }
       },
+      "device_classes": {
+        "title": "Invoer zonder de verwachte apparaatklasse",
+        "description": "Deze sensoren hebben geen apparaatklasse, of een andere dan verwacht:\n\n{entities}\n\nDe controller leest ze op hun eenheid, die de installatie heeft gecontroleerd, dus het werkt. Andere delen van Home Assistant, zoals statistieken, kunnen ze verkeerd behandelen. Stel de apparaatklasse in op de sensor (Instellingen → Entiteiten → de sensor → Weergeven als), of vraag de integratie die de sensor maakt om er een toe te voegen. Verstuur om verder te gaan."
+      },
       "shared": {
         "title": "Invoer gedeeld met een andere regelaar",
         "description": "Deze entiteiten worden ook gebruikt door een andere laadregelaar:\n\n{shared}\n\nTwee regelaars die dezelfde laadpaal, auto, huisverbruik of EMS-signaal lezen, kunnen elkaar tegenwerken. Zo nemen ze allebei de volledige ruimte onder de vermogenslimiet, en samen overschrijden ze die. Verstuur om toch verder te gaan, of sluit dit venster om te annuleren."
@@ -322,6 +326,10 @@
           "dashboard_rebuild": "Bouwt het dashboard opnieuw op uit de huidige instellingen en verwijdert je wijzigingen. Gebruik het na een wijziging van entiteiten in deze stappen, of na een update.",
           "dashboard_title": "De naam in de zijbalk. Een nieuwe naam geldt na het opslaan; de inhoud van het dashboard blijft."
         }
+      },
+      "device_classes": {
+        "title": "Invoer zonder de verwachte apparaatklasse",
+        "description": "Deze sensoren hebben geen apparaatklasse, of een andere dan verwacht:\n\n{entities}\n\nDe controller leest ze op hun eenheid, die de installatie heeft gecontroleerd, dus het werkt. Andere delen van Home Assistant, zoals statistieken, kunnen ze verkeerd behandelen. Stel de apparaatklasse in op de sensor (Instellingen → Entiteiten → de sensor → Weergeven als), of vraag de integratie die de sensor maakt om er een toe te voegen. Verstuur om verder te gaan."
       },
       "shared": {
         "title": "Invoer gedeeld met een andere regelaar",

@@ -149,6 +149,10 @@
           "recalc_interval_s": "How often the controller calculates. Mode, setting, connection and phase changes start a calculation at once."
         }
       },
+      "device_classes": {
+        "title": "Inputs without the expected device class",
+        "description": "These sensors have no device class, or another one than expected:\n\n{entities}\n\nThe controller reads them by their unit, which setup has checked, so it works. Other parts of Home Assistant, such as statistics, may treat them wrongly. Set the device class on the sensor (Settings → Entities → the sensor → Show as), or ask the integration that makes it to add one. Submit to continue."
+      },
       "shared": {
         "title": "Inputs shared with another controller",
         "description": "These entities are also used by another charge controller:\n\n{shared}\n\nTwo controllers that read the same charger, car, house power or EMS signal can work against each other. For example, both take the full headroom under the power limit, so together they exceed it. Submit to continue anyway, or close this dialog to cancel."
@@ -322,6 +326,10 @@
           "dashboard_rebuild": "Builds the dashboard again from the current setup and discards your edits. Use it after you change entities in these steps, or after an update.",
           "dashboard_title": "The name in the sidebar. A new name applies after you save; the dashboard content stays."
         }
+      },
+      "device_classes": {
+        "title": "Inputs without the expected device class",
+        "description": "These sensors have no device class, or another one than expected:\n\n{entities}\n\nThe controller reads them by their unit, which setup has checked, so it works. Other parts of Home Assistant, such as statistics, may treat them wrongly. Set the device class on the sensor (Settings → Entities → the sensor → Show as), or ask the integration that makes it to add one. Submit to continue."
       },
       "shared": {
         "title": "Inputs shared with another controller",

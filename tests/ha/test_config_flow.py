@@ -375,3 +375,29 @@ async def test_battery_level_needs_percent(hass: HomeAssistant, sources) -> None
     hass.states.async_set(CAR_SOC, "60")  # no unit
     data = {"car_soc_entity": CAR_SOC, "battery_capacity_kwh": 80}
     assert await _error(hass, "car", data) == "soc_unit_unknown"
+
+
+async def test_a_sensor_without_device_class_gets_a_warning(
+    hass: HomeAssistant, sources
+) -> None:
+    """Not an error: the unit is right, so the controller works."""
+    hass.states.async_set(APPLIED_CURRENT, "6", {"unit_of_measurement": "A"})
+    result = await _to_step(hass, "tuning")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TUNING_STEP
+    )
+    assert result["step_id"] == "device_classes"
+    entities = result["description_placeholders"]["entities"]
+    assert f"{APPLIED_CURRENT}: no device class, expected current" in entities
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_no_warning_with_the_expected_device_classes(
+    hass: HomeAssistant, sources
+) -> None:
+    result = await _to_step(hass, "tuning")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TUNING_STEP
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

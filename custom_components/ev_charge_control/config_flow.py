@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -545,6 +546,56 @@ async def _shared_placeholders(handler: SchemaCommonFlowHandler) -> dict[str, st
     return {"shared": "\n".join(_shared_inputs(handler))}
 
 
+# The device class each sensor input should have. The selectors do not
+# filter on it, since many integrations leave it out; setup only warns.
+_EXPECTED_DEVICE_CLASS = {
+    CONF_CHARGER_POWER: SensorDeviceClass.POWER,
+    CONF_APPLIED_CURRENT: SensorDeviceClass.CURRENT,
+    CONF_MAX_CURRENT_ENTITY: SensorDeviceClass.CURRENT,
+    CONF_ENERGY_METER: SensorDeviceClass.ENERGY,
+    CONF_HOUSE_POWER: SensorDeviceClass.POWER,
+    CONF_POWER_LIMIT: SensorDeviceClass.POWER,
+    CONF_SOLAR_POWER: SensorDeviceClass.POWER,
+    CONF_CAR_SOC: SensorDeviceClass.BATTERY,
+    CONF_EMS: SensorDeviceClass.POWER,
+}
+
+
+def _device_class_notes(handler: SchemaCommonFlowHandler) -> list[str]:
+    """Lines like '- sensor.x: no device class, expected current'.
+
+    Only sensors: a number or helper often has no device class by design.
+    """
+    hass = _hass(handler)
+    lines: list[str] = []
+    for key, expected in _EXPECTED_DEVICE_CLASS.items():
+        entity_id = handler.options.get(key)
+        if not entity_id or not entity_id.startswith("sensor."):
+            continue
+        state = hass.states.get(entity_id)
+        if state is None:
+            continue
+        actual = state.attributes.get("device_class")
+        if actual == expected:
+            continue
+        found = f"device class {actual}" if actual else "no device class"
+        lines.append(f"- {entity_id}: {found}, expected {expected.value}")
+    return lines
+
+
+async def _device_class_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema | None:
+    """An empty confirmation form, or None to skip the step."""
+    return vol.Schema({}) if _device_class_notes(handler) else None
+
+
+async def _device_class_placeholders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    return {"entities": "\n".join(_device_class_notes(handler))}
+
+
 DASHBOARD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DASHBOARD, default=False): selector.BooleanSelector(),
@@ -580,7 +631,7 @@ def _steps(outputs_step: str, *, options: bool) -> dict[str, SchemaFlowFormStep]
     dashboard; a new controller first gets a name ("user"), where the
     dashboard is asked too.
     """
-    after_tuning = "dashboard" if options else "shared"
+    after_tuning = "dashboard" if options else "device_classes"
     steps = {
         outputs_step: SchemaFlowFormStep(
             OUTPUTS_SCHEMA, validate_user_input=_validate_outputs, next_step="phases"
@@ -604,7 +655,13 @@ def _steps(outputs_step: str, *, options: bool) -> dict[str, SchemaFlowFormStep]
             PRICE_SCHEMA, validate_user_input=_validate_price, next_step="tuning"
         ),
         "tuning": SchemaFlowFormStep(TUNING_SCHEMA, next_step=after_tuning),
-        # A warning, not an error: one car can use two chargers, for example.
+        # Warnings, not errors: the setup works, but the user should know.
+        "device_classes": SchemaFlowFormStep(
+            _device_class_schema,
+            description_placeholders=_device_class_placeholders,
+            next_step="shared",
+        ),
+        # One car can use two chargers, for example.
         "shared": SchemaFlowFormStep(
             _shared_schema,
             description_placeholders=_shared_placeholders,
@@ -615,7 +672,7 @@ def _steps(outputs_step: str, *, options: bool) -> dict[str, SchemaFlowFormStep]
         steps["dashboard"] = SchemaFlowFormStep(
             DASHBOARD_SCHEMA,
             validate_user_input=_validate_dashboard,
-            next_step="shared",
+            next_step="device_classes",
         )
     return steps
 

@@ -72,6 +72,7 @@ CHARGED_GRID = "sensor.test_charger_charged_from_grid"
 CHARGED_SOLAR = "sensor.test_charger_charged_from_solar"
 
 W = {"unit_of_measurement": "W", "device_class": "power"}
+AMPERE = {"unit_of_measurement": "A", "device_class": "current"}
 
 
 @pytest.fixture(autouse=True)
@@ -83,10 +84,10 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 def sources(hass: HomeAssistant) -> None:
     """A connected, idle 16 A charger on 1 phase and a house drawing 500 W."""
     hass.states.async_set(CHARGER_POWER, "0", W)
-    hass.states.async_set(APPLIED_CURRENT, "0", {"unit_of_measurement": "A"})
+    hass.states.async_set(APPLIED_CURRENT, "0", AMPERE)
     hass.states.async_set(ACTIVE_PHASES, "1 Phase")
     hass.states.async_set(MODE3, "C2")
-    hass.states.async_set(MAX_CURRENT, "16", {"unit_of_measurement": "A"})
+    hass.states.async_set(MAX_CURRENT, "16", AMPERE)
     hass.states.async_set(CURRENT_LIMIT, "0")
     hass.states.async_set(PHASE_SELECT, "1 Phase", {"options": ["1 Phase", "3 Phases"]})
     hass.states.async_set(HOUSE_POWER, "500", W)
