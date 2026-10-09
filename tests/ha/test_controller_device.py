@@ -563,7 +563,7 @@ async def test_without_a_limit_entity_the_device_number_is_the_limit(
     entry = make_entry(hass, power_limit_entity=None)
     await setup(hass, entry)
     own = "number.test_charger_power_limit"
-    assert hass.states.get(own).state == "5000.0"
+    assert float(hass.states.get(own).state) == 5000
     assert hass.states.get(EFFECTIVE_LIMIT).state == "5000"
     await _set_number(hass, own, 3200)
     await _tick(hass, _DEBOUNCE)
