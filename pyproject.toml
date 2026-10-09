@@ -1,6 +1,6 @@
 [project]
 name = "ha-ev-charge-control"
-version = "0.4.0-beta.4"
+version = "0.5.0-beta.1"
 description = "Home Assistant custom integration for EV smart charging"
 readme = "README.md"
 requires-python = ">=3.14"
