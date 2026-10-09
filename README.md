@@ -321,7 +321,8 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |
 | The target current stays at the fallback current. | The maximum current entity has not sent a value since the start. |
 | A repair issue says an input **was renamed** or **does not exist**. | The setup still points at the old entity ID, so the controller runs in fail-safe. Open **Configure**, go to the step the issue names and select the new entity. The integration never changes the setup by itself. After a restart, a renamed entity shows as missing. A missing entity is reported 10 minutes after Home Assistant has started, so sources that appear later (an EMS publishes its sensors after its first run) raise nothing; the issue closes by itself when the entity appears. |
-| Setup refuses an entity because of its **unit**. | Power inputs need W or kW, the energy meter Wh, kWh or MWh. Set the unit on the sensor or helper. Without a unit the value would be read in the wrong unit. |
+| Setup refuses an entity because of its **unit**. | Power inputs need W or kW, the energy meter Wh, kWh or MWh, the applied current A and the battery level %. Set the unit on the sensor or helper. Without a unit the value would be read in the wrong unit. |
+| Setup warns that inputs have **no expected device class**. | Not an error: the controller reads them by their unit. Set the device class on the sensor (Settings → Entities → Show as), or ask the integration that makes it to add one. Submit to continue. |
 | Setup refuses the **current limit** number. | It must accept 0 A (the controller stops the car with 0 A) and its step must not be coarser than the current step you pick. |
 
 ### Debug logging
