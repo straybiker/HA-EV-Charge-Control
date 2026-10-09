@@ -10,6 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.ev_charge_control.const import DOMAIN
 
 from .conftest import (
+    APPLIED_CURRENT,
     CAR_SOC,
     CHARGER_ENERGY,
     CHARGER_POWER,
@@ -351,3 +352,26 @@ async def test_current_step_must_fit_the_number(hass: HomeAssistant, sources) ->
         result["flow_id"], LIMITS_STEP | {"current_step_a": "1"}
     )
     assert result["step_id"] == "household"
+
+
+async def test_a_current_sensor_without_device_class_is_accepted(
+    hass: HomeAssistant, sources
+) -> None:
+    """An Alfen Modbus current sensor has a unit but no device class (issue #4)."""
+    hass.states.async_set(APPLIED_CURRENT, "6", {"unit_of_measurement": "A"})
+    result = await _to_step(hass, "inputs")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], INPUTS_STEP
+    )
+    assert result["step_id"] == "limits"
+
+
+async def test_applied_current_needs_amperes(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(APPLIED_CURRENT, "6")  # no unit
+    assert await _error(hass, "inputs", INPUTS_STEP) == "current_unit_unknown"
+
+
+async def test_battery_level_needs_percent(hass: HomeAssistant, sources) -> None:
+    hass.states.async_set(CAR_SOC, "60")  # no unit
+    data = {"car_soc_entity": CAR_SOC, "battery_capacity_kwh": 80}
+    assert await _error(hass, "car", data) == "soc_unit_unknown"

@@ -94,6 +94,7 @@ flowchart LR
 - **House power without the charger** (W or kW; negative during export). Power inputs need a unit of measurement. If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
 - **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
 - Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
+- **Units, not device classes:** the setup lists every sensor, also ones without a device class. It checks the unit instead: W or kW for power, Wh, kWh or MWh for energy, A for the applied current and % for the battery level. Set the unit on a sensor or helper that has none.
 - For the optional [dashboard](#the-dashboard): nothing extra. It uses only built-in cards and works on every supported Home Assistant version. From Home Assistant 2026.6, the lines of its power graph get their own colours. It needs the Dashboards integration, which Home Assistant loads by default.
 
 ## Installation

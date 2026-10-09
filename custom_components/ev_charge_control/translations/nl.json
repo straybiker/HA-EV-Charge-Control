@@ -169,6 +169,8 @@
       "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn.",
       "power_unit_unknown": "Een vermogensentiteit heeft geen meeteenheid, of geen vermogenseenheid (W of kW). Stel de eenheid in op de sensor of helper, zodat de regelaar de waarde in de juiste eenheid leest.",
       "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
+      "current_unit_unknown": "De toegepaste stroom heeft geen eenheid of niet A. Zet de eenheid op A op de sensor, zodat de controller de waarde in ampère leest.",
+      "soc_unit_unknown": "Het batterijniveau heeft geen eenheid of niet %. Kies een batterijniveau in %.",
       "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
       "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
     }
@@ -341,6 +343,8 @@
       "fallback_needs_three_phases": "De laadpaal heeft geen 3-fasenoptie: de terugvalfasen moeten 1 fase zijn.",
       "power_unit_unknown": "Een vermogensentiteit heeft geen meeteenheid, of geen vermogenseenheid (W of kW). Stel de eenheid in op de sensor of helper, zodat de regelaar de waarde in de juiste eenheid leest.",
       "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
+      "current_unit_unknown": "De toegepaste stroom heeft geen eenheid of niet A. Zet de eenheid op A op de sensor, zodat de controller de waarde in ampère leest.",
+      "soc_unit_unknown": "Het batterijniveau heeft geen eenheid of niet %. Kies een batterijniveau in %.",
       "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
       "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
     }

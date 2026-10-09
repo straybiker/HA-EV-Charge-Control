@@ -169,6 +169,8 @@
       "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase.",
       "power_unit_unknown": "A power entity has no unit of measurement, or not a power unit (W or kW). Set the unit on the sensor or helper, so the controller reads the value in the right unit.",
       "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
+      "current_unit_unknown": "The applied current has no unit or not A. Set the unit to A on the sensor, so the controller reads the value in amperes.",
+      "soc_unit_unknown": "The battery level has no unit or not %. Select a battery level in %.",
       "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
       "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
     }
@@ -341,6 +343,8 @@
       "fallback_needs_three_phases": "The charger has no 3-phase option: the fallback phases must be 1 phase.",
       "power_unit_unknown": "A power entity has no unit of measurement, or not a power unit (W or kW). Set the unit on the sensor or helper, so the controller reads the value in the right unit.",
       "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
+      "current_unit_unknown": "The applied current has no unit or not A. Set the unit to A on the sensor, so the controller reads the value in amperes.",
+      "soc_unit_unknown": "The battery level has no unit or not %. Select a battery level in %.",
       "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
       "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
     }

@@ -6,8 +6,12 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfElectricCurrent,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -86,14 +90,14 @@ from .engine import ConnectionState, Phase, connection_from_mode3
 from .yaml_import import async_import, package_present
 
 
-def _entity(
-    domain: str | list[str], device_class: str | None = None
-) -> selector.EntitySelector:
-    if device_class is None:
-        return selector.EntitySelector(selector.EntitySelectorConfig(domain=domain))
-    return selector.EntitySelector(
-        selector.EntitySelectorConfig(domain=domain, device_class=device_class)
-    )
+def _entity(domain: str | list[str]) -> selector.EntitySelector:
+    """Any entity of the domain.
+
+    No device-class filter: many integrations leave the device class out
+    (an Alfen Modbus current sensor has only its unit). The unit checks in
+    the step validators catch a wrong choice instead.
+    """
+    return selector.EntitySelector(selector.EntitySelectorConfig(domain=domain))
 
 
 def _number(low: float, high: float, step: float, unit: str) -> selector.NumberSelector:
@@ -166,15 +170,13 @@ OUTPUTS_SCHEMA = vol.Schema(
 INPUTS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONNECTION): _entity(["sensor", "binary_sensor"]),
-        vol.Required(CONF_CHARGER_POWER): _entity("sensor", SensorDeviceClass.POWER),
-        vol.Required(CONF_APPLIED_CURRENT): _entity(
-            "sensor", SensorDeviceClass.CURRENT
-        ),
+        vol.Required(CONF_CHARGER_POWER): _entity("sensor"),
+        vol.Required(CONF_APPLIED_CURRENT): _entity("sensor"),
         vol.Required(CONF_ACTIVE_PHASES): _entity("sensor"),
         vol.Required(CONF_MAX_CURRENT_ENTITY): _entity(
             ["sensor", "number", "input_number"]
         ),
-        vol.Optional(CONF_ENERGY_METER): _entity("sensor", SensorDeviceClass.ENERGY),
+        vol.Optional(CONF_ENERGY_METER): _entity("sensor"),
     }
 )
 
@@ -202,17 +204,17 @@ LIMITS_SCHEMA = vol.Schema(
 
 HOUSEHOLD_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOUSE_POWER): _entity("sensor", SensorDeviceClass.POWER),
+        vol.Required(CONF_HOUSE_POWER): _entity("sensor"),
         # A helper or an EMS entity, for example the capacity tariff peak.
         vol.Required(CONF_POWER_LIMIT): _entity(["sensor", "input_number", "number"]),
         vol.Optional(CONF_PEAK_FACTOR): _number(50, 100, 1, "%"),
-        vol.Optional(CONF_SOLAR_POWER): _entity("sensor", SensorDeviceClass.POWER),
+        vol.Optional(CONF_SOLAR_POWER): _entity("sensor"),
     }
 )
 
 CAR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_CAR_SOC): _entity("sensor", SensorDeviceClass.BATTERY),
+        vol.Optional(CONF_CAR_SOC): _entity("sensor"),
         vol.Optional(CONF_BATTERY_CAPACITY): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1,
@@ -231,7 +233,7 @@ PRICE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRICE): _entity("sensor"),
         vol.Optional(CONF_PRICE_ATTRIBUTE): selector.TextSelector(),
-        vol.Optional(CONF_EMS): _entity("sensor", SensorDeviceClass.POWER),
+        vol.Optional(CONF_EMS): _entity("sensor"),
     }
 )
 
@@ -343,6 +345,13 @@ async def _validate_inputs(
         ):
             raise SchemaFlowError("connection_not_mode3")
     _check_power_units(handler, user_input[CONF_CHARGER_POWER])
+    # Read as a plain number in amperes.
+    _check_unit(
+        handler,
+        user_input[CONF_APPLIED_CURRENT],
+        {UnitOfElectricCurrent.AMPERE},
+        "current_unit_unknown",
+    )
     _check_unit(
         handler,
         user_input.get(CONF_ENERGY_METER),
@@ -470,6 +479,7 @@ async def _validate_car(
 ) -> dict[str, Any]:
     if user_input.get(CONF_CAR_SOC) and not user_input.get(CONF_BATTERY_CAPACITY):
         raise SchemaFlowError("capacity_required")
+    _check_unit(handler, user_input.get(CONF_CAR_SOC), {PERCENTAGE}, "soc_unit_unknown")
     if user_input.get(CONF_CAR_MIN_CURRENT, 0) > user_input.get(
         CONF_CAR_MAX_CURRENT, DEFAULT_MAX_CURRENT
     ):
