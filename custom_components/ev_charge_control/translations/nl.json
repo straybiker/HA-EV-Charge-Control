@@ -8,13 +8,15 @@
           "name": "Naam",
           "import_yaml": "Importeren uit EV Load Balancer",
           "dashboard": "Dashboard toevoegen",
-          "dashboard_title": "Naam van het dashboard"
+          "dashboard_title": "Naam van het dashboard",
+          "dashboard_require_admin": "Alleen voor beheerders"
         },
         "data_description": {
           "name": "De naam van het regelaarapparaat, bijvoorbeeld waar de laadpaal staat. Zijn entiteiten krijgen deze naam.",
           "import_yaml": "Het YAML-pakket EV Load Balancer is geïnstalleerd. Aan: de volgende stappen worden ingevuld met zijn entiteiten en waarden, en het nieuwe apparaat start met zijn instellingen. Laadpaal aansturen blijft uit. Je controleert elke stap voor het opslaan.",
           "dashboard": "Voegt een dashboard voor deze regelaar toe aan de zijbalk. Als het YAML-pakket EV Load Balancer geïnstalleerd is, krijgt het een tweede weergave die de regelaar met het pakket vergelijkt. Je kunt het later toevoegen of verwijderen via Configureren.",
-          "dashboard_title": "De naam van het dashboard in de zijbalk. Met de standaardnaam en meer dan één regelaar voegen de andere dashboards hun apparaatnaam toe."
+          "dashboard_title": "De naam van het dashboard in de zijbalk. Met de standaardnaam en meer dan één regelaar voegen de andere dashboards hun apparaatnaam toe.",
+          "dashboard_require_admin": "Aan: alleen beheerders zien het dashboard in de zijbalk en kunnen het openen."
         }
       },
       "outputs": {
@@ -319,12 +321,14 @@
         "data": {
           "dashboard": "Dashboard tonen",
           "dashboard_rebuild": "Dashboard opnieuw opbouwen",
-          "dashboard_title": "Naam van het dashboard"
+          "dashboard_title": "Naam van het dashboard",
+          "dashboard_require_admin": "Alleen voor beheerders"
         },
         "data_description": {
           "dashboard": "Uit verwijdert het dashboard en je wijzigingen eraan.",
           "dashboard_rebuild": "Bouwt het dashboard opnieuw op uit de huidige instellingen en verwijdert je wijzigingen. Gebruik het na een wijziging van entiteiten in deze stappen, of na een update.",
-          "dashboard_title": "De naam in de zijbalk. Een nieuwe naam geldt na het opslaan; de inhoud van het dashboard blijft."
+          "dashboard_title": "De naam in de zijbalk. Een nieuwe naam geldt na het opslaan; de inhoud van het dashboard blijft.",
+          "dashboard_require_admin": "Aan: alleen beheerders zien het dashboard in de zijbalk en kunnen het openen."
         }
       },
       "device_classes": {

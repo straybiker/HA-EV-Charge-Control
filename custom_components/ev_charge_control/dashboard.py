@@ -35,6 +35,7 @@ from .const import (
     CONF_CONNECTION,
     CONF_CURRENT_LIMIT,
     CONF_DASHBOARD,
+    CONF_DASHBOARD_ADMIN,
     CONF_DASHBOARD_TITLE,
     CONF_EMS,
     CONF_HOUSE_POWER,
@@ -139,6 +140,7 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     path = url_path(hass, entry)
+    admin = bool(entry.options.get(CONF_DASHBOARD_ADMIN))
     name = title(hass, entry)
     board = lovelace.LovelaceStorage(
         hass,
@@ -149,7 +151,7 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "icon": _ICON,
             "mode": "storage",
             "show_in_sidebar": True,
-            "require_admin": False,
+            "require_admin": admin,
         },
     )
     try:
@@ -175,6 +177,7 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
         sidebar_icon=_ICON,
         frontend_url_path=path,
         config={"mode": "storage"},
+        require_admin=admin,
         update=True,
     )
 

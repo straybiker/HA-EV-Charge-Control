@@ -76,6 +76,7 @@ CONF_DASHBOARD_REBUILD = "dashboard_rebuild"
 # When the user last rebuilt the dashboard; makes a rebuild change the options.
 CONF_DASHBOARD_REBUILT = "dashboard_rebuilt"
 CONF_DASHBOARD_TITLE = "dashboard_title"
+CONF_DASHBOARD_ADMIN = "dashboard_require_admin"
 
 DEFAULT_NAME = "EV charger controller"
 DEFAULT_MAX_CURRENT = 16

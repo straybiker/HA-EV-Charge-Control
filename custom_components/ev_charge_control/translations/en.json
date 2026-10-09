@@ -8,13 +8,15 @@
           "name": "Name",
           "import_yaml": "Import from EV Load Balancer",
           "dashboard": "Add a dashboard",
-          "dashboard_title": "Dashboard name"
+          "dashboard_title": "Dashboard name",
+          "dashboard_require_admin": "Only for administrators"
         },
         "data_description": {
           "name": "The name of the controller device, for example where the charger is. Its entities are named after it.",
           "import_yaml": "The EV Load Balancer YAML package is installed. On: the next steps are prefilled with its entities and values, and the new device starts with its settings. Control charger stays off. You check every step before saving.",
           "dashboard": "Adds a dashboard for this controller to the sidebar. When the EV Load Balancer YAML package is installed, it gets a second view that compares the controller with the package. You can add or remove it later under Configure.",
-          "dashboard_title": "The name of the dashboard in the sidebar. With the default name and more than one controller, the other dashboards add their device name."
+          "dashboard_title": "The name of the dashboard in the sidebar. With the default name and more than one controller, the other dashboards add their device name.",
+          "dashboard_require_admin": "On: only administrators see the dashboard in the sidebar and can open it."
         }
       },
       "outputs": {
@@ -319,12 +321,14 @@
         "data": {
           "dashboard": "Show the dashboard",
           "dashboard_rebuild": "Rebuild the dashboard",
-          "dashboard_title": "Dashboard name"
+          "dashboard_title": "Dashboard name",
+          "dashboard_require_admin": "Only for administrators"
         },
         "data_description": {
           "dashboard": "Off removes the dashboard and your edits to it.",
           "dashboard_rebuild": "Builds the dashboard again from the current setup and discards your edits. Use it after you change entities in these steps, or after an update.",
-          "dashboard_title": "The name in the sidebar. A new name applies after you save; the dashboard content stays."
+          "dashboard_title": "The name in the sidebar. A new name applies after you save; the dashboard content stays.",
+          "dashboard_require_admin": "On: only administrators see the dashboard in the sidebar and can open it."
         }
       },
       "device_classes": {

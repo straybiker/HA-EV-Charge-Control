@@ -125,7 +125,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 
 | Step | Kind | What you enter |
 |---|---|---|
-| New charge controller | | The device name, **Add a dashboard** (on) and the **Dashboard name**. On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
+| New charge controller | | The device name, **Add a dashboard** (on), the **Dashboard name** and **Only for administrators** (off). On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
 | Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. |
 | Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
@@ -191,6 +191,7 @@ Edit it like any other dashboard; the edits stay. To add or remove it later, sel
 
 - **Show the dashboard** on adds it; off removes it and your edits.
 - **Dashboard name** renames it. The content stays.
+- **Only for administrators** shows it only to administrators, in the sidebar and when they open its address.
 - **Rebuild the dashboard** builds it again from the current setup and discards your edits. Use it after you change entities in the setup, or after an update.
 
 The dashboard belongs to the controller. It is listed under **Settings → Dashboards**, but the integration sets its name and icon at every start, and it is removed with the controller. To add, remove, rename or rebuild it, use **Configure**, not the dashboard settings.

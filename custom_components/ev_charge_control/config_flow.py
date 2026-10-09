@@ -39,6 +39,7 @@ from .const import (
     CONF_CURRENT_LIMIT,
     CONF_CURRENT_STEP,
     CONF_DASHBOARD,
+    CONF_DASHBOARD_ADMIN,
     CONF_DASHBOARD_REBUILD,
     CONF_DASHBOARD_REBUILT,
     CONF_DASHBOARD_TITLE,
@@ -144,6 +145,9 @@ async def _name_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     fields[vol.Required(CONF_DASHBOARD, default=True)] = selector.BooleanSelector()
     fields[vol.Optional(CONF_DASHBOARD_TITLE, default=dashboard.NAME)] = (
         selector.TextSelector()
+    )
+    fields[vol.Required(CONF_DASHBOARD_ADMIN, default=False)] = (
+        selector.BooleanSelector()
     )
     return vol.Schema(fields)
 
@@ -601,6 +605,7 @@ DASHBOARD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DASHBOARD, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_DASHBOARD_TITLE): selector.TextSelector(),
+        vol.Required(CONF_DASHBOARD_ADMIN, default=False): selector.BooleanSelector(),
         vol.Required(CONF_DASHBOARD_REBUILD, default=False): selector.BooleanSelector(),
     }
 )

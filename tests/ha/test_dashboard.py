@@ -223,3 +223,16 @@ async def test_built_at_startup_is_built_again_once_started(
     await hass.async_block_till_done()
     config = await _config(hass)
     assert [view["path"] for view in config["views"]] == ["overview", "shadow"]
+
+
+async def test_only_for_administrators(hass: HomeAssistant, sources, lovelace) -> None:
+    entry = make_entry(hass, dashboard=True, dashboard_require_admin=True)
+    await setup(hass, entry)
+    assert _panels(hass)[PATH].require_admin is True
+
+
+async def test_visible_to_everyone_by_default(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    assert _panels(hass)[PATH].require_admin is False
