@@ -207,7 +207,7 @@ HOUSEHOLD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOUSE_POWER): _entity("sensor"),
         # A helper or an EMS entity, for example the capacity tariff peak.
-        vol.Required(CONF_POWER_LIMIT): _entity(["sensor", "input_number", "number"]),
+        vol.Optional(CONF_POWER_LIMIT): _entity(["sensor", "input_number", "number"]),
         vol.Optional(CONF_PEAK_FACTOR): _number(50, 100, 1, "%"),
         vol.Optional(CONF_SOLAR_POWER): _entity("sensor"),
     }
@@ -368,7 +368,7 @@ async def _validate_household(
     _check_power_units(
         handler,
         user_input[CONF_HOUSE_POWER],
-        user_input[CONF_POWER_LIMIT],
+        user_input.get(CONF_POWER_LIMIT),
         user_input.get(CONF_SOLAR_POWER),
     )
     return user_input

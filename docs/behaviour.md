@@ -47,7 +47,7 @@ Each run applies the first rule that matches.
 
 ## Power limit
 
-- **Power limit:** read at each run from a required entity (sensor or number, W or kW): a helper or an entity of the EMS. With a capacity tariff, the EMS gives it a floor and lets it follow the paid peak, for example max(default, 90 % × monthly peak). A raw monthly peak is not a good limit where the tariff resets it at the start of the month.
+- **Power limit:** read at each run from an entity (sensor or number, W or kW): a helper or an entity of the EMS. Without an entity in the setup, the device has its own **Power limit** number, set by hand or by an automation of the EMS. With a capacity tariff, the EMS gives it a floor and lets it follow the paid peak, for example max(default, 90 % × monthly peak). A raw monthly peak is not a good limit where the tariff resets it at the start of the month.
 - **Effective power limit** = peak factor × power limit. The peak factor is an optional setup field (50–100 %, empty: 100 %): a safety buffer, so a held charging power stays below the billed peak.
 - Limit unavailable: the last known value. No value since start: 0, so the controller has no power limit and writes nothing.
 - The controller uses the effective limit everywhere the rules above say "power limit".
@@ -126,7 +126,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 | `failsafe` | A required sensor is unavailable |
 | `not_connected` | No car plugged in, or the charger reports an error |
 | `charger_unavailable` | The charger's current or phase setting is unknown |
-| `no_power_limit` | The power limit entity has no value yet, or is 0 |
+| `no_power_limit` | The power limit entity has no value yet, or the power limit is 0 |
 | `grace_period` | Waiting after a 1→3 phase switch |
 | `charger_not_responding` | The charger did not follow the last 3 writes (shown while Control charger is on) |
 
@@ -159,8 +159,8 @@ A change to the charging behaviour adds or updates a row here.
 | B6 | Efficiency learning | Running average, steady samples only. |
 | B7 | Charger quirks | Current step (0.1 A or 1 A) and "widen small decreases" are charger options. |
 | B8 | Recalculation | Fixed interval (default 10 s), plus at once on mode, settings and phase changes and when the car connects or disconnects (B20). Power sensor updates do not trigger a run. |
-| B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the power limit is an existing entity; the runtime settings are device entities. |
-| B10 | Power limit | From a required entity (helper or EMS); the EMS, not the integration, makes it follow the monthly peak. Effective limit = peak factor × limit; the optional peak factor is a safety buffer (empty: 100 %). Unavailable: last known value; none yet: no power limit. |
+| B9 | Parameter sources | Each parameter of the YAML package's user config has one place: measurements and the charger maximum are existing entities; fixed values (currents, voltage, phase texts, tuning, peak factor) are setup fields; the power limit is an existing entity or a device number (B10); the runtime settings are device entities. |
+| B10 | Power limit | From an entity (helper or EMS), or, without one in the setup, from the device's own Power limit number (default 5000 W, restored after a restart), so the limit does not need a helper outside the integration. The EMS, not the integration, makes it follow the monthly peak. Effective limit = peak factor × limit; the optional peak factor is a safety buffer (empty: 100 %). Unavailable: last known value; none yet: no power limit. |
 | B11 | Money | No cost or reimbursement sensors. The integration provides charged energy, split into grid and solar; an EMS calculates cost and reimbursement. |
 | B12 | Energy source | The charger's energy meter when set, else integrated charger power. |
 | B13 | Charger maximum | From an entity; last known value when unavailable; fallback current until a first value; never above 32 A. |

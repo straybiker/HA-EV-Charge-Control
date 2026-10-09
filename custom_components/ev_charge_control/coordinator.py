@@ -156,7 +156,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
         max_a = self._max_current(extras)
         self.controller.charger = replace(self.controller.charger, max_current_a=max_a)
         settings = self.store.snapshot()
-        limit_w = self._limit(extras)
+        limit_w = self._limit(extras, settings.power_limit_w)
         power_limit_w = effective_power_limit(limit_w, self.tuning.peak_factor)
         settings = replace(
             settings,
@@ -222,12 +222,15 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
             return replace(output, reason=Reason.CHARGER_NOT_RESPONDING)
         return output
 
-    def _limit(self, extras: Extras) -> float | None:
+    def _limit(self, extras: Extras, own_w: float) -> float | None:
         """The power limit entity's value, else the last value seen.
 
         None until it has reported once: the controller then has no power
-        limit and writes nothing.
+        limit and writes nothing. Without an entity in the setup, the
+        device's own Power limit number (B10).
         """
+        if not self.reader.power_limit_entity:
+            return own_w
         if extras.power_limit_w is not None and extras.power_limit_w > 0:
             self._last_limit_w = extras.power_limit_w
         return self._last_limit_w

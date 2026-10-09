@@ -169,6 +169,11 @@ class InputReader:
         return self.last_extras
 
     @property
+    def power_limit_entity(self) -> bool:
+        """Whether the setup names a power limit entity (B10)."""
+        return bool(self._options.get(CONF_POWER_LIMIT))
+
+    @property
     def three_phases(self) -> bool:
         """Whether the phase setting has a 3-phase option (B18)."""
         return bool(self._options.get(CONF_PHASE_OPTION_3))

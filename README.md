@@ -92,7 +92,7 @@ flowchart LR
   | Phase setting | The entity that switches between 1 and 3 phases: a `select` (an option per phase count), a `switch` (on/off) or a `number` (a value per phase count). For a charger that only charges on 1 phase, the 3-phase option or value can stay empty. |
 
 - **House power without the charger** (W or kW; negative during export). Power inputs need a unit of measurement. If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
-- **A power limit entity** (W or kW): a helper or an entity of your EMS. See [power limit](#power-limit-and-the-capacity-tariff).
+- **A power limit** (W or kW): an entity (a helper or an entity of your EMS), or the device's own Power limit number. See [power limit](#power-limit-and-the-capacity-tariff).
 - Optional: the car's battery level, an electricity price, an EMS signal, the charger's energy meter.
 - **Units, not device classes:** the setup lists every sensor, also ones without a device class. It checks the unit instead: W or kW for power, Wh, kWh or MWh for energy, A for the applied current and % for the battery level. Set the unit on a sensor or helper that has none. A sensor without the expected device class (power, current, energy or battery) gets a warning at the end of the setup; you can continue.
 - For the optional [dashboard](#the-dashboard): nothing extra. It uses only built-in cards and works on every supported Home Assistant version. From Home Assistant 2026.6, the lines of its power graph get their own colours. It needs the Dashboards integration, which Home Assistant loads by default.
@@ -129,7 +129,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
 | Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
-| House | Reads | House power without the charger, power limit (sensor or number). Optional: peak factor as a safety buffer (empty: 100 %), solar power. |
+| House | Reads | House power without the charger. Optional: power limit (sensor or number; empty: the device's own **Power limit** number), peak factor as a safety buffer (empty: 100 %), solar power. |
 | Car (optional) | Reads | Battery level, battery capacity, car maximum and minimum current. Without a battery level, the battery targets have no effect. |
 | Price and EMS (optional) | Reads | Price sensor (or one of its attributes), EMS signal. Without a price, the price check is skipped. |
 | Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s). |
@@ -151,6 +151,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | Charge mode | See [charge modes](#charge-modes). |
 | Setting | Max charging cost (per kWh) | Above this price, the car does not use the grid, except in Fast mode. Default 0.30. |
 | Setting | Target SOC, Comfort SOC, Emergency SOC (%) | Battery levels. They need **Car aware**. Defaults 80, 50 and 20 %. |
+| Setting | Power limit (W) | Only without a power limit entity in the setup: the limit the controller uses, set by hand or by an automation of your EMS. Default 5000 W. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Setting | Solar bridge (W) | The grid power that Solar mode can import to reach the minimum. Default 0 W: solar only. |
 | Setting | Car aware | Use the car's battery level. |
 | Setting | Charge on solar when EMS blocks | When the EMS signal is 0 W, grid modes charge on solar instead of stopping. |
@@ -244,7 +245,7 @@ For the YAML package, the [migration guide](docs/migration.md) has the full step
 
 The **power limit** is the most power the house may take from the grid, charger included. The car gets the remainder: limit − house power.
 
-The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. The controller only reads it.
+The limit comes from an entity that you pick in the House step: a helper you set by hand, or an entity of your EMS. The controller only reads it. Leave the field empty to use the device's own **Power limit** number instead; set it by hand, or let an automation of your EMS write to it.
 
 With a capacity tariff, you pay for the highest quarter-hour peak of the month, so charging up to that peak costs nothing extra. Let your EMS keep the limit entity at the higher of two values: a minimum limit that you choose, and 90 % of this month's peak. For example: **max(5 kW, 90 % × monthly peak)**. The limit then never drops below your minimum, and it rises with the peak that you already pay for.
 

@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EvChargeConfigEntry
+from .const import CONF_POWER_LIMIT
 from .entity import init_entity
 from .settings import SettingsStore
 
@@ -68,6 +69,19 @@ NUMBERS: tuple[SettingNumberDescription, ...] = (
         device_class=NumberDeviceClass.POWER,
         mode=NumberMode.BOX,
     ),
+    # Only without a power limit entity in the setup (B10): set by hand or
+    # by an automation of the EMS.
+    SettingNumberDescription(
+        key="power_limit",
+        field="power_limit_w",
+        default=5000,
+        native_min_value=0,
+        native_max_value=50000,
+        native_step=100,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
+        mode=NumberMode.BOX,
+    ),
 )
 
 
@@ -86,6 +100,7 @@ async def async_setup_entry(
             unit=currency_unit if d.key == "max_charging_cost" else None,
         )
         for d in NUMBERS
+        if d.key != "power_limit" or not entry.options.get(CONF_POWER_LIMIT)
     )
 
 

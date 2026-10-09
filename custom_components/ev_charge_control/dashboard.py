@@ -331,6 +331,11 @@ def _phase_tiles(e: Mapping[str, str], three: bool) -> list[dict]:
     return tiles
 
 
+def _power_limit(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
+    """The setup's power limit entity, else the device's own number (B10)."""
+    return o.get(CONF_POWER_LIMIT) or e["power_limit"]
+
+
 def _car_state(o: Mapping[str, Any]) -> str:
     """The connection entity in words: a tile would show the bare Mode 3 code."""
     connection = o[CONF_CONNECTION]
@@ -474,7 +479,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 # the setup names one, and it has a unit.
                 _tile(e["import_price"], "Import price") if price else None,
                 *_phase_tiles(e, three),
-                _tile(o[CONF_POWER_LIMIT], "Power limit"),
+                _tile(_power_limit(e, o), "Power limit"),
             ),
             _section(
                 _heading("Power today", "mdi:chart-areaspline"),
@@ -674,7 +679,7 @@ def _shadow(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _tile(o[CONF_ACTIVE_PHASES], "Active phases", 4),
                 _tile(o[CONF_CHARGER_POWER], "Charger power", 4),
                 _tile(o[CONF_CONNECTION], "Connection", 4),
-                _tile(o[CONF_POWER_LIMIT], "Power limit", 4),
+                _tile(_power_limit(e, o), "Power limit", 4),
                 _tile(o[CONF_EMS], "EMS signal", 4) if o.get(CONF_EMS) else None,
                 span=2,
             ),

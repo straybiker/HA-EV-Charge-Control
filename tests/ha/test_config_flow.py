@@ -401,3 +401,10 @@ async def test_no_warning_with_the_expected_device_classes(
         result["flow_id"], TUNING_STEP
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_the_power_limit_entity_is_optional(hass: HomeAssistant, sources) -> None:
+    result = await _to_step(hass, "household")
+    data = {k: v for k, v in HOUSEHOLD_STEP.items() if k != "power_limit_entity"}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["step_id"] == "car"

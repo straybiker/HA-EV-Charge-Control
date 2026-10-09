@@ -73,8 +73,8 @@ async def test_defaults_on_first_creation(
 ) -> None:
     await setup(hass, entry)
     assert hass.states.get(MODE_SELECT).state == "off"
-    # The power limit comes from an entity; the device has no own number.
-    assert hass.states.get("number.test_charger_base_power_limit") is None
+    # The power limit comes from an entity; the device has no own number (B10).
+    assert hass.states.get("number.test_charger_power_limit") is None
     assert hass.states.get("number.test_charger_target_soc").state == "80"
     assert (
         hass.states.get("switch.test_charger_charge_on_solar_when_ems_blocks").state
@@ -554,3 +554,17 @@ async def test_a_single_phase_charger_has_no_3_phase_entities(
     assert hass.states.get("sensor.test_charger_efficiency_1_phase") is not None
     assert hass.states.get("sensor.test_charger_efficiency_3_phases") is None
     assert hass.states.get("sensor.test_charger_grace_period_until") is None
+
+
+async def test_without_a_limit_entity_the_device_number_is_the_limit(
+    hass: HomeAssistant, sources
+) -> None:
+    """B10: no helper outside the integration needed."""
+    entry = make_entry(hass, power_limit_entity=None)
+    await setup(hass, entry)
+    own = "number.test_charger_power_limit"
+    assert hass.states.get(own).state == "5000.0"
+    assert hass.states.get(EFFECTIVE_LIMIT).state == "5000"
+    await _set_number(hass, own, 3200)
+    await _tick(hass, _DEBOUNCE)
+    assert hass.states.get(EFFECTIVE_LIMIT).state == "3200"
