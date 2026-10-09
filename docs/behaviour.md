@@ -38,7 +38,7 @@ Each run applies the first rule that matches.
 - **Grid gate.** The grid is allowed when the price is at or below the maximum cost (no price: the check is skipped) and, with EMS control on, the EMS signal is above 0 W (no signal: closed). Fast skips the price check; the EMS check stays (B19).
 - **What skips what.** No rule skips the power limit. Fast skips the price check. The emergency skips the price, the EMS and the Minimum cap. Solar and Comfort from the comfort SOC let the price and the EMS block only the bridge.
 - **Grid allowance.** Gate closed: 0. Otherwise the mode's request (bridge, minimum, power limit or hardware maximum). With EMS in budget mode, capped at the EMS signal in watts. With EMS in on/off mode, the signal only opens or closes the gate.
-- **EMS at 0 W** stops Minimum, Limited and Fast, also on solar, unless "Charge on solar when EMS blocks" is on: then they charge on solar only. Solar (and Comfort from the comfort SOC) keeps charging on solar; EMS blocks only its bridge.
+- **EMS at 0 W** stops Minimum, Limited and Fast, also on solar, unless "Always charge when solar available" is on: then they charge on solar only. Solar (and Comfort from the comfort SOC) keeps charging on solar; EMS blocks only its bridge.
 - **Request.**
   - Minimum modes: `min(solar + grid allowance, minimum)`. Grid and solar may both supply the minimum; the surplus never raises it.
   - Limited, Fast: `solar + grid allowance`.
@@ -153,7 +153,7 @@ A change to the charging behaviour adds or updates a row here.
 | D16 | Rounding | Round up (to the nearest step) when there is headroom; round down when rounding up would exceed the power limit. |
 | B1 | PV priority purpose | Maximise solar use and minimise import. The bridge closes a small gap to the minimum and is never used beyond it. |
 | B2 | Solar mode | Solar mode is "solar first + bridge" (bridge 0 W = pure solar). Limited never uses the bridge. Comfort from its comfort SOC runs as Solar, so it gets the bridge. |
-| B3 | PV priority switch | Renamed "Charge on solar when EMS blocks". Its only job: with EMS at 0 W, grid modes charge on solar instead of stopping. |
+| B3 | PV priority switch | Named "Always charge when solar available". Its only job: with EMS at 0 W, grid modes charge on solar instead of stopping. A price above the maximum never stops solar charging, so the switch is not needed there. In every other case the grid modes already use all solar; the Minimum modes stay at their minimum (D05). |
 | B4 | Stops and phases | A stop keeps the current phase; the phase is chosen when charging restarts. |
 | B5 | Phase hold after restart | Starts only on a real 3→1 change. |
 | B6 | Efficiency learning | Running average, steady samples only. |

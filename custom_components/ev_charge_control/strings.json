@@ -421,7 +421,7 @@
         "name": "Car aware"
       },
       "solar_when_ems_blocks": {
-        "name": "Charge on solar when EMS blocks"
+        "name": "Always charge when solar available"
       },
       "single_phase_only": {
         "name": "Single phase only"

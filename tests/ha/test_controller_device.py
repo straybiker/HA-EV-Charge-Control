@@ -77,7 +77,7 @@ async def test_defaults_on_first_creation(
     assert hass.states.get("number.test_charger_power_limit") is None
     assert hass.states.get("number.test_charger_target_soc").state == "80"
     assert (
-        hass.states.get("switch.test_charger_charge_on_solar_when_ems_blocks").state
+        hass.states.get("switch.test_charger_always_charge_when_solar_available").state
         == "off"
     )
     assert hass.states.get(DECISION).state == "off"

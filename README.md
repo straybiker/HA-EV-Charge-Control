@@ -154,7 +154,7 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Setting | Power limit (W) | Only without a power limit entity in the setup: the limit the controller uses, set by hand or by an automation of your EMS. Default 5000 W. See [power limit](#power-limit-and-the-capacity-tariff). |
 | Setting | Solar bridge (W) | The grid power that Solar mode can import to reach the minimum. Default 0 W: solar only. |
 | Setting | Car aware | Use the car's battery level. |
-| Setting | Charge on solar when EMS blocks | When the EMS signal is 0 W, grid modes charge on solar instead of stopping. |
+| Setting | Always charge when solar available | When the EMS signal is 0 W, grid modes charge on solar instead of stopping. Above the maximum price they always charge on solar, also with this switch off. Otherwise the controller already uses all solar: only the Minimum modes stay at their minimum. |
 | Setting | Single phase only | Never use 3 phases. Always on, and cannot be switched off, when the setup has no option for 3 phases. |
 | Setting | EMS control, EMS as on/off | The EMS signal limits the grid, as a watt budget or as on/off. |
 | Decision | Target current, Target phases, Target power | What the controller sets now, or would set with Control charger off. |
@@ -269,7 +269,7 @@ The **Effective power limit** sensor shows the value in use.
 
 - **Max charging cost:** with a price sensor, the grid is blocked while the price is above this value. The car can still charge on solar. **Fast** mode and emergency charging skip this check.
 - **EMS control:** the EMS signal (in W) limits the grid. As a **budget**, the grid share is at most the signal. As **on/off**, a value above 0 W allows the grid.
-- **EMS at 0 W** stops the grid modes, also on solar. **Charge on solar when EMS blocks** lets them continue on solar. Solar mode always continues on solar.
+- **EMS at 0 W** stops the grid modes, also on solar. **Always charge when solar available** lets them continue on solar. Solar mode always continues on solar.
 
 ### Car awareness
 
@@ -316,7 +316,7 @@ The controller uses 3 phases when the power is sufficient for the minimum curren
 | The decision stays **Fail-safe**. | Charger power, applied current, active phases or house power is unavailable. |
 | The decision stays **Not connected** while a car is connected. | The connection entity must show a Mode 3 state (B1 … D2 = connected), or be a binary sensor that is on. |
 | The current goes up and down at each run. | The house power sensor probably includes the charger. It must exclude the charger. |
-| **Grid blocked** during daylight. | The price is above Max charging cost, or the EMS signal is 0 W. Turn on **Charge on solar when EMS blocks** to use solar. |
+| **Grid blocked** during daylight. | The price is above Max charging cost, or the EMS signal is 0 W. Turn on **Always charge when solar available** to use solar. |
 | **Comfort** never changes to Solar. | Car aware is off, or the battery level is unavailable. |
 | **Charger not responding**, with a repair issue. | The charger is offline, or its integration does not pass the values on. Check the charger's current-limit number and applied current. Switch Control charger off to stop the attempts. |
 | The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |

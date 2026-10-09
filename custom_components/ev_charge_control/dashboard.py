@@ -530,7 +530,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 _tile(e["ems_as_onoff"], "EMS as on/off") if ems else None,
                 _tile(
                     e["solar_when_ems_blocks"],
-                    "PV prioritized (charge on solar when EMS blocks)",
+                    "Always charge when solar available",
                     12,
                 )
                 if ems

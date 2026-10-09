@@ -421,7 +421,7 @@
         "name": "Autobewust"
       },
       "solar_when_ems_blocks": {
-        "name": "Laden op zon als EMS blokkeert"
+        "name": "Altijd laden bij zon"
       },
       "single_phase_only": {
         "name": "Enkel 1 fase"

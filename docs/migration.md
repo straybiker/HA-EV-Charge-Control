@@ -56,7 +56,7 @@ Alfen chargers: in Charger limits and safety, set **Current step** to 0.1 A and 
 | state (charge mode) | Device: Charge mode. See [modes](#modes) below. |
 | `power_limit` | House: Power limit (the entity the template reads) |
 | `car_aware` | Device: Car aware |
-| `pv_prioritized` | Device: Charge on solar when EMS blocks. Its other job, solar first in Limited, is now Solar mode. |
+| `pv_prioritized` | Device: Always charge when solar available. Its other job, solar first in Limited, is now Solar mode. |
 | `pv_prio_threshold` | Device: Solar bridge |
 | `single_phase_only` | Device: Single phase only |
 | `ems_control`, `ems_as_onoff` | Device: EMS control, EMS as on/off |
