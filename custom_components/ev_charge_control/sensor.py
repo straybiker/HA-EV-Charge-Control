@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EvChargeConfigEntry
-from .const import CONF_PRICE
+from .const import CONF_PHASE_OPTION_3, CONF_PRICE
 from .coordinator import EvChargeCoordinator, Snapshot
 from .engine import Reason
 from .entity import init_entity
@@ -118,6 +118,20 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         value_fn=lambda s: round(s.output.efficiency * 100, 1),
     ),
     OutputSensorDescription(
+        key="efficiency_1p",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda s: round(s.efficiencies["1"] * 100, 1),
+    ),
+    OutputSensorDescription(
+        key="efficiency_3p",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda s: round(s.efficiencies["3"] * 100, 1),
+    ),
+    OutputSensorDescription(
         key="solar_surplus",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -200,6 +214,12 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         value_fn=lambda s: s.output.phase_hold_until,
     ),
     OutputSensorDescription(
+        key="grace_until",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda s: s.output.grace_until,
+    ),
+    OutputSensorDescription(
         key="effective_power_limit",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -216,6 +236,9 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
 )
 
 
+_THREE_PHASE_ONLY = {"efficiency_3p", "grace_until"}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EvChargeConfigEntry,
@@ -223,8 +246,12 @@ async def async_setup_entry(
 ) -> None:
     coordinator = entry.runtime_data.coordinator
     price_unit = f"{hass.config.currency}/kWh"
+    three_phases = bool(entry.options.get(CONF_PHASE_OPTION_3))
     descriptions = []
     for d in SENSORS:
+        # A single-phase charger never charges on 3 phases (B18).
+        if d.key in _THREE_PHASE_ONLY and not three_phases:
+            continue
         if d.key == "import_price":
             # Without a price entity there is no price to show.
             if not entry.options.get(CONF_PRICE):

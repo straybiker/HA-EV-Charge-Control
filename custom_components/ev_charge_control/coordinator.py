@@ -57,6 +57,8 @@ class Snapshot:
     total_power_w: float | None
     # The import price the controller read, per kWh.
     price: float | None
+    # Learned efficiency by phase count ("1", "3").
+    efficiencies: dict[str, float]
     # What the car would take now in the current mode, also without a car.
     available: Available | None
     # None when the setup has no EMS entity.
@@ -197,6 +199,7 @@ class EvChargeCoordinator(DataUpdateCoordinator[Snapshot]):
                 else measurements.house_power_w + measurements.charger_power_w
             ),
             price=measurements.price,
+            efficiencies=self.controller.efficiency_state(),
             available=available,
             max_current_a=max_a,
             energy=energy,

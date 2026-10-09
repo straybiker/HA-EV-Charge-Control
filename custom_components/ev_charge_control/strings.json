@@ -448,6 +448,12 @@
       "charger_efficiency": {
         "name": "Charger efficiency"
       },
+      "efficiency_1p": {
+        "name": "Efficiency 1 phase"
+      },
+      "efficiency_3p": {
+        "name": "Efficiency 3 phases"
+      },
       "solar_surplus": {
         "name": "Solar surplus"
       },
@@ -477,6 +483,9 @@
       },
       "phase_hold_until": {
         "name": "Phase hold until"
+      },
+      "grace_until": {
+        "name": "Grace period until"
       },
       "effective_power_limit": {
         "name": "Effective power limit"

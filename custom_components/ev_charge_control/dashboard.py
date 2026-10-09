@@ -301,6 +301,36 @@ def _total_power(e: Mapping[str, str]) -> list[dict]:
     ]
 
 
+def _phase_tiles(e: Mapping[str, str], three: bool) -> list[dict]:
+    """Efficiency per phase count, and the phase-switch timers while they run.
+
+    A single-phase charger has neither the 3-phase efficiency nor the grace
+    period after a 1 -> 3 switch.
+    """
+
+    def running(key: str, name: str) -> dict:
+        return _tile(
+            e[key],
+            name,
+            visibility=[
+                {
+                    "condition": "state",
+                    "entity": e[key],
+                    "state_not": ["unknown", "unavailable"],
+                }
+            ],
+        )
+
+    tiles = [_tile(e["efficiency_1p"], "Efficiency 1 phase")]
+    if three:
+        tiles += [
+            _tile(e["efficiency_3p"], "Efficiency 3 phases"),
+            running("phase_hold_until", "Phase hold until"),
+            running("grace_until", "Grace period until"),
+        ]
+    return tiles
+
+
 def _car_state(o: Mapping[str, Any]) -> str:
     """The connection entity in words: a tile would show the bare Mode 3 code."""
     connection = o[CONF_CONNECTION]
@@ -368,6 +398,7 @@ def _control_badges(e: Mapping[str, str]) -> list[dict]:
 def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
     ems = o.get(CONF_EMS)
     price = o.get(CONF_PRICE)
+    three = bool(o.get(CONF_PHASE_OPTION_3))
     solar = o.get(CONF_SOLAR_POWER)
     today_grid, today_solar = (
         e["charged_from_grid_today"],
@@ -442,7 +473,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> dict:
                 # The integration's own sensor: it reads the attribute when
                 # the setup names one, and it has a unit.
                 _tile(e["import_price"], "Import price") if price else None,
-                _tile(e["charger_efficiency"], "Charger efficiency"),
+                *_phase_tiles(e, three),
                 _tile(o[CONF_POWER_LIMIT], "Power limit"),
             ),
             _section(

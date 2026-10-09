@@ -534,3 +534,23 @@ async def test_no_import_price_without_a_price_entity(
 ) -> None:
     await setup(hass, entry)
     assert hass.states.get("sensor.test_charger_import_price") is None
+
+
+async def test_efficiency_per_phase_count_and_the_switch_timers(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    await setup(hass, entry)
+    assert hass.states.get("sensor.test_charger_efficiency_1_phase").state == "100.0"
+    assert hass.states.get("sensor.test_charger_efficiency_3_phases").state == "100.0"
+    # Timers are empty while no switch runs.
+    assert hass.states.get("sensor.test_charger_grace_period_until").state == "unknown"
+
+
+async def test_a_single_phase_charger_has_no_3_phase_entities(
+    hass: HomeAssistant, sources
+) -> None:
+    entry = make_entry(hass, phase_option_3=None)
+    await setup(hass, entry)
+    assert hass.states.get("sensor.test_charger_efficiency_1_phase") is not None
+    assert hass.states.get("sensor.test_charger_efficiency_3_phases") is None
+    assert hass.states.get("sensor.test_charger_grace_period_until") is None

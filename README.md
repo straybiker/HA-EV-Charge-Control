@@ -171,7 +171,9 @@ The setup creates one device, **EV charger controller**, with these entities:
 | Diagnostic | Total power | The house including the charger: house power plus charger power, as measured (W). |
 | Diagnostic | Car from grid, Car from solar | The target power split into the part from the grid and the part from the solar surplus (W). Together they are the target power; 0 W while the controller does not charge. |
 | Diagnostic | Charger efficiency | Measured charger power ÷ commanded power, learned while charging, separately for 1 and 3 phases. Shows the value for the target phases. Kept across sessions and restarts. |
+| Diagnostic | Efficiency 1 phase, Efficiency 3 phases | The learned efficiency for each phase count. Efficiency 3 phases only when the setup has the 3-phase option. |
 | Diagnostic | Phase hold until | When a running phase hold ends. Empty (unknown) while no hold runs. |
+| Diagnostic | Grace period until | When the wait after a 1 → 3 phase switch ends. Empty (unknown) while no wait runs. Only with the 3-phase option. |
 
 Settings keep their value after a restart. The controller runs at the recalculation interval. It also runs immediately when the mode, a setting or the phase changes, and when the car connects or disconnects. Other changes of the connection entity (for example Mode 3 C1 to C2) wait for the next timed run: at that moment the house power is not reliable.
 

@@ -448,6 +448,12 @@
       "charger_efficiency": {
         "name": "Rendement laadpaal"
       },
+      "efficiency_1p": {
+        "name": "Rendement 1 fase"
+      },
+      "efficiency_3p": {
+        "name": "Rendement 3 fasen"
+      },
       "solar_surplus": {
         "name": "Zonne-overschot"
       },
@@ -477,6 +483,9 @@
       },
       "phase_hold_until": {
         "name": "Fase vastgehouden tot"
+      },
+      "grace_until": {
+        "name": "Wachttijd tot"
       },
       "effective_power_limit": {
         "name": "Effectieve vermogenslimiet"
