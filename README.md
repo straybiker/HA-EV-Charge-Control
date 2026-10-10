@@ -105,7 +105,7 @@ flowchart LR
 [![Open the repository in HACS on your Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=straybiker&repository=HA-EV-Charge-Control&category=integration)
 
 1. Select the button above, or in HACS open the menu, select **Custom repositories** and add `https://github.com/straybiker/HA-EV-Charge-Control` with the type **Integration**.
-2. Install **EV Charge Control** and restart Home Assistant. To get pre-releases (versions such as `0.3.0-beta.1`), turn on **Show beta versions** for the repository in HACS.
+2. Install **EV Charge Control** and restart Home Assistant. To get pre-releases (versions such as `1.1.0-beta.1`), turn on **Show beta versions** for the repository in HACS.
 
 **Manual**
 

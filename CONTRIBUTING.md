@@ -78,9 +78,9 @@ The YAML package column needs a checkout of [EV Load Balancer](https://github.co
 
 1. Set the same version in `custom_components/ev_charge_control/manifest.json` and `pyproject.toml` (SemVer). `tests/test_manifest.py` checks that they match.
 2. Rebuild and commit the test report.
-3. Publish a GitHub release with the tag `v<version>`, for example `v0.3.0`. HACS offers releases as versions; the Release workflow fails when the tag does not match the manifest.
+3. Publish a GitHub release with the tag `v<version>`, for example `v1.0.0`. HACS offers releases as versions; the Release workflow fails when the tag does not match the manifest.
 
-For a test version, use a SemVer pre-release version such as `0.3.0-beta.1` and mark the GitHub release as a pre-release. HACS offers it only to users who turn on **Show beta versions** for the repository.
+For a test version, use a SemVer pre-release version such as `1.1.0-beta.1` and mark the GitHub release as a pre-release. HACS offers it only to users who turn on **Show beta versions** for the repository.
 
 ## Pull requests
 
