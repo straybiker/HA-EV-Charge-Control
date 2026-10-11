@@ -90,6 +90,12 @@ _CONTROL_CONFIRM = (
     "This makes the controller write to the charger. "
     "Turn off any other automation that sets the charger first."
 )
+# Not the handover itself: the dashboard is not rebuilt when that option
+# changes, so naming it here could go stale.
+_CONTROL_OFF_CONFIRM = (
+    "Switch Control charger off? The controller stops writing. The charger "
+    "gets once what you chose in Configure, step 4/9 Charger limits and safety."
+)
 
 
 def _store_id(entry: ConfigEntry) -> str:
@@ -375,6 +381,53 @@ def _settings_tiles(
     return tiles
 
 
+def _control_tiles(e: Mapping[str, str]) -> list[Card]:
+    """Control charger, one tile per state.
+
+    A tile has one name and one confirmation text, so each state gets its own
+    tile: switching on warns about other automations, switching off says what
+    the charger gets.
+    """
+    control = e["control_charger"]
+
+    def tile(state: str, name: str, confirm: str) -> Card:
+        return _tile(
+            control,
+            name,
+            12,
+            tap_action={"action": "more-info"},
+            icon_tap_action={"action": "toggle", "confirmation": {"text": confirm}},
+            visibility=[{"condition": "state", "entity": control, "state": state}],
+        )
+
+    return [
+        tile("off", "Control charger - Shadow mode", _CONTROL_CONFIRM),
+        tile("on", "Control charger", _CONTROL_OFF_CONFIRM),
+    ]
+
+
+def _ems_tiles(e: Mapping[str, str], o: Mapping[str, Any]) -> list[Card]:
+    """The EMS input as the controller reads it.
+
+    As on/off the controller uses only whether the signal is above 0 W, so
+    EMS active says it; as a budget the watts count, so the signal itself.
+    """
+    onoff = e["ems_as_onoff"]
+    return [
+        _tile(
+            e["ems_active"],
+            "EMS active",
+            visibility=[{"condition": "state", "entity": onoff, "state": "on"}],
+        ),
+        _tile(
+            o[CONF_EMS],
+            "EMS signal",
+            icon="mdi:home-lightning-bolt",
+            visibility=[{"condition": "state", "entity": onoff, "state_not": "on"}],
+        ),
+    ]
+
+
 def _car_state(o: Mapping[str, Any]) -> str:
     """The connection entity in words: a tile would show the bare Mode 3 code."""
     connection = o[CONF_CONNECTION]
@@ -412,12 +465,7 @@ def _control_badges(e: Mapping[str, str]) -> list[Card]:
                 "perform_action": "switch.toggle",
                 "target": {"entity_id": control},
                 "confirmation": {
-                    "text": (
-                        _CONTROL_CONFIRM
-                        if off
-                        else "Switch Control charger off? The charger gets the "
-                        "fallback setpoint once, and the controller stops writing."
-                    )
+                    "text": _CONTROL_CONFIRM if off else _CONTROL_OFF_CONFIRM
                 },
             },
             "visibility": list(visibility),
@@ -513,7 +561,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
                 _heading("Gates and inputs", "mdi:traffic-light"),
                 _markdown(_car_state(o)),
                 _tile(e["grid_allowed"], "Grid allowed"),
-                _tile(e["ems_active"], "EMS active") if ems else None,
+                *(_ems_tiles(e, o) if ems else []),
                 # The integration's own sensor: it reads the attribute when
                 # the setup names one, and it has a unit.
                 _tile(e["import_price"], "Import price") if price else None,
@@ -554,16 +602,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
             ),
             _section(
                 _heading("Configuration", "mdi:cog"),
-                _tile(
-                    e["control_charger"],
-                    "Control charger (off: shadow mode)",
-                    12,
-                    tap_action={"action": "more-info"},
-                    icon_tap_action={
-                        "action": "toggle",
-                        "confirmation": {"text": _CONTROL_CONFIRM},
-                    },
-                ),
+                *_control_tiles(e),
                 _tile(e["ems_control"], "EMS control") if ems else None,
                 _tile(e["ems_as_onoff"], "EMS as on/off") if ems else None,
                 _tile(

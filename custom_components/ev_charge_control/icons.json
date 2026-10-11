@@ -146,6 +146,15 @@
       },
       "charged_from_solar_today": {
         "default": "mdi:solar-power-variant-outline"
+      },
+      "import_price": {
+        "default": "mdi:currency-eur"
+      },
+      "efficiency_1p": {
+        "default": "mdi:transfer"
+      },
+      "efficiency_3p": {
+        "default": "mdi:transfer"
       }
     }
   }

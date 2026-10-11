@@ -184,7 +184,7 @@ The settings are listed under **Configuration** on the device page; Control char
 
 With **Add a dashboard** on, the controller gets a dashboard in the sidebar. **Dashboard name** sets its name; the default is **EV Charge Control**. With the default name and more than one controller, the other dashboards add the device name, for example **EV Charge Control Garage**. It uses only built-in cards:
 
-- **Overview:** live status: the power the car draws and the target setpoint (in shadow mode the target power, marked Virtual), the power budget for the current mode, gates and inputs, power today, a timeline of today's decisions, phases, car connection and gates, the settings, the energy charged today and since setup, and the average charging power.
+- **Overview:** live status: the power the car draws and the target setpoint (in shadow mode the target power, marked Virtual), the power budget for the current mode, gates and inputs (with **EMS as on/off**: EMS active; otherwise the EMS signal in W), power today, a timeline of today's decisions, phases, car connection and gates, the settings (**Control charger** reads **Control charger - Shadow mode** while it is off, and asks to confirm both ways), the energy charged today and since setup, and the average charging power.
 - **Shadow comparison:** only when the EV Load Balancer YAML package is installed. It sets the controller's setpoint and target power next to what the package writes to the charger and what the car draws, for the shadow-mode period.
 
 Edit it like any other dashboard; the edits stay. To add or remove it later, select **Configure** on the integration page and go to the last step, **Dashboard**:

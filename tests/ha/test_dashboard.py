@@ -236,3 +236,50 @@ async def test_visible_to_everyone_by_default(
 ) -> None:
     await setup(hass, with_dashboard)
     assert _panels(hass)[PATH].require_admin is False
+
+
+def _cards(config: dict) -> list[dict]:
+    return [
+        card for section in config["views"][0]["sections"] for card in section["cards"]
+    ]
+
+
+async def test_control_charger_tile_per_state(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    control = "switch.test_charger_control_charger"
+    tiles = {
+        c["visibility"][0]["state"]: c
+        for c in _cards(await _config(hass))
+        if c.get("entity") == control and c["type"] == "tile"
+    }
+    assert tiles["off"]["name"] == "Control charger - Shadow mode"
+    assert tiles["on"]["name"] == "Control charger"
+    # Switching on warns about other automations; switching off does not.
+    on_text = tiles["off"]["icon_tap_action"]["confirmation"]["text"]
+    off_text = tiles["on"]["icon_tap_action"]["confirmation"]["text"]
+    assert "Turn off any other automation" in on_text
+    assert "stops writing" in off_text
+    assert "Turn off any other automation" not in off_text
+
+
+async def test_ems_tile_follows_on_off(hass: HomeAssistant, sources, lovelace) -> None:
+    signal = "sensor.ems_signal"
+    hass.states.async_set(signal, "1000", {"unit_of_measurement": "W"})
+    await setup(hass, make_entry(hass, dashboard=True, ems_entity=signal))
+    onoff = "switch.test_charger_ems_as_on_off"
+    cards = _cards(await _config(hass))
+    active = next(
+        c
+        for c in cards
+        if c.get("entity") == "binary_sensor.test_charger_ems_active"
+        and c["type"] == "tile"
+    )
+    watts = next(c for c in cards if c.get("entity") == signal)
+    assert active["visibility"] == [
+        {"condition": "state", "entity": onoff, "state": "on"}
+    ]
+    assert watts["visibility"] == [
+        {"condition": "state", "entity": onoff, "state_not": "on"}
+    ]
