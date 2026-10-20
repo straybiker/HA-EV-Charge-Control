@@ -75,7 +75,7 @@ flowchart LR
 - **Energy:** charged energy, split into grid and solar, for the Energy dashboard or an EMS.
 - **Dashboard:** an optional dashboard in the sidebar, built from your setup, with a shadow comparison view when the YAML package is installed.
 - **Safe by design:** a sensor fault never increases the current. Writes are confirmed, retried and reported as a repair issue when the charger does not follow. Settings survive restarts.
-- **Any charger** whose Home Assistant integration has a current-limit number and a phase setting: a select, a switch or a number.
+- **Any charger** whose Home Assistant integration has a current-limit number and a phase setting: a select, a switch or a number. A charger whose current limit starts above 0 A also needs a switch that pauses charging.
 
 ## Requirements
 
@@ -89,7 +89,8 @@ flowchart LR
   | Active phases | A sensor that shows 1 or 3. |
   | Connection state | A Mode 3 sensor (A, B1 … D2, E, F), or a binary sensor that is on while a car is connected. |
   | Maximum current (A) | The charger's configured or installation maximum. |
-  | Current limit | A `number` entity that the charger accepts. |
+  | Current limit | A `number` entity that the charger accepts. It must accept 0 A, unless you add a charging switch. |
+  | Charging switch (optional) | A `switch` or `input_boolean` that pauses charging, for a charger whose current limit does not go down to 0 A (for example a 6 A minimum). The controller stops charging by switching it off. |
   | Phase setting | The entity that switches between 1 and 3 phases: a `select` (an option per phase count), a `switch` (on/off) or a `number` (a value per phase count). For a charger that only charges on 1 phase, the 3-phase option or value can stay empty. |
 
 - **House power without the charger** (W or kW; negative during export). Power inputs need a unit of measurement. If you only have a grid meter, make a template sensor: grid power − charger power. A sensor smoothed over approximately 15 s gives the best results.
@@ -119,14 +120,14 @@ Then go to **Settings → Devices & services → Add integration → EV Charge C
 **Inputs and outputs.** Every few seconds the controller reads its **inputs**, decides how fast the car may charge, and sets its **outputs**.
 
 - **Inputs** are entities the controller only reads: what the charger reports, the house power, and optionally the battery level, the electricity price and an EMS signal.
-- **Outputs** are the two entities of your charger's own integration that the controller changes: the charging current limit and the phase setting. It writes to them only while **Control charger** is on.
+- **Outputs** are the entities of your charger's own integration that the controller changes: the charging current limit, the phase setting and, for a charger whose current limit does not go down to 0 A, its charging switch. It writes to them only while **Control charger** is on.
 
 The setup steps are numbered and named after what they ask for: outputs, inputs or fixed values. To change the setup later, select **Configure** on the integration page; it shows the same steps, without the name.
 
 | Step | Kind | What you enter |
 |---|---|---|
 | New charge controller | | The device name, **Add a dashboard** (on), the **Dashboard name** and **Only for administrators** (off). On the first controller of a system with the EV Load Balancer YAML package: **Import from EV Load Balancer** (see the [migration guide](docs/migration.md)). |
-| Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. |
+| Charger outputs | Writes | The charging current limit (`number`) and the phase setting (`select`, `switch` or `number`) of your charger. Optional: the charging switch. |
 | Phase options | | How the phase setting says 1 and 3 phases: the options of a select, what On means for a switch, or the values of a number. Leave the 3-phase option or value empty for a charger that only charges on 1 phase. |
 | Charger inputs | Reads | Connection state, charging power, applied current limit, active phases, maximum current. Optional: energy meter. |
 | Charger limits and safety | Fixed | Minimum current (6 A), voltage per phase (230 V), current step (0.1 A or 1 A), widen small decreases (on for Alfen), fallback current (7 A) and phases (1), keep the phases on a sensor fault (off), what the charger gets when Control charger is switched off (fallback). |
@@ -136,7 +137,7 @@ The setup steps are numbered and named after what they ask for: outputs, inputs 
 | Tuning | Fixed | Power update threshold (230 W), phase switch delay (5 min), recalculation interval (10 s). |
 | Dashboard (Configure only) | | **Show the dashboard**, the **Dashboard name**, and **Rebuild the dashboard**. See [The dashboard](#the-dashboard). |
 
-**More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit or phase setting that another controller uses. When a new controller reads the same charger sensors, battery level, house power, power limit or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power and the price can be shared.
+**More than one controller.** Each controller needs its own charger outputs; setup refuses a current limit, phase setting or charging switch that another controller uses. When a new controller reads the same charger sensors, battery level, house power, power limit or EMS signal as another one, setup shows a warning with the shared entities before it saves. Two controllers on one house power sensor both take the full headroom and together exceed the power limit. Solar power and the price can be shared.
 
 The controller uses the **fallback current and phases** after a sensor fault, and one minute after the car is unplugged. This makes the next session start gently. With **Keep the phase on a sensor fault** off, a fault switches to the fallback phases. A charger that stops responding then does not stay on an unintended phase.
 
@@ -214,7 +215,7 @@ A new device starts with **Control charger** off: it calculates, but writes noth
 
 For the YAML package, the [migration guide](docs/migration.md) has the full steps: import, parameter mapping, comparison and removal of the package.
 
-**When Control charger is on**, the controller writes to the charger's current-limit number and phase setting. It switches from 1 to 3 phases at 0 A, and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
+**When Control charger is on**, the controller writes to the charger's current-limit number and phase setting. It switches from 1 to 3 phases at 0 A (with a charging switch: with the switch off), and it checks that the charger follows each write: the applied current within 30 s, the active phases within 60 s. A write that the charger does not follow is written again at the next run. After 3 in a row, the decision shows **Charger not responding** and a repair issue appears under **Settings → Repairs**. Both clear when the charger follows again.
 
 **When you switch Control charger off**, the charger gets the fallback current and phases once, so it does not stay at a high current that nothing controls. The setup option in Charger limits and safety can change this to *Leave as it is* or *Stop charging (0 A)*.
 
@@ -342,6 +343,19 @@ actions:
       message: The car reached its target SOC.
 ```
 
+### Other chargers
+
+The controller needs a connection state as a Mode 3 sensor or a binary sensor. A charger that reports words, such as `standby` and `charging`, needs a template binary sensor. Example for an NRGkick, whose status is `standby` without a car:
+
+```yaml
+template:
+  - binary_sensor:
+      - name: "NRGkick car connected"
+        state: "{{ not is_state('sensor.nrgkick_status', ['standby', 'unknown', 'unavailable']) }}"
+```
+
+Its charging current starts at 6 A, so pick its **Charging enabled** switch as the charging switch in step 1, Outputs. Its phase count is a number: the values 1 and 3.
+
 ### Decision values
 
 | Value | Meaning |
@@ -386,7 +400,8 @@ actions:
 | A repair issue says an input **was renamed** or **does not exist**. | The setup still points at the old entity ID, so the controller runs in fail-safe. Open **Configure**, go to the step the issue names and select the new entity. The integration never changes the setup by itself. After a restart, a renamed entity shows as missing. A missing entity is reported 10 minutes after Home Assistant has started, so sources that appear later (an EMS publishes its sensors after its first run) raise nothing; the issue closes by itself when the entity appears. |
 | Setup refuses an entity because of its **unit**. | Power inputs need W or kW, the energy meter Wh, kWh or MWh, the applied current A and the battery level %. Set the unit on the sensor or helper. Without a unit the value would be read in the wrong unit. |
 | Setup warns that inputs have **no expected device class**. | Not an error: the controller reads them by their unit. Set the device class on the sensor (Settings → Entities → Show as), or ask the integration that makes it to add one. Submit to continue. |
-| Setup refuses the **current limit** number. | It must accept 0 A (the controller stops the car with 0 A) and its step must not be coarser than the current step you pick. |
+| Setup refuses the **current limit** number. | Without a charging switch it must accept 0 A (the controller stops the car with 0 A). With one, the minimum current must be at least the number's minimum. Its step must not be coarser than the current step you pick. |
+| Setup refuses the **connection state** sensor. | It must show Mode 3 states. For a charger that reports its state in other words, make a template binary sensor that is on while a car is connected; see [Other chargers](#other-chargers). |
 
 ### Debug logging
 

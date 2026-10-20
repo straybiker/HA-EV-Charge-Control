@@ -21,14 +21,16 @@
       },
       "outputs": {
         "title": "1/8 Outputs: what the controller changes",
-        "description": "**Outputs** are entities the controller changes. It writes to them only while **Control charger** is on.\n\nPick the two entities of your charger's own integration that set its charging current and its number of phases. Another charge controller cannot use the same entities.",
+        "description": "**Outputs** are entities the controller changes. It writes to them only while **Control charger** is on.\n\nPick the entities of your charger's own integration that set its charging current and its number of phases. Add its charging switch only when the current limit does not go down to 0 A. Another charge controller cannot use the same entities.",
         "data": {
           "current_limit_entity": "Charging current limit (output)",
-          "phase_select_entity": "Phase setting (output)"
+          "phase_select_entity": "Phase setting (output)",
+          "charging_switch_entity": "Charging switch (output, optional)"
         },
         "data_description": {
           "current_limit_entity": "A number entity in A that limits the charging current. Examples: Alfen Max Current Limit S1, go-e Requested current.",
-          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select)."
+          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select).",
+          "charging_switch_entity": "Only for a charger whose current limit does not go down to 0 A, for example one that starts at 6 A. The controller stops charging by switching it off, and starts by setting the current and then switching it on. A switch or input boolean that is on while the charger may charge. Leave it empty when the current limit accepts 0 A, as on an Alfen."
         }
       },
       "phases": {
@@ -177,22 +179,27 @@
       "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
       "current_unit_unknown": "The applied current has no unit or not A. Set the unit to A on the sensor, so the controller reads the value in amperes.",
       "soc_unit_unknown": "The battery level has no unit or not %. Select a battery level in %.",
-      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
-      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
+      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. Without a charging switch the controller stops the car with 0 A, so every stop would fail. Add the charger's charging switch, or pick a number that starts at 0.",
+      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step.",
+      "charging_switch_in_use": "Another charge controller already uses this charging switch.",
+      "charging_switch_is_phase": "The charging switch and the phase setting must be different entities.",
+      "min_below_current_limit_min": "The min current is lower than the minimum of the current limit. Set the min current to at least that minimum."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "1/9 Outputs: what the controller changes",
-        "description": "**Outputs** are entities the controller changes. It writes to them only while **Control charger** is on.\n\nPick the two entities of your charger's own integration that set its charging current and its number of phases. Another charge controller cannot use the same entities.",
+        "description": "**Outputs** are entities the controller changes. It writes to them only while **Control charger** is on.\n\nPick the entities of your charger's own integration that set its charging current and its number of phases. Add its charging switch only when the current limit does not go down to 0 A. Another charge controller cannot use the same entities.",
         "data": {
           "current_limit_entity": "Charging current limit (output)",
-          "phase_select_entity": "Phase setting (output)"
+          "phase_select_entity": "Phase setting (output)",
+          "charging_switch_entity": "Charging switch (output, optional)"
         },
         "data_description": {
           "current_limit_entity": "A number entity in A that limits the charging current. Examples: Alfen Max Current Limit S1, go-e Requested current.",
-          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select)."
+          "phase_select_entity": "The entity that switches the charger between 1 and 3 phases: a select (with options), a switch (on/off) or a number (a value per phase count). The next step asks how it says 1 and 3 phases. Example: Alfen Usable phases (select).",
+          "charging_switch_entity": "Only for a charger whose current limit does not go down to 0 A, for example one that starts at 6 A. The controller stops charging by switching it off, and starts by setting the current and then switching it on. A switch or input boolean that is on while the charger may charge. Leave it empty when the current limit accepts 0 A, as on an Alfen."
         }
       },
       "phases": {
@@ -357,8 +364,11 @@
       "energy_unit_unknown": "The energy meter has no energy unit (Wh, kWh or MWh). Set the unit on the sensor.",
       "current_unit_unknown": "The applied current has no unit or not A. Set the unit to A on the sensor, so the controller reads the value in amperes.",
       "soc_unit_unknown": "The battery level has no unit or not %. Select a battery level in %.",
-      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. The controller stops the car with 0 A, so every stop would fail. Pick a number that starts at 0, or change its minimum.",
-      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step."
+      "current_limit_min_not_zero": "The current limit does not accept 0 A: its minimum is higher. Without a charging switch the controller stops the car with 0 A, so every stop would fail. Add the charger's charging switch, or pick a number that starts at 0.",
+      "current_step_too_fine": "The current limit number has a coarser step than the current step you picked. Pick 1 A, or a current limit with a 0.1 A step.",
+      "charging_switch_in_use": "Another charge controller already uses this charging switch.",
+      "charging_switch_is_phase": "The charging switch and the phase setting must be different entities.",
+      "min_below_current_limit_min": "The min current is lower than the minimum of the current limit. Set the min current to at least that minimum."
     }
   },
   "selector": {

@@ -1,7 +1,8 @@
 """Applying the controller's output to the charger.
 
 Writes go only through the charger's own entities: its current-limit
-number and its phase select. A write counts as confirmed when the charger
+number, its phase setting and, for a charger whose current limit does not
+go down to 0 A, its charging switch. A write counts as confirmed when the charger
 follows it, so a charger integration that accepts a value but does not
 pass it on is noticed.
 """
@@ -24,6 +25,7 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from .const import (
     CONF_ACTIVE_PHASES,
     CONF_APPLIED_CURRENT,
+    CONF_CHARGING_SWITCH,
     CONF_CONTROL_OFF,
     CONF_CURRENT_LIMIT,
     CONF_PHASE_OPTION_1,
@@ -45,6 +47,9 @@ from .inputs import InputReader
 ZERO_TIMEOUT_S = 30
 PHASE_TIMEOUT_S = 60
 CURRENT_TIMEOUT_S = 30
+# How long a charger may take to report its current limit after charging is
+# switched on; some report it only while charging is on.
+LIMIT_READABLE_TIMEOUT_S = 10
 # Unconfirmed writes in a row before the repair issue is raised.
 MAX_UNCONFIRMED = 3
 
@@ -80,6 +85,7 @@ class ChargerWriter:
         self._phase_entity: str = o[CONF_PHASE_SELECT]
         self._applied_entity: str = o[CONF_APPLIED_CURRENT]
         self._active_entity: str = o[CONF_ACTIVE_PHASES]
+        self._switch_entity: str | None = o.get(CONF_CHARGING_SWITCH) or None
         self._options = {Phase.ONE: o[CONF_PHASE_OPTION_1]}
         if o.get(CONF_PHASE_OPTION_3):
             self._options[Phase.THREE] = o[CONF_PHASE_OPTION_3]
@@ -183,14 +189,11 @@ class ChargerWriter:
             LOGGER.warning("Handing the charger over failed", exc_info=True)
 
     async def _sequence(self, sp: Setpoint, by_charger: bool) -> bool:
-        """0 A before a 1 -> 3 switch, then the phase, then the current."""
+        """A stop before a 1 -> 3 switch, then the phase, then the current."""
         if sp.zero_before_phase_change:
-            await self._set_current(0.0)
             # Go on after the timeout, as the package does: the phase change
-            # matters more than a charger that is slow to report 0 A.
-            await self._wait_for(
-                *self._current_is(0.0, sp.phase, by_charger), ZERO_TIMEOUT_S
-            )
+            # matters more than a charger that is slow to report the stop.
+            await self._command_current(0.0, sp.phase, by_charger, ZERO_TIMEOUT_S)
         if sp.write_phase:
             await self._set_phase(sp.phase)
             if not await self._wait_for(
@@ -198,13 +201,50 @@ class ChargerWriter:
             ):
                 return False
         if sp.write_current or sp.zero_before_phase_change:
-            await self._set_current(sp.current_a)
+            return await self._command_current(
+                sp.current_a, sp.phase, by_charger, CURRENT_TIMEOUT_S
+            )
+        return True
+
+    async def _command_current(
+        self, current_a: float, phase: Phase, by_charger: bool, timeout_s: float
+    ) -> bool:
+        """Write the current; True once the charger shows it.
+
+        With a charging switch (B22), 0 A switches charging off, and any
+        other current is written before the switch goes on, so the car never
+        starts at an old, higher current. A paused charger may still report
+        its last current, so the switch confirms a stop.
+        """
+        switch = self._switch_entity
+        if switch is None:
+            await self._set_current(current_a)
+            return await self._wait_for(
+                *self._current_is(current_a, phase, by_charger), timeout_s
+            )
+        if current_a <= 0:
+            if not self._reader.charging_switch_is(False):
+                await self._set_switch(on=False)
+            return await self._wait_for(
+                switch, lambda: self._reader.charging_switch_is(False), timeout_s
+            )
+        if not self._reader.current_limit_readable():
+            await self._set_switch(on=True)
+            await self._wait_for(
+                self._current_entity,
+                self._reader.current_limit_readable,
+                LIMIT_READABLE_TIMEOUT_S,
+            )
+        await self._set_current(current_a)
+        if not self._reader.charging_switch_is(True):
+            await self._set_switch(on=True)
             if not await self._wait_for(
-                *self._current_is(sp.current_a, sp.phase, by_charger),
-                CURRENT_TIMEOUT_S,
+                switch, lambda: self._reader.charging_switch_is(True), timeout_s
             ):
                 return False
-        return True
+        return await self._wait_for(
+            *self._current_is(current_a, phase, by_charger), timeout_s
+        )
 
     # Confirmation: by the charger's own sensors when they can tell (see
     # _charger_can_confirm); otherwise the control entities count.
@@ -273,6 +313,17 @@ class ChargerWriter:
             _domain(self._current_entity),
             "set_value",
             {"entity_id": self._current_entity, "value": current_a},
+            blocking=True,
+        )
+
+    async def _set_switch(self, *, on: bool) -> None:
+        assert self._switch_entity is not None
+        service = "turn_on" if on else "turn_off"
+        LOGGER.debug("Charging switch %s: %s", self._switch_entity, service)
+        await self._hass.services.async_call(
+            _domain(self._switch_entity),
+            service,
+            {"entity_id": self._switch_entity},
             blocking=True,
         )
 

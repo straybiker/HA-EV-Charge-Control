@@ -34,6 +34,7 @@ from .const import (
     CONF_CAR_MIN_CURRENT,
     CONF_CAR_SOC,
     CONF_CHARGER_POWER,
+    CONF_CHARGING_SWITCH,
     CONF_CONNECTION,
     CONF_CONTROL_OFF,
     CONF_CURRENT_LIMIT,
@@ -169,6 +170,7 @@ OUTPUTS_SCHEMA = vol.Schema(
         vol.Required(CONF_PHASE_SELECT): _entity(
             [*SELECT_DOMAINS, *SWITCH_DOMAINS, *NUMBER_DOMAINS]
         ),
+        vol.Optional(CONF_CHARGING_SWITCH): _entity(list(SWITCH_DOMAINS)),
     }
 )
 
@@ -312,10 +314,13 @@ async def _validate_outputs(
 ) -> dict[str, Any]:
     hass = _hass(handler)
     limit = hass.states.get(user_input[CONF_CURRENT_LIMIT])
-    # The controller stops the car with 0 A; a number that starts higher
-    # would refuse every stop.
-    if limit is not None and (limit.attributes.get("min") or 0) > 0:
+    switch = user_input.get(CONF_CHARGING_SWITCH)
+    # Without a charging switch the controller stops the car with 0 A; a
+    # number that starts higher would refuse every stop (B22).
+    if not switch and limit is not None and (limit.attributes.get("min") or 0) > 0:
         raise SchemaFlowError("current_limit_min_not_zero")
+    if switch and switch == user_input[CONF_PHASE_SELECT]:
+        raise SchemaFlowError("charging_switch_is_phase")
     phase_entity = user_input[CONF_PHASE_SELECT]
     if _domain(phase_entity) in SELECT_DOMAINS:
         state = hass.states.get(phase_entity)
@@ -335,6 +340,8 @@ async def _validate_outputs(
         for e in others
     ):
         raise SchemaFlowError("phase_entity_in_use")
+    if switch and any(e.options.get(CONF_CHARGING_SWITCH) == switch for e in others):
+        raise SchemaFlowError("charging_switch_in_use")
     return user_input
 
 
@@ -397,6 +404,15 @@ async def _validate_limits(
     ] != str(int(Phase.ONE)):
         raise SchemaFlowError("fallback_needs_three_phases")
     limit = _hass(handler).states.get(handler.options[CONF_CURRENT_LIMIT])
+    # With a charging switch the number may start above 0 A (B22); the
+    # controller never writes less than its minimum current.
+    number_min = limit.attributes.get("min") if limit is not None else None
+    if (
+        handler.options.get(CONF_CHARGING_SWITCH)
+        and number_min
+        and user_input[CONF_MIN_CURRENT] < float(number_min)
+    ):
+        raise SchemaFlowError("min_below_current_limit_min")
     number_step = limit.attributes.get("step") if limit is not None else None
     if (
         number_step

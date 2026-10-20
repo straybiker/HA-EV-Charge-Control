@@ -32,6 +32,7 @@ from .const import (
     CONF_CAR_MIN_CURRENT,
     CONF_CAR_SOC,
     CONF_CHARGER_POWER,
+    CONF_CHARGING_SWITCH,
     CONF_CONNECTION,
     CONF_CURRENT_LIMIT,
     CONF_CURRENT_STEP,
@@ -208,7 +209,30 @@ class InputReader:
         return self._number(self._options[CONF_APPLIED_CURRENT])
 
     def commanded_current(self) -> float | None:
+        """0 A while the charging switch is off (B22).
+
+        The controller reasons in 0 A = stopped; the switch is how such a
+        charger takes it. An unreadable switch is an unknown command.
+        """
+        switch = self._options.get(CONF_CHARGING_SWITCH)
+        if switch:
+            state = self._state(switch)
+            if state is None or state.state not in (STATE_ON, STATE_OFF):
+                return None
+            if state.state == STATE_OFF:
+                return 0.0
         return self._number(self._options[CONF_CURRENT_LIMIT])
+
+    def charging_switch_is(self, on: bool) -> bool:
+        state = self._state(self._options.get(CONF_CHARGING_SWITCH))
+        return state is not None and state.state == (STATE_ON if on else STATE_OFF)
+
+    def current_limit_readable(self) -> bool:
+        state = self._state(self._options[CONF_CURRENT_LIMIT])
+        return state is not None and state.state not in (
+            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
+        )
 
     def active_phases(self) -> Phase | None:
         o = self._options

@@ -89,11 +89,17 @@ What the controller writes, before the charger control below applies it.
 - An increase is written only when it is worth at least the power update threshold (default 230 W), so solar ripple causes no writes.
 - "Widen small decreases" (on for Alfen): a decrease below 0.15 A is written as 0.2 A, unless that drops below the minimum. Some chargers ignore 0.1 A decreases.
 - Going from 1 to 3 phases: current 0 A first, then the phase, then the current.
+- 0 A means stop. With a charging switch (B22) the charger gets it as the switch off.
 
 ## Charger control
 
 - **Control charger** (a switch on the device, off on a new device) turns writing on. While it is off, nothing is written and the decision sensors show what would be written (shadow mode).
 - Writes go to the charger's current-limit number and phase setting (a select, switch or number), in this order: 0 A (only before a 1→3 switch), phase, current.
+- **Charging switch** (optional output, B22), for a charger whose current limit does not go down to 0 A:
+  - A stop switches it off; the current limit keeps its value.
+  - A start or a current change writes the current first, then switches it on. When the current limit is unavailable, the switch goes on first and the current follows once the limit reports (at most 10 s).
+  - While the switch is off, the controller reads the commanded current as 0 A.
+  - The switch confirms a stop: a paused charger may still report its last current. A start is confirmed by the switch and then the current, as below.
 - **Confirmation.** With a car connected, a write counts as confirmed when the charger follows: the applied current comes within the power update threshold of the written value (never stricter than half a current step) within 30 s, and the active phases match within 60 s. Without a car the charger's sensors may not follow, and with the applied current or active phases unavailable (fail-safe) they cannot: then the current-limit number and the phase setting must show the written value, so a sensor fault is not reported as a charger fault. After the 0 A step the sequence goes on after at most 30 s, confirmed or not.
 - **One write at a time.** A write sequence runs in the background. Runs that come while it waits for the charger write nothing.
 - **Retry.** A write that is not confirmed is written again at the next run, also when the write filter sees nothing new.
@@ -101,7 +107,7 @@ What the controller writes, before the charger control below applies it.
 - **Switching control off** hands the charger over once, without confirmation. A setup option sets what it gets:
   - **Fallback current and phases** (default): the fallback phase and fallback current.
   - **Leave as it is**: nothing is written.
-  - **Stop charging**: 0 A, phase unchanged.
+  - **Stop charging**: 0 A, phase unchanged. With a charging switch: the switch off.
 
 ## Energy
 
@@ -172,3 +178,4 @@ A change to the charging behaviour adds or updates a row here.
 | B19 | Fast and the price | Fast skips the maximum charging cost: it uses the grid up to the power limit also when the price is high. The EMS and the power limit still apply. Without this, Fast sets the same current as Limited, because both are capped by the headroom under the power limit. |
 | B20 | Mode 3 sub-states | A change between connected sub-states (B1, B2, C1, C2 …) does not trigger a run; only connect and disconnect do. The sub-state changes when the car starts or stops drawing, and the house power (grid minus charger, two meters) is then wrong for a few seconds. A run at that moment can start, stop or switch phases on a false value; the next timed run reads settled values. |
 | B21 | Efficiency per phase count | Learned separately for 1 and 3 phases, kept across sessions and restarts. One shared value, reset on unplug, set the 3-phase threshold with the 1-phase efficiency after each phase switch and started every session at 100 %, so the first minutes asked for too little current. |
+| B22 | Charging switch | Optional. With it, a stop switches charging off instead of writing 0 A, and the current limit may start above 0 A (for example 6 A). The current is written before the switch goes on, so the car never starts at an old, higher current. Without it, nothing changes: a stop is 0 A, and the current limit must accept 0 A. The connection stays a Mode 3 sensor or a binary sensor; a charger that reports its state in other words needs a template binary sensor, so no charger-specific states are built in. |

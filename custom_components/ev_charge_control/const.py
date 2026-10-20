@@ -39,6 +39,9 @@ CONF_ENERGY_METER = "charger_energy_entity"
 # Config flow: charger controls
 CONF_CURRENT_LIMIT = "current_limit_entity"
 CONF_PHASE_SELECT = "phase_select_entity"
+# For chargers whose current limit does not go down to 0 A: a stop switches
+# charging off instead (B22).
+CONF_CHARGING_SWITCH = "charging_switch_entity"
 CONF_PHASE_OPTION_1 = "phase_option_1"
 CONF_PHASE_OPTION_3 = "phase_option_3"
 # The phase options step asks these for a switch or a number; the flow

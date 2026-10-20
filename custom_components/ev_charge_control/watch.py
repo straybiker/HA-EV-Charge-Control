@@ -33,6 +33,7 @@ from .const import (
     CONF_APPLIED_CURRENT,
     CONF_CAR_SOC,
     CONF_CHARGER_POWER,
+    CONF_CHARGING_SWITCH,
     CONF_CONNECTION,
     CONF_CURRENT_LIMIT,
     CONF_EMS,
@@ -58,6 +59,7 @@ MISSING_GRACE = timedelta(minutes=10)
 STEPS: dict[str, str] = {
     CONF_CURRENT_LIMIT: "init",
     CONF_PHASE_SELECT: "init",
+    CONF_CHARGING_SWITCH: "init",
     CONF_CONNECTION: "inputs",
     CONF_CHARGER_POWER: "inputs",
     CONF_APPLIED_CURRENT: "inputs",

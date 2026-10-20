@@ -21,14 +21,16 @@
       },
       "outputs": {
         "title": "1/8 Uitgangen: wat de regelaar wijzigt",
-        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de twee entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
+        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Voeg de laadschakelaar alleen toe als de stroomlimiet niet tot 0 A gaat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
           "current_limit_entity": "Laadstroomlimiet (uitgang)",
-          "phase_select_entity": "Fase-instelling (uitgang)"
+          "phase_select_entity": "Fase-instelling (uitgang)",
+          "charging_switch_entity": "Laadschakelaar (uitgang, optioneel)"
         },
         "data_description": {
           "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Voorbeelden: Alfen Max Current Limit S1, go-e Requested current.",
-          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze)."
+          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze).",
+          "charging_switch_entity": "Alleen voor een laadpaal waarvan de stroomlimiet niet tot 0 A gaat, bijvoorbeeld een die bij 6 A begint. De regelaar stopt het laden door de schakelaar uit te zetten, en start door eerst de stroom in te stellen en dan de schakelaar aan te zetten. Een schakelaar of input boolean die aan staat zolang de laadpaal mag laden. Laat leeg als de stroomlimiet 0 A aanvaardt, zoals bij een Alfen."
         }
       },
       "phases": {
@@ -177,22 +179,27 @@
       "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
       "current_unit_unknown": "De toegepaste stroom heeft geen eenheid of niet A. Zet de eenheid op A op de sensor, zodat de controller de waarde in ampère leest.",
       "soc_unit_unknown": "Het batterijniveau heeft geen eenheid of niet %. Kies een batterijniveau in %.",
-      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
-      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
+      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. Zonder laadschakelaar stopt de regelaar de auto met 0 A, dus elke stop zou mislukken. Voeg de laadschakelaar van de laadpaal toe, of kies een getal dat bij 0 begint.",
+      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A.",
+      "charging_switch_in_use": "Een andere laadregelaar gebruikt deze laadschakelaar al.",
+      "charging_switch_is_phase": "De laadschakelaar en de fase-instelling moeten verschillende entiteiten zijn.",
+      "min_below_current_limit_min": "De minimale stroom is lager dan het minimum van de stroomlimiet. Zet de minimale stroom op minstens dat minimum."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "1/9 Uitgangen: wat de regelaar wijzigt",
-        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de twee entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
+        "description": "**Uitgangen** zijn entiteiten die de regelaar wijzigt. Hij schrijft er alleen naar zolang **Laadpaal aansturen** aan staat.\n\nKies de entiteiten van de integratie van je laadpaal die de laadstroom en het aantal fasen instellen. Voeg de laadschakelaar alleen toe als de stroomlimiet niet tot 0 A gaat. Een andere laadregelaar kan dezelfde entiteiten niet gebruiken.",
         "data": {
           "current_limit_entity": "Laadstroomlimiet (uitgang)",
-          "phase_select_entity": "Fase-instelling (uitgang)"
+          "phase_select_entity": "Fase-instelling (uitgang)",
+          "charging_switch_entity": "Laadschakelaar (uitgang, optioneel)"
         },
         "data_description": {
           "current_limit_entity": "Een getal-entiteit in A die de laadstroom begrenst. Voorbeelden: Alfen Max Current Limit S1, go-e Requested current.",
-          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze)."
+          "phase_select_entity": "De entiteit die de laadpaal schakelt tussen 1 en 3 fasen: een keuze (met opties), een schakelaar (aan/uit) of een getal (een waarde per aantal fasen). De volgende stap vraagt hoe ze 1 en 3 fasen aangeeft. Voorbeeld: Alfen Usable phases (keuze).",
+          "charging_switch_entity": "Alleen voor een laadpaal waarvan de stroomlimiet niet tot 0 A gaat, bijvoorbeeld een die bij 6 A begint. De regelaar stopt het laden door de schakelaar uit te zetten, en start door eerst de stroom in te stellen en dan de schakelaar aan te zetten. Een schakelaar of input boolean die aan staat zolang de laadpaal mag laden. Laat leeg als de stroomlimiet 0 A aanvaardt, zoals bij een Alfen."
         }
       },
       "phases": {
@@ -357,8 +364,11 @@
       "energy_unit_unknown": "De energiemeter heeft geen energie-eenheid (Wh, kWh of MWh). Stel de eenheid in op de sensor.",
       "current_unit_unknown": "De toegepaste stroom heeft geen eenheid of niet A. Zet de eenheid op A op de sensor, zodat de controller de waarde in ampère leest.",
       "soc_unit_unknown": "Het batterijniveau heeft geen eenheid of niet %. Kies een batterijniveau in %.",
-      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. De regelaar stopt de auto met 0 A, dus elke stop zou mislukken. Kies een getal dat bij 0 begint, of wijzig het minimum.",
-      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A."
+      "current_limit_min_not_zero": "De stroomlimiet aanvaardt geen 0 A: haar minimum ligt hoger. Zonder laadschakelaar stopt de regelaar de auto met 0 A, dus elke stop zou mislukken. Voeg de laadschakelaar van de laadpaal toe, of kies een getal dat bij 0 begint.",
+      "current_step_too_fine": "Het getal van de stroomlimiet heeft een grovere stap dan de stroomstap die je koos. Kies 1 A, of een stroomlimiet met een stap van 0,1 A.",
+      "charging_switch_in_use": "Een andere laadregelaar gebruikt deze laadschakelaar al.",
+      "charging_switch_is_phase": "De laadschakelaar en de fase-instelling moeten verschillende entiteiten zijn.",
+      "min_below_current_limit_min": "De minimale stroom is lager dan het minimum van de stroomlimiet. Zet de minimale stroom op minstens dat minimum."
     }
   },
   "selector": {

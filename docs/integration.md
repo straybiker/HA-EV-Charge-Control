@@ -5,7 +5,7 @@ This file describes how `custom_components/ev_charge_control/` connects the [eng
 ## Design
 
 - One config entry is one virtual device: the **EV charger controller**.
-- The integration owns no charger and no car. It reads entities that already exist and writes to the charger only through the charger's own integration: its current-limit number and its phase setting, which can be a select, a switch or a number.
+- The integration owns no charger and no car. It reads entities that already exist and writes to the charger only through the charger's own integration: its current-limit number, its phase setting (a select, a switch or a number) and, optionally, a charging switch for a charger whose current limit does not go down to 0 A.
 - The engine is pure Python. All Home Assistant code stays outside `engine/`.
 
 ```
