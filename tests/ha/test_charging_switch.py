@@ -21,7 +21,6 @@ from .conftest import (
     NAME_STEP,
     OPTIONS,
     OUTPUTS_STEP,
-    PHASE_SELECT,
     PHASES_STEP,
     W,
     make_entry,
@@ -186,14 +185,19 @@ async def test_a_switch_allows_a_current_limit_above_0_a(
     hass.states.async_set(CURRENT_LIMIT, "6", LIMIT_6A)
     hass.states.async_set(CHARGING, "off")
     result = await _flow(hass, OUTPUTS_STEP | {"charging_switch_entity": CHARGING})
+    # Past the outputs and on to the fixed values: no error.
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "phases"
+    assert not result.get("errors")
+    assert result["step_id"] == "limits"
 
 
 async def test_the_switch_cannot_be_the_phase_setting(
     hass: HomeAssistant, sources
 ) -> None:
-    result = await _flow(hass, OUTPUTS_STEP | {"charging_switch_entity": PHASE_SELECT})
+    """A phase switch cannot also pause charging."""
+    hass.states.async_set(CHARGING, "on")
+    outputs = {"phase_select_entity": CHARGING, "charging_switch_entity": CHARGING}
+    result = await _flow(hass, OUTPUTS_STEP | outputs)
     assert result["errors"]["base"] == "charging_switch_is_phase"
 
 
