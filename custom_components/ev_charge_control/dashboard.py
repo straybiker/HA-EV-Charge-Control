@@ -47,6 +47,8 @@ from .const import (
     CONF_SOLAR_POWER,
     DOMAIN,
     LOGGER,
+    NUMBER_DOMAINS,
+    SWITCH_DOMAINS,
 )
 from .yaml_import import package_present
 
@@ -345,9 +347,9 @@ _NUMBER_INPUT = [{"type": "numeric-input", "style": "buttons"}]
 def _setting(entity: str, name: str, columns: int | str = 6) -> Card:
     """A tile with the control that fits the entity's kind."""
     domain = entity.split(".", 1)[0]
-    if domain in ("switch", "input_boolean"):
+    if domain in SWITCH_DOMAINS:
         return _tile(entity, name, columns, features=_TOGGLE)
-    if domain in ("number", "input_number"):
+    if domain in NUMBER_DOMAINS:
         return _tile(entity, name, columns, features=_NUMBER_INPUT)
     return _tile(entity, name, columns)
 
