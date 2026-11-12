@@ -286,16 +286,70 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         "{% if lim | is_number %} · Limit {{ (lim | float / 1000) | round(1) }} kW"
         "{% endif %}"
     )
-    if soc := o.get(CONF_CAR_SOC):
+    # The battery levels mean nothing while Car aware is off; the battery
+    # level itself has its own tile (_car_battery).
+    if o.get(CONF_CAR_SOC):
         text += (
-            f"\n\n{{% set soc = states('{soc}') %}}"
-            "Battery **{{ (soc | float) | round(0) | int if soc | is_number "
-            "else '–' }} %**"
-            f" · Emergency {{{{ states('{e['emergency_soc']}') | int(0) }}}} %"
+            f"\n\n{{% if is_state('{e['car_aware']}', 'on') %}}"
+            f"Emergency {{{{ states('{e['emergency_soc']}') | int(0) }}}} %"
             f" · Comfort {{{{ states('{e['comfort_soc']}') | int(0) }}}} %"
             f" · Target {{{{ states('{e['target_soc']}') | int(0) }}}} %"
+            "{% endif %}"
         )
     return text
+
+
+def _car_battery(e: Mapping[str, str], o: Mapping[str, Any]) -> Card | None:
+    """The car's battery level, while Car aware uses it."""
+    soc = o.get(CONF_CAR_SOC)
+    if not soc:
+        return None
+    return _tile(
+        soc,
+        "Car battery",
+        visibility=[{"condition": "state", "entity": e["car_aware"], "state": "on"}],
+    )
+
+
+def _car_power_split(e: Mapping[str, str]) -> Card:
+    """What the car draws now, from grid and from solar, as one bar.
+
+    Hidden while the car draws nothing: the bar would be empty.
+    """
+    drawing = {
+        "condition": "or",
+        "conditions": [
+            {"condition": "numeric_state", "entity": e["grid_share"], "above": 0},
+            {"condition": "numeric_state", "entity": e["car_from_solar"], "above": 0},
+        ],
+    }
+    return {
+        "type": "distribution",
+        "entities": [
+            {"entity": e["grid_share"], "name": "From grid", "color": GRID_BLUE},
+            {"entity": e["car_from_solar"], "name": "From solar", "color": SOLAR_AMBER},
+        ],
+        "grid_options": {"columns": "full"},
+        "visibility": [drawing],
+    }
+
+
+# Inline controls on every entity the user can change, so a tile with a
+# control is a setting and a tile without one is read only. Control charger
+# is the exception: a tile feature has no confirmation, and switching it on
+# must ask first (_control_tiles).
+_TOGGLE = [{"type": "toggle"}]
+_NUMBER_INPUT = [{"type": "numeric-input", "style": "buttons"}]
+
+
+def _setting(entity: str, name: str, columns: int | str = 6) -> Card:
+    """A tile with the control that fits the entity's kind."""
+    domain = entity.split(".", 1)[0]
+    if domain in ("switch", "input_boolean"):
+        return _tile(entity, name, columns, features=_TOGGLE)
+    if domain in ("number", "input_number"):
+        return _tile(entity, name, columns, features=_NUMBER_INPUT)
+    return _tile(entity, name, columns)
 
 
 def _total_power(e: Mapping[str, str]) -> list[Card]:
@@ -310,11 +364,10 @@ def _total_power(e: Mapping[str, str]) -> list[Card]:
         "above": e["effective_power_limit"],
     }
     return [
-        _tile(e["total_power"], "Total power", 4, color="red", visibility=[above]),
+        _tile(e["total_power"], "Total power", color="red", visibility=[above]),
         _tile(
             e["total_power"],
             "Total power",
-            4,
             visibility=[{"condition": "not", "conditions": [above]}],
         ),
     ]
@@ -367,17 +420,18 @@ def _settings_tiles(
     tiles: list[Card] = []
     if o.get(CONF_CAR_SOC):
         tiles += [
-            _tile(e["car_aware"], "Car aware"),
-            _tile(e["target_soc"], "Target SOC", 4),
-            _tile(e["comfort_soc"], "Comfort SOC", 4),
-            _tile(e["emergency_soc"], "Emergency SOC", 4),
+            _setting(e["car_aware"], "Car aware", 12),
+            _setting(e["target_soc"], "Target SOC"),
+            _setting(e["comfort_soc"], "Comfort SOC"),
+            _setting(e["emergency_soc"], "Emergency SOC"),
         ]
     if three:
-        tiles.append(_tile(e["single_phase_only"], "Single phase only"))
+        tiles.append(_setting(e["single_phase_only"], "Single phase only"))
     if price:
-        tiles.append(_tile(e["max_charging_cost"], "Max charging cost"))
-    tiles.append(_tile(e["solar_bridge"], "Solar bridge"))
-    tiles.append(_tile(_power_limit(e, o), "Power limit"))
+        tiles.append(_setting(e["max_charging_cost"], "Max charging cost"))
+    tiles.append(_setting(e["solar_bridge"], "Solar bridge"))
+    # A sensor from the setup stays read only: the controller only reads it.
+    tiles.append(_setting(_power_limit(e, o), "Power limit"))
     return tiles
 
 
@@ -530,9 +584,9 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
             _section(
                 _heading("Live", "mdi:lightning-bolt"),
                 _markdown(_live(e, o)),
-                _tile(e["grid_share"], "From grid", 4, color="blue"),
-                _tile(e["car_from_solar"], "From solar", 4, color="amber"),
+                _car_power_split(e),
                 *_total_power(e),
+                _car_battery(e, o),
             ),
             _section(
                 _heading("Power budget", "mdi:scale-balance"),
@@ -603,9 +657,9 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
             _section(
                 _heading("Configuration", "mdi:cog"),
                 *_control_tiles(e),
-                _tile(e["ems_control"], "EMS control") if ems else None,
-                _tile(e["ems_as_onoff"], "EMS as on/off") if ems else None,
-                _tile(
+                _setting(e["ems_control"], "EMS control") if ems else None,
+                _setting(e["ems_as_onoff"], "EMS as on/off") if ems else None,
+                _setting(
                     e["solar_when_ems_blocks"],
                     "Always charge when solar available",
                     12,

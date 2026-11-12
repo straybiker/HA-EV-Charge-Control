@@ -16,12 +16,14 @@ from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .conftest import (
+    CAR_SOC,
     HOUSE_POWER,
     HOUSEHOLD_STEP,
     INPUTS_STEP,
     LIMITS_STEP,
     OUTPUTS_STEP,
     PHASES_STEP,
+    POWER_LIMIT,
     TUNING_STEP,
     make_entry,
     setup,
@@ -283,3 +285,104 @@ async def test_ems_tile_follows_on_off(hass: HomeAssistant, sources, lovelace) -
     assert watts["visibility"] == [
         {"condition": "state", "entity": onoff, "state_not": "on"}
     ]
+
+
+def _live_cards(config: dict) -> list[dict]:
+    return config["views"][0]["sections"][0]["cards"]
+
+
+async def test_live_shows_the_car_battery_while_car_aware(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    hass.states.async_set(CAR_SOC, "55", {"unit_of_measurement": "%"})
+    entry = make_entry(
+        hass, dashboard=True, car_soc_entity=CAR_SOC, battery_capacity_kwh=60
+    )
+    await setup(hass, entry)
+    live = _live_cards(await _config(hass))
+    battery = next(c for c in live if c.get("entity") == CAR_SOC)
+    assert battery["visibility"] == [
+        {
+            "condition": "state",
+            "entity": "switch.test_charger_car_aware",
+            "state": "on",
+        }
+    ]
+    # Shown once: the text no longer repeats the battery level.
+    text = next(c for c in live if c["type"] == "markdown")["content"]
+    assert CAR_SOC not in text
+
+
+async def test_live_has_no_battery_without_a_battery_sensor(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    live = _live_cards(await _config(hass))
+    assert not any(c.get("name") == "Car battery" for c in live)
+
+
+async def test_live_splits_the_car_power_in_one_bar(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    live = _live_cards(await _config(hass))
+    bar = next(c for c in live if c["type"] == "distribution")
+    assert [x["entity"] for x in bar["entities"]] == [
+        "sensor.test_charger_grid_share",
+        "sensor.test_charger_car_from_solar",
+    ]
+    # Hidden while the car draws nothing.
+    assert bar["visibility"][0]["condition"] == "or"
+    assert not any(
+        c["type"] == "tile" and c["entity"] in ("sensor.test_charger_grid_share",)
+        for c in live
+    )
+
+
+async def test_settings_have_controls_and_readings_do_not(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    hass.states.async_set(CAR_SOC, "55", {"unit_of_measurement": "%"})
+    entry = make_entry(
+        hass, dashboard=True, car_soc_entity=CAR_SOC, battery_capacity_kwh=60
+    )
+    await setup(hass, entry)
+    tiles = {
+        c["entity"]: c
+        for c in _cards(await _config(hass))
+        if c["type"] == "tile" and "visibility" not in c
+    }
+    assert tiles["switch.test_charger_car_aware"]["features"] == [{"type": "toggle"}]
+    assert tiles["number.test_charger_target_soc"]["features"][0]["type"] == (
+        "numeric-input"
+    )
+    assert tiles["select.test_charger_charge_mode"]["features"][0]["type"] == (
+        "select-options"
+    )
+    # The power limit helper from the setup can be changed too.
+    assert tiles[POWER_LIMIT]["features"][0]["type"] == "numeric-input"
+    for entity, tile in tiles.items():
+        if entity.startswith(("sensor.", "binary_sensor.")):
+            assert "features" not in tile, entity
+    # Switching control on must still ask first: no one-tap control.
+    control = [
+        c
+        for c in _cards(await _config(hass))
+        if c.get("entity") == "switch.test_charger_control_charger"
+        and c["type"] == "tile"
+    ]
+    assert control and all("features" not in c for c in control)
+
+
+async def test_a_power_limit_sensor_stays_read_only(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    limit = "sensor.test_peak_limit"
+    hass.states.async_set(limit, "5000", {"unit_of_measurement": "W"})
+    await setup(hass, make_entry(hass, dashboard=True, power_limit_entity=limit))
+    tile = next(
+        c
+        for c in _cards(await _config(hass))
+        if c.get("entity") == limit and c["type"] == "tile"
+    )
+    assert "features" not in tile
