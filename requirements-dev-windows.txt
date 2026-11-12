@@ -4,7 +4,7 @@
 # skips tests/ha when it is missing. Run those in Docker: scripts/test-ha.ps1.
 # Keep homeassistant at the version pytest-homeassistant-custom-component
 # pins in requirements-dev.txt.
-homeassistant==2026.9.4
+homeassistant==2026.11.0
 pytest>=8
 pytest-asyncio>=0.24
 hypothesis>=6.100
