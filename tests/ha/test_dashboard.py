@@ -387,3 +387,39 @@ async def test_a_power_limit_sensor_stays_read_only(
         if c.get("entity") == limit and c["type"] == "tile"
     )
     assert "features" not in tile
+
+
+async def test_every_decision_has_a_badge(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    """A blocked or failing charger must still show at the top."""
+    await setup(hass, with_dashboard)
+    badges = (await _config(hass))["views"][0]["badges"]
+    decision = "sensor.test_charger_decision"
+    by_color = {
+        b["color"]: next(v for v in b["visibility"] if v.get("entity") == decision)
+        for b in badges
+        if b["color"] != "red"
+    }
+    assert by_color["blue"]["state"] == "charging"
+    assert by_color["amber"]["state"] == "emergency"
+    named = {by_color[c]["state"] for c in ("grey", "blue", "amber", "green")}
+    assert set(by_color["orange"]["state_not"]) == named
+
+
+async def test_battery_levels_are_coloured(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    hass.states.async_set(CAR_SOC, "55", {"unit_of_measurement": "%"})
+    entry = make_entry(
+        hass, dashboard=True, car_soc_entity=CAR_SOC, battery_capacity_kwh=60
+    )
+    await setup(hass, entry)
+    colors = {
+        c["entity"]: c.get("color")
+        for c in _cards(await _config(hass))
+        if c["type"] == "tile"
+    }
+    assert colors["number.test_charger_target_soc"] == "green"
+    assert colors["number.test_charger_comfort_soc"] == "amber"
+    assert colors["number.test_charger_emergency_soc"] == "red"

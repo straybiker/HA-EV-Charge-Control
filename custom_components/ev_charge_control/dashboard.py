@@ -78,16 +78,6 @@ _MODE3_LABELS = (
     "'D1': 'Car wants to charge, charger paused', 'C2': 'Car charging', "
     "'D2': 'Car charging', 'E': 'Charger off', 'F': 'Charger error'}"
 )
-_MODE_HELP = (
-    "{'off': 'No charging.', "
-    "'min_1p': 'Exactly the minimum current on 1 phase, from grid or solar.', "
-    "'min_3p': 'Exactly the minimum current on 3 phases.', "
-    "'limited': 'Grid up to the power limit, with solar added.', "
-    "'fast': 'As much as the charger accepts, within the power limit; "
-    "also when the price is above the maximum.', "
-    "'solar': 'Solar surplus first; the bridge closes a small gap to the minimum.', "
-    "'comfort': 'Limited until the comfort SOC, then Solar.'}"
-)
 _CONTROL_CONFIRM = (
     "This makes the controller write to the charger. "
     "Turn off any other automation that sets the charger first."
@@ -344,14 +334,18 @@ _TOGGLE = [{"type": "toggle"}]
 _NUMBER_INPUT = [{"type": "numeric-input", "style": "buttons"}]
 
 
-def _setting(entity: str, name: str, columns: int | str = 6) -> Card:
-    """A tile with the control that fits the entity's kind."""
+def _setting(entity: str, name: str, columns: int | str = 6, **extra: Any) -> Card:
+    """A tile with the control that fits the entity's kind, beside its name."""
     domain = entity.split(".", 1)[0]
     if domain in SWITCH_DOMAINS:
-        return _tile(entity, name, columns, features=_TOGGLE)
-    if domain in NUMBER_DOMAINS:
-        return _tile(entity, name, columns, features=_NUMBER_INPUT)
-    return _tile(entity, name, columns)
+        features = _TOGGLE
+    elif domain in NUMBER_DOMAINS:
+        features = _NUMBER_INPUT
+    else:
+        return _tile(entity, name, columns, **extra)
+    return _tile(
+        entity, name, columns, features=features, features_position="inline", **extra
+    )
 
 
 def _total_power(e: Mapping[str, str]) -> list[Card]:
@@ -410,31 +404,42 @@ def _power_limit(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
     return o.get(CONF_POWER_LIMIT) or e["power_limit"]
 
 
-def _settings_tiles(
-    e: Mapping[str, str], o: Mapping[str, Any], three: bool, price: bool
-) -> list[Card]:
-    """The device settings that are not set elsewhere on the dashboard.
+def _configuration(
+    e: Mapping[str, str], o: Mapping[str, Any], three: bool
+) -> list[Card | None]:
+    """Control charger and the device settings, in the user's order.
 
-    Only those that do something in this setup: the battery levels need a
-    battery level sensor, Single phase only a 3-phase option, and the
-    maximum cost a price.
+    Only the settings that do something in this setup: the EMS switches need
+    an EMS signal, the battery levels a battery level sensor, Single phase
+    only a 3-phase option, and the maximum cost a price. The battery levels
+    are coloured by what they do: green the target, amber comfort, red the
+    emergency.
     """
-    tiles: list[Card] = []
-    if o.get(CONF_CAR_SOC):
-        tiles += [
-            _setting(e["car_aware"], "Car aware", 12),
-            _setting(e["target_soc"], "Target SOC"),
-            _setting(e["comfort_soc"], "Comfort SOC"),
-            _setting(e["emergency_soc"], "Emergency SOC"),
-        ]
-    if three:
-        tiles.append(_setting(e["single_phase_only"], "Single phase only"))
-    if price:
-        tiles.append(_setting(e["max_charging_cost"], "Max charging cost"))
-    tiles.append(_setting(e["solar_bridge"], "Solar bridge"))
-    # A sensor from the setup stays read only: the controller only reads it.
-    tiles.append(_setting(_power_limit(e, o), "Power limit"))
-    return tiles
+    ems, soc, price = o.get(CONF_EMS), o.get(CONF_CAR_SOC), o.get(CONF_PRICE)
+    return [
+        *_control_tiles(e),
+        _setting(e["ems_control"], "EMS control") if ems else None,
+        _setting(e["ems_as_onoff"], "EMS as on/off") if ems else None,
+        _setting(e["target_soc"], "Target SOC", color="green") if soc else None,
+        _setting(e["solar_when_ems_blocks"], "Always charge when solar available", 12)
+        if ems
+        else None,
+        _setting(e["comfort_soc"], "Comfort SOC", color="amber") if soc else None,
+        _tile(
+            e["charge_mode"],
+            "Charge mode",
+            12,
+            features=[{"type": "select-options"}],
+            features_position="bottom",
+        ),
+        _setting(e["car_aware"], "Car aware", 12) if soc else None,
+        _setting(e["emergency_soc"], "Emergency SOC", color="red") if soc else None,
+        _setting(e["single_phase_only"], "Single phase only") if three else None,
+        _setting(e["solar_bridge"], "Solar bridge"),
+        # A sensor from the setup stays read only: the controller only reads it.
+        _setting(_power_limit(e, o), "Power limit"),
+        _setting(e["max_charging_cost"], "Max charging cost") if price else None,
+    ]
 
 
 def _control_tiles(e: Mapping[str, str]) -> list[Card]:
@@ -498,14 +503,15 @@ def _control_badges(e: Mapping[str, str]) -> list[Card]:
     """Control charger, coloured by what the controller does.
 
     A badge colour cannot follow a template, so one badge per state: red
-    when off, grey without a car, amber with a car that does not charge,
-    blue while charging, green at the target. The badges show the Decision
+    when off, grey without a car, blue while charging, amber while emergency
+    charging, green at the target, and orange for every other decision, so a
+    blocked or failing charger still shows. The badges show the Decision
     sensor, not the switch: a badge colour applies only while its entity is
     active, and a switch that is off is not. A tap toggles Control charger.
     """
     control, decision = e["control_charger"], e["decision"]
     on = {"condition": "state", "entity": control, "state": "on"}
-    active = ["charging", "emergency"]
+    named = ["not_connected", "charging", "emergency", "target_reached"]
 
     def badge(color: str, *visibility: Card, off: bool = False) -> Card:
         return {
@@ -535,11 +541,10 @@ def _control_badges(e: Mapping[str, str]) -> list[Card]:
             "red", {"condition": "state", "entity": control, "state": "off"}, off=True
         ),
         badge("grey", on, decided(state="not_connected")),
-        badge("blue", on, decided(state=active)),
+        badge("blue", on, decided(state="charging")),
         badge("green", on, decided(state="target_reached")),
-        badge(
-            "amber", on, decided(state_not=[*active, "target_reached", "not_connected"])
-        ),
+        badge("amber", on, decided(state="emergency")),
+        badge("orange", on, decided(state_not=named)),
     ]
 
 
@@ -552,6 +557,7 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
         e["charged_from_grid_today"],
         e["charged_from_solar_today"],
     )
+    total_grid, total_solar = e["charged_from_grid"], e["charged_from_solar"]
     charged_some = {
         "condition": "or",
         "conditions": [
@@ -643,12 +649,12 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
                         for x in (
                             {"entity": e["decision"], "name": "Decision"},
                             {"entity": e["target_phases"], "name": "Target phases"},
-                            {"entity": e["car_connected"], "name": "Car connected"},
-                            {"entity": e["control_charger"], "name": "Control charger"},
                             {"entity": e["grid_allowed"], "name": "Grid allowed"},
+                            {"entity": e["car_connected"], "name": "Car connected"},
                             {"entity": e["ems_active"], "name": "EMS active"}
                             if ems
                             else None,
+                            {"entity": e["control_charger"], "name": "Control charger"},
                         )
                         if x
                     ],
@@ -658,35 +664,12 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
             ),
             _section(
                 _heading("Configuration", "mdi:cog"),
-                *_control_tiles(e),
-                _setting(e["ems_control"], "EMS control") if ems else None,
-                _setting(e["ems_as_onoff"], "EMS as on/off") if ems else None,
-                _setting(
-                    e["solar_when_ems_blocks"],
-                    "Always charge when solar available",
-                    12,
-                )
-                if ems
-                else None,
-                _tile(
-                    e["charge_mode"],
-                    "Charge mode",
-                    12,
-                    features=[{"type": "select-options"}],
-                    features_position="bottom",
-                ),
-                _markdown(
-                    f"{{% set help = {_MODE_HELP} %}}"
-                    f"{{{{ help.get(states('{e['charge_mode']}'), '') }}}}",
-                    text_only=True,
-                ),
-                *_settings_tiles(e, o, three, bool(price)),
+                *_configuration(e, o, three),
+                span=3,
             ),
             _section(
                 _heading("Charged today", "mdi:battery-charging-high"),
                 _tile(e["charged_today"], "Charged today", 12),
-                _tile(today_grid, "From grid today", color="blue"),
-                _tile(today_solar, "From solar today", color="amber"),
                 {
                     "type": "distribution",
                     "entities": [
@@ -696,20 +679,26 @@ def _overview(e: Mapping[str, str], o: Mapping[str, Any]) -> Card:
                     "grid_options": {"columns": "full"},
                     "visibility": [charged_some],
                 },
-                _markdown(
-                    "Nothing charged today yet.",
-                    text_only=True,
-                    visibility=[{"condition": "not", "conditions": [charged_some]}],
-                ),
             ),
             _section(
                 _heading("Totals since setup", "mdi:sigma"),
-                _tile(e["charged_energy"], "Total charged", 12),
-                _tile(e["charged_from_grid"], "Total from grid", 12),
-                _tile(e["charged_from_solar"], "Total from solar", 12),
-                _tile(
-                    e["average_charging_power"], "Average charging power (60 days)", 12
-                ),
+                {
+                    "type": "entities",
+                    "entities": [
+                        {"entity": e["charged_energy"], "name": "Total charged"},
+                        {
+                            "entity": e["average_charging_power"],
+                            "name": "Average charging power",
+                        },
+                    ],
+                },
+                {
+                    "type": "distribution",
+                    "entities": [
+                        {"entity": total_grid, "name": "Grid", "color": GRID_BLUE},
+                        {"entity": total_solar, "name": "Solar", "color": SOLAR_AMBER},
+                    ],
+                },
             ),
         ],
     }
