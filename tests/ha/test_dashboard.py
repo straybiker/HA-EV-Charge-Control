@@ -328,13 +328,14 @@ async def test_live_splits_the_car_power_in_one_bar(
     live = _live_cards(await _config(hass))
     bar = next(c for c in live if c["type"] == "distribution")
     assert [x["entity"] for x in bar["entities"]] == [
-        "sensor.test_charger_grid_share",
+        "sensor.test_charger_car_from_grid",
         "sensor.test_charger_car_from_solar",
     ]
     # Hidden while the car draws nothing.
     assert bar["visibility"][0]["condition"] == "or"
+    # No separate grid and solar tiles next to it.
     assert not any(
-        c["type"] == "tile" and c["entity"] in ("sensor.test_charger_grid_share",)
+        c["type"] == "tile" and c["entity"] == "sensor.test_charger_car_from_grid"
         for c in live
     )
 
