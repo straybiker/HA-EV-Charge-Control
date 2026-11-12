@@ -569,3 +569,24 @@ async def test_without_a_limit_entity_the_device_number_is_the_limit(
     await _set_number(hass, own, 3200)
     await _tick(hass, _DEBOUNCE)
     assert hass.states.get(EFFECTIVE_LIMIT).state == "3200"
+
+
+async def test_decision_says_why_the_grid_is_blocked(
+    hass: HomeAssistant, sources
+) -> None:
+    hass.states.async_set("sensor.test_price", "9.99")
+    await setup(hass, make_entry(hass, price_entity="sensor.test_price"))
+    await _select(hass, "limited")
+    state = hass.states.get(DECISION)
+    assert state.state == "grid_blocked"
+    assert state.attributes["blocked_by"] == ["price"]
+
+
+async def test_blocked_by_is_empty_while_charging(
+    hass: HomeAssistant, sources, entry: MockConfigEntry
+) -> None:
+    await setup(hass, entry)
+    await _select(hass, "limited")
+    state = hass.states.get(DECISION)
+    assert state.state != "grid_blocked"
+    assert state.attributes["blocked_by"] == []

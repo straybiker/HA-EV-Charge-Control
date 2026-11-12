@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .model import Budget, Measurements, Phase, Settings
+from .model import Budget, GridBlock, Measurements, Phase, Settings
 from .policy import GridRequest, ModePolicy
 
 
@@ -26,10 +26,10 @@ class Limits:
         return self.min_1p_w
 
 
-def grid_gate_open(
+def grid_blocks(
     settings: Settings, m: Measurements, policy: ModePolicy | None = None
-) -> bool:
-    """May the car use the grid at all?
+) -> tuple[GridBlock, ...]:
+    """What closes the grid gate; empty while the car may use the grid.
 
     Without a price the price check is skipped (D01); Fast skips it too
     (B19). With EMS control on, a missing or zero EMS signal closes the gate.
@@ -40,7 +40,18 @@ def grid_gate_open(
         or m.price <= settings.max_cost_rate
     )
     ems_ok = not settings.ems_control or (m.ems_signal_w or 0) > 0
-    return price_ok and ems_ok
+    return tuple(
+        block
+        for block, ok in ((GridBlock.PRICE, price_ok), (GridBlock.EMS, ems_ok))
+        if not ok
+    )
+
+
+def grid_gate_open(
+    settings: Settings, m: Measurements, policy: ModePolicy | None = None
+) -> bool:
+    """May the car use the grid at all?"""
+    return not grid_blocks(settings, m, policy)
 
 
 def ems_stops_charging(settings: Settings, m: Measurements, policy: ModePolicy) -> bool:

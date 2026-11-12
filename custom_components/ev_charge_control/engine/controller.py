@@ -6,7 +6,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any
 
-from .budget import Limits, ems_stops_charging, grid_gate_open, plan
+from .budget import Limits, ems_stops_charging, grid_blocks, grid_gate_open, plan
 from .model import (
     Available,
     CarSpec,
@@ -63,13 +63,19 @@ class Controller:
         out = self._decide(settings, m, car_aware, now)
         # Whether the grid may be used depends only on price and EMS, so it
         # is known also when nothing is charging.
+        policy = self._policy(settings, m, car_aware)
         grid_allowed = out.grid_allowed
         if grid_allowed is None:
-            policy = self._policy(settings, m, car_aware)
             grid_allowed = grid_gate_open(settings, m, policy)
+        blocked_by = (
+            grid_blocks(settings, m, policy)
+            if out.reason == Reason.GRID_BLOCKED
+            else ()
+        )
         return replace(
             out,
             grid_allowed=grid_allowed,
+            blocked_by=blocked_by,
             efficiency=self._efficiency[_shown_phase(out, m)],
             phase_hold_until=_active(self._phase_hold_until, now),
             grace_until=_active(self._grace_until, now),

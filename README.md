@@ -366,7 +366,7 @@ Its charging current starts at 6 A, so pick its **Charging enabled** switch as t
 | Emergency charging | Charging because the battery is below the emergency SOC. |
 | Off | The mode is Off. |
 | Target reached | The battery is at or above the target SOC. |
-| Grid blocked | Price or EMS blocks the grid, and there is not sufficient solar. |
+| Grid blocked | Price or EMS blocks the grid, and there is not sufficient solar. The **Blocked by** attribute names the cause (`price`, `ems` or both), and the Live card shows it with the values. |
 | Not enough power | Not sufficient power for the minimum current. |
 | Refused | 3-Phases Minimum together with Single phase only. |
 | Fail-safe | A necessary sensor is unavailable. |
@@ -394,7 +394,7 @@ Its charging current starts at 6 A, so pick its **Charging enabled** switch as t
 | The decision stays **Fail-safe**. | Charger power, applied current, active phases or house power is unavailable. |
 | The decision stays **Not connected** while a car is connected. | The connection entity must show a Mode 3 state (B1 … D2 = connected), or be a binary sensor that is on. |
 | The current goes up and down at each run. | The house power sensor probably includes the charger. It must exclude the charger. |
-| **Grid blocked** during daylight. | The price is above Max charging cost, or the EMS signal is 0 W. Turn on **Always charge when solar available** to use solar. |
+| **Grid blocked**. | The Live card and the Decision's **Blocked by** attribute say why. Price: the import price is above Max charging cost; both must be in the same unit (a price in c€/kWh or €/MWh is always above a maximum in €/kWh). Raise the maximum or use Fast. EMS: EMS control is on and the EMS signal is 0 W or missing. Turn on **Always charge when solar available** to use solar meanwhile. |
 | **Comfort** never changes to Solar. | Car aware is off, or the battery level is unavailable. |
 | **Charger not responding**, with a repair issue. | The charger is offline, or its integration does not pass the values on. Check the charger's current-limit number and applied current. Switch Control charger off to stop the attempts. |
 | The charger changes, but differently from Target current. | Another automation also writes to the charger. Turn it off. |

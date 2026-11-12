@@ -126,7 +126,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 | `emergency` | Charging because the SOC is below the emergency SOC |
 | `off` | Mode is Off |
 | `target_reached` | SOC at or above the target |
-| `grid_blocked` | Price or EMS blocks the grid and there is not enough solar |
+| `grid_blocked` | Price or EMS blocks the grid and there is not enough solar. The attribute `blocked_by` lists the cause: `price`, `ems` or both. |
 | `insufficient_power` | Not enough power for the minimum current |
 | `refused` | 3-Phases Minimum with single phase only |
 | `failsafe` | A required sensor is unavailable |

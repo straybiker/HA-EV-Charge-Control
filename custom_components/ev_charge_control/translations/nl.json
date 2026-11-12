@@ -544,6 +544,11 @@
           "no_power_limit": "Geen vermogenslimiet",
           "grace_period": "Wachten na faseschakeling",
           "charger_not_responding": "Laadpaal reageert niet"
+        },
+        "state_attributes": {
+          "blocked_by": {
+            "name": "Geblokkeerd door"
+          }
         }
       },
       "charged_today": {

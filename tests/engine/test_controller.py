@@ -14,6 +14,7 @@ from custom_components.ev_charge_control.engine import (
     ChargerSpec,
     ConnectionState,
     Controller,
+    GridBlock,
     Phase,
     Reason,
 )
@@ -295,6 +296,27 @@ def test_ems_onoff_ignores_the_budget_value():
 def test_missing_ems_signal_closes_the_gate():
     out = step(M.LIMITED, 500, s=EMS_BUDGET, m={"ems_signal_w": None})
     assert out.reason == Reason.GRID_BLOCKED
+
+
+def test_blocked_by_names_the_price():
+    out = step(M.LIMITED, 500, m={"price": 0.35})
+    assert out.blocked_by == (GridBlock.PRICE,)
+
+
+def test_blocked_by_names_the_ems():
+    out = step(M.LIMITED, 500, s=EMS_BUDGET, m={"ems_signal_w": 0})
+    assert out.blocked_by == (GridBlock.EMS,)
+
+
+def test_blocked_by_names_both():
+    out = step(M.LIMITED, 500, s=EMS_BUDGET, m={"price": 0.35, "ems_signal_w": 0})
+    assert out.blocked_by == (GridBlock.PRICE, GridBlock.EMS)
+
+
+def test_blocked_by_is_empty_unless_grid_blocked():
+    # The price closes the grid, but the sun charges the car.
+    out = step(M.LIMITED, -6000, m={"price": 0.35})
+    assert out.reason == Reason.CHARGING and out.blocked_by == ()
 
 
 def test_ems_budget_below_minimum_stops_3p_minimum():

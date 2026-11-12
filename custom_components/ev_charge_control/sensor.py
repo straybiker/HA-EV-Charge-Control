@@ -37,6 +37,7 @@ PARALLEL_UPDATES = 0
 @dataclass(frozen=True, kw_only=True)
 class OutputSensorDescription(SensorEntityDescription):
     value_fn: Callable[[Snapshot], Any]
+    attrs_fn: Callable[[Snapshot], dict[str, Any]] | None = None
 
 
 def _solar_surplus(s: Snapshot) -> int | None:
@@ -113,6 +114,9 @@ SENSORS: tuple[OutputSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[r.value for r in Reason],
         value_fn=lambda s: s.output.reason.value,
+        # Why the grid is closed while the decision is grid_blocked: price,
+        # ems or both. Empty otherwise.
+        attrs_fn=lambda s: {"blocked_by": [b.value for b in s.output.blocked_by]},
     ),
     OutputSensorDescription(
         key="charger_efficiency",
@@ -283,3 +287,8 @@ class OutputSensor(CoordinatorEntity[EvChargeCoordinator], SensorEntity):
     def native_value(self) -> Any:
         data = self.coordinator.data
         return None if data is None else self.entity_description.value_fn(data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        data, attrs_fn = self.coordinator.data, self.entity_description.attrs_fn
+        return None if data is None or attrs_fn is None else attrs_fn(data)

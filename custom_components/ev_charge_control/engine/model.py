@@ -46,6 +46,13 @@ def connection_from_mode3(code: str | None) -> ConnectionState:
     return ConnectionState.UNKNOWN
 
 
+class GridBlock(StrEnum):
+    """What closes the grid gate. Shown with the grid_blocked decision."""
+
+    PRICE = "price"
+    EMS = "ems"
+
+
 class Reason(StrEnum):
     """Why the controller chose its output. Shown on the decision sensor."""
 
@@ -186,3 +193,5 @@ class Output:
     setpoint: Setpoint | None = None
     phase_hold_until: datetime | None = None
     grace_until: datetime | None = None
+    # Why the grid is closed, while the decision is grid_blocked.
+    blocked_by: tuple[GridBlock, ...] = ()

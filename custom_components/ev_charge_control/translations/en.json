@@ -544,6 +544,11 @@
           "no_power_limit": "No power limit",
           "grace_period": "Waiting after phase switch",
           "charger_not_responding": "Charger not responding"
+        },
+        "state_attributes": {
+          "blocked_by": {
+            "name": "Blocked by"
+          }
         }
       },
       "charged_today": {

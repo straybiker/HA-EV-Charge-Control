@@ -278,6 +278,7 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
         "{% if lim | is_number %} · Limit {{ (lim | float / 1000) | round(1) }} kW"
         "{% endif %}"
     )
+    text += _blocked_by(e, o)
     # The battery levels mean nothing while Car aware is off; the battery
     # level itself has its own tile (_car_battery).
     if o.get(CONF_CAR_SOC):
@@ -289,6 +290,39 @@ def _live(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
             "{% endif %}"
         )
     return text
+
+
+def _blocked_by(e: Mapping[str, str], o: Mapping[str, Any]) -> str:
+    """Why the grid is closed, with the values that close it.
+
+    Only the causes this setup can have: the price needs a price entity,
+    the EMS an EMS signal.
+    """
+    parts = []
+    if o.get(CONF_PRICE):
+        price, cost = e["import_price"], e["max_charging_cost"]
+        parts.append(
+            "{% if 'price' in why %}**Price** "
+            f"{{{{ states('{price}') }}}} above the maximum "
+            f"{{{{ states('{cost}') }}}} "
+            f"{{{{ state_attr('{price}', 'unit_of_measurement') or '' }}}}"
+            "{% endif %}"
+        )
+    if ems := o.get(CONF_EMS):
+        parts.append(
+            "{% if 'ems' in why %}**EMS** signal "
+            f"{{{{ states('{ems}') }}}} "
+            f"{{{{ state_attr('{ems}', 'unit_of_measurement') or '' }}}}"
+            "{% endif %}"
+        )
+    if not parts:
+        return ""
+    return (
+        f"{{% set why = state_attr('{e['decision']}', 'blocked_by') or [] %}}"
+        "{% if why %}\n\nGrid blocked by: "
+        + "{% if why | length > 1 %} · {% endif %}".join(parts)
+        + "{% endif %}"
+    )
 
 
 def _car_battery(e: Mapping[str, str], o: Mapping[str, Any]) -> Card | None:

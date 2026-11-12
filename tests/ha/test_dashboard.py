@@ -423,3 +423,28 @@ async def test_battery_levels_are_coloured(
     assert colors["number.test_charger_target_soc"] == "green"
     assert colors["number.test_charger_comfort_soc"] == "amber"
     assert colors["number.test_charger_emergency_soc"] == "red"
+
+
+async def test_live_says_why_the_grid_is_blocked(
+    hass: HomeAssistant, sources, lovelace
+) -> None:
+    price, ems = "sensor.test_price", "sensor.test_ems"
+    hass.states.async_set(price, "0.35", {"unit_of_measurement": "EUR/kWh"})
+    hass.states.async_set(ems, "0", {"unit_of_measurement": "W"})
+    entry = make_entry(hass, dashboard=True, price_entity=price, ems_entity=ems)
+    await setup(hass, entry)
+    text = next(c for c in _live_cards(await _config(hass)) if c["type"] == "markdown")[
+        "content"
+    ]
+    assert "state_attr('sensor.test_charger_decision', 'blocked_by')" in text
+    assert "'price' in why" in text and "'ems' in why" in text
+
+
+async def test_no_blocked_by_text_without_price_or_ems(
+    hass: HomeAssistant, sources, lovelace, with_dashboard: MockConfigEntry
+) -> None:
+    await setup(hass, with_dashboard)
+    text = next(c for c in _live_cards(await _config(hass)) if c["type"] == "markdown")[
+        "content"
+    ]
+    assert "blocked_by" not in text
