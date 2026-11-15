@@ -458,8 +458,24 @@ def test_grid_allowed_is_known_without_charging():
 
 
 def test_insufficient_power_keeps_the_phase():
-    out = step(M.SOLAR, 500, m={"commanded_phase": Phase.THREE})
+    # 9900 W house under a 10000 W limit: no room for the minimum.
+    out = step(M.LIMITED, 9900, m={"commanded_phase": Phase.THREE})
     assert out.reason == Reason.INSUFFICIENT_POWER and result(out) == (3, 0.0)
+
+
+def test_solar_without_sun_waits_for_solar():
+    out = step(M.SOLAR, 500, m={"commanded_phase": Phase.THREE})  # B23
+    assert out.reason == Reason.WAITING_FOR_SOLAR and result(out) == (3, 0.0)
+
+
+def test_comfort_above_comfort_soc_waits_for_solar_at_night():
+    out = step(M.COMFORT, 500, s=CAR_AWARE, m={"car_soc": 60})  # B23
+    assert out.reason == Reason.WAITING_FOR_SOLAR and out.current_a == 0
+
+
+def test_comfort_below_comfort_soc_does_not_wait_for_solar():
+    out = step(M.COMFORT, 500, s=CAR_AWARE, m={"car_soc": 30})
+    assert out.reason == Reason.CHARGING
 
 
 # --- skipped runs and fail-safe -------------------------------------------------------

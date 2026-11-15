@@ -537,6 +537,7 @@
           "target_reached": "Doel bereikt",
           "grid_blocked": "Net geblokkeerd",
           "insufficient_power": "Te weinig vermogen",
+          "waiting_for_solar": "Wacht op zon",
           "refused": "Geweigerd",
           "failsafe": "Veiligheidsstand",
           "not_connected": "Niet verbonden",

@@ -90,6 +90,7 @@
           "target_reached": "mdi:flag-checkered",
           "grid_blocked": "mdi:transmission-tower-off",
           "insufficient_power": "mdi:battery-off-outline",
+          "waiting_for_solar": "mdi:solar-power-variant-outline",
           "refused": "mdi:cancel",
           "failsafe": "mdi:shield-alert",
           "not_connected": "mdi:power-plug-off-outline",

@@ -537,6 +537,7 @@
           "target_reached": "Target reached",
           "grid_blocked": "Grid blocked",
           "insufficient_power": "Not enough power",
+          "waiting_for_solar": "Waiting for solar",
           "refused": "Refused",
           "failsafe": "Fail-safe",
           "not_connected": "Not connected",

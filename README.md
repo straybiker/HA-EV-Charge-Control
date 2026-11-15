@@ -368,6 +368,7 @@ Its charging current starts at 6 A, so pick its **Charging enabled** switch as t
 | Target reached | The battery is at or above the target SOC. |
 | Grid blocked | Price or EMS blocks the grid, and there is not sufficient solar. The **Blocked by** attribute names the cause (`price`, `ems` or both), and the Live card shows it with the values. |
 | Not enough power | Not sufficient power for the minimum current. |
+| Waiting for solar | Solar, or Comfort above the comfort SOC: not enough solar to start. Comfort SOC is not a stop point; the car charges on solar up to the Target SOC. |
 | Refused | 3-Phases Minimum together with Single phase only. |
 | Fail-safe | A necessary sensor is unavailable. |
 | Not connected | No car is connected, or the charger reports an error. |

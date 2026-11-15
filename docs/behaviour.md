@@ -128,6 +128,7 @@ The integration counts energy only; an EMS turns it into cost and reimbursement.
 | `target_reached` | SOC at or above the target |
 | `grid_blocked` | Price or EMS blocks the grid and there is not enough solar. The attribute `blocked_by` lists the cause: `price`, `ems` or both. |
 | `insufficient_power` | Not enough power for the minimum current |
+| `waiting_for_solar` | Solar, or Comfort from the comfort SOC: not enough solar to start, also with the bridge |
 | `refused` | 3-Phases Minimum with single phase only |
 | `failsafe` | A required sensor is unavailable |
 | `not_connected` | No car plugged in, or the charger reports an error |
@@ -179,3 +180,4 @@ A change to the charging behaviour adds or updates a row here.
 | B20 | Mode 3 sub-states | A change between connected sub-states (B1, B2, C1, C2 …) does not trigger a run; only connect and disconnect do. The sub-state changes when the car starts or stops drawing, and the house power (grid minus charger, two meters) is then wrong for a few seconds. A run at that moment can start, stop or switch phases on a false value; the next timed run reads settled values. |
 | B21 | Efficiency per phase count | Learned separately for 1 and 3 phases, kept across sessions and restarts. One shared value, reset on unplug, set the 3-phase threshold with the 1-phase efficiency after each phase switch and started every session at 100 %, so the first minutes asked for too little current. |
 | B22 | Charging switch | Optional. With it, a stop switches charging off instead of writing 0 A, and the current limit may start above 0 A (for example 6 A). The current is written before the switch goes on, so the car never starts at an old, higher current. Without it, nothing changes: a stop is 0 A, and the current limit must accept 0 A. The connection stays a Mode 3 sensor or a binary sensor; a charger that reports its state in other words needs a template binary sensor, so no charger-specific states are built in. |
+| B23 | Waiting for solar | Solar, and Comfort from the comfort SOC, show `waiting_for_solar` instead of `insufficient_power` (Not enough power) when the sun is too weak to start. Comfort SOC is not a stop point: from there Comfort keeps charging on solar up to the target SOC. "Not enough power" at night read as a fault, or as if the comfort SOC were a target. Only the label changes. |

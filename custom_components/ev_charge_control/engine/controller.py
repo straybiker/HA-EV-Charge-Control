@@ -293,7 +293,12 @@ class Controller:
         else:
             phase = stop_phase
             blocked = not gate_open or ems_stops_charging(settings, m, policy)
-            reason = Reason.GRID_BLOCKED if blocked else Reason.INSUFFICIENT_POWER
+            if blocked:
+                reason = Reason.GRID_BLOCKED
+            elif policy.solar_first:
+                reason = Reason.WAITING_FOR_SOLAR
+            else:
+                reason = Reason.INSUFFICIENT_POWER
 
         return self._result(
             reason,

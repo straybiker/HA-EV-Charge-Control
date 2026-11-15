@@ -62,6 +62,8 @@ class Reason(StrEnum):
     TARGET_REACHED = "target_reached"
     GRID_BLOCKED = "grid_blocked"
     INSUFFICIENT_POWER = "insufficient_power"
+    # Solar and Comfort from the comfort SOC: too little solar to start (B23).
+    WAITING_FOR_SOLAR = "waiting_for_solar"
     REFUSED = "refused"
     FAILSAFE = "failsafe"
     NOT_CONNECTED = "not_connected"
